@@ -20,6 +20,9 @@ export default async function About() {
 			<p>
 				This is a simple recipe manager to help you track your macros.
 			</p>
+            <pre>
+                {JSON.stringify(session, null, 4)}
+            </pre>
 		</div>
 	);
 }
