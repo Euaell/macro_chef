@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { auth } from "../context/auth";
+import { auth } from "@/context/auth";
 
 export default async function Navbar() {
 	const session = await auth();

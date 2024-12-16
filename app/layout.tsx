@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "./components/Navbar";
+import Navbar from "@/components/Navbar";
+import 'remixicon/fonts/remixicon.css';
 
 export const metadata: Metadata = {
 	title: "MacroChef - Recipe Manager",
@@ -17,7 +18,9 @@ export default function RootLayout(
 			>
 				{/* navbar */}
 				<Navbar />
-				{children}
+				<main>
+					{children}
+				</main>
 			</body>
 		</html>
 	);
