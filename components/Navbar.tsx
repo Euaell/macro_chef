@@ -10,7 +10,7 @@ export default async function Navbar() {
 				<Link href="/" className="text-white text-2xl font-bold">MacroChef</Link>
 				<div>
 					<Link href="/about" className="text-white">About</Link>
-					<Link href="/recipes" className="text-white ml-4">Recipes</Link>
+					<Link href="/ingredients" className="text-white ml-4">Ingredients</Link>
 					{session ? (
 						<Link href="/api/auth/signout?callbackUrl=/" className="text-white ml-4">Sign Out</Link>
 					) : (
