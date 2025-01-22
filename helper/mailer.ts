@@ -1,5 +1,6 @@
 
 import nodemailer from "nodemailer"
+import SMTPTransport from "nodemailer/lib/smtp-transport"
 import bcryptjs from "bcryptjs"
 import UserModel from "@/model/user"
 import { ID } from "@/types/id"
@@ -46,15 +47,14 @@ export async function sendEmail({ email, emailType, userId }: EmailProps) {
 			)
 		}
 
-		// Create a nodemailer transport
 		var transport = nodemailer.createTransport({
 			host: process.env.NODE_MAILER_HOST!,
-			port: process.env.NODE_MAILER_PORT,
+			port: Number(process.env.NODE_MAILER_PORT),
 			auth: {
 				user: process.env.NODE_MAILER_USER,
 				pass: process.env.NODE_MAILER_PASS
 			}
-		});
+		} as SMTPTransport.Options);
 
 		// Compose email options
 		const mailOptions = {

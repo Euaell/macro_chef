@@ -89,7 +89,7 @@ export default function Page() {
 					{error && <div className="text-red-500 text-sm">{error}</div>}
 					<div className="flex flex-row gap-8 justify-end">
 						<Link href="/register" className="text-blue-500 text-right">
-							Don't have an account? <br />Register
+							Don&apos;t have an account? <br />Register
 						</Link>
 						<button
 							type="submit"

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
 
 export default function Page() {
 	const [token, setToken] = useState("");
 	const [verified, setVerified] = useState(false);
 	const [error, setError] = useState(false);
+    const router = useRouter();
 
 	const [countdown, setCountdown] = useState(8); // Countdown from 8 seconds
 
@@ -32,8 +33,6 @@ export default function Page() {
 
 	useEffect(() => {
 		const token = searchParams.get("token");
-		// const urlToken = window.location.search.split("=")[1];
-		// setToken(urlToken || "");
 		setToken(token || "");
 	}, []);
 
@@ -46,13 +45,11 @@ export default function Page() {
 	// Start the countdown when verified is true
 	useEffect(() => {
 		if (verified) {
-			let timer: NodeJS.Timeout;
-			timer = setInterval(() => {
+			const timer: NodeJS.Timeout = setInterval(() => {
 				setCountdown((prev) => {
 					if (prev <= 1) {
 						clearInterval(timer);
-						// Redirect to '/login' after countdown finishes
-						window.location.href = "/login";
+                        router.push("/login");
 						return 0;
 					}
 					return prev - 1;
