@@ -9,7 +9,8 @@ import MongoDBClient from "@/mongo/client";
 
 import { z } from "zod";
 import User from "@/model/user";
-import UserType, { UserInput } from "@/types/user";
+import UserType, { UserInput, UserOutput } from "@/types/user";
+import { ObjectId } from "mongoose";
 
 
 export async function getAllUser(searchUser: string = "", sortBy?: string): Promise<UserType[]> {
@@ -23,10 +24,10 @@ export async function getAllUser(searchUser: string = "", sortBy?: string): Prom
 	return users;
 }
 
-export async function getUserById(id: string): Promise<UserType | null> {
+export async function getUserById(id: string): Promise<UserOutput | null> {
 	await MongoDBClient();
 
-	const user = await User.findById(id);
+	const user = await User.findById(id).select("-password");
 	return user;
 }
 
@@ -102,7 +103,6 @@ export async function getUserByEmail(email: string): Promise<UserType | null> {
 
 	return user;
 }
-
 
 export async function createUser(user: UserInput): Promise<UserType> {
     await MongoDBClient();

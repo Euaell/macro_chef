@@ -3,11 +3,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UserInput } from "@/types/user";
 
 export default function Page() {
 	const router = useRouter();
+    const searchParam = useSearchParams();
 	const [user, setUser] = useState<UserInput>({
 		email: "",
 		password: "",
@@ -25,7 +26,8 @@ export default function Page() {
 	function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		setLoading(true);
-		fetch("/api/auth/login", {
+        const callbackUrl = searchParam.get("callbackUrl") || "/";
+		fetch("/api/auth/login?callbackUrl=" + callbackUrl, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -33,12 +35,12 @@ export default function Page() {
 			body: JSON.stringify(user),
 		})
 		.then((res) => {
-			if (res.ok) {
-				router.push("/");
-			}
 			return res.json();
 		})
 		.then((data) => {
+            if (data.success) {
+                router.push(data.callbackUrl);
+            }
 			setError(data.error);
 		})
 		.catch((error) => {
