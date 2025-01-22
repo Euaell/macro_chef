@@ -16,7 +16,7 @@ const MAX_IMAGES_TO_PREVIEW = 1;
 
 
 export default function Page() {
-    const router = useRouter();
+	const router = useRouter();
 	const [formState, action] = useActionState(addUser, EMPTY_FORM_STATE);
 	const [images, setImages] = useState<string[]>([]);
 	
@@ -36,14 +36,14 @@ export default function Page() {
 					<div className="flex flex-1 flex-col gap-2">
 						<label htmlFor="email">Email <span className="text-xs text-red-500">*required</span></label>
 						<input
-                            required
-                            type="email"
-                            id="email"
-                            name="email"
-                            className="border-2 border-gray-300 rounded-lg p-2"
-                            placeholder="Email"
-                            defaultValue={formState.fieldValues?.email}
-                        />
+							required
+							type="email"
+							id="email"
+							name="email"
+							className="border-2 border-gray-300 rounded-lg p-2"
+							placeholder="Email"
+							defaultValue={formState.fieldValues?.email}
+						/>
 						<FieldError formState={formState} name="email" />
 					</div>
 				</div>
@@ -128,9 +128,9 @@ export default function Page() {
 					</div>
 				</div>
 				<SubmitButton label="Submit" loading={<div>Loading...</div>} />
-                <Link href="/login" className="text-blue-500">
-                    Already have an account? Login
-                </Link>
+				<Link href="/login" className="text-blue-500">
+					Already have an account? Login
+				</Link>
 
 				<div>
 					{formState.status === "SUCCESS" && (
