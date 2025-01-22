@@ -22,7 +22,7 @@ export default function Page() {
 			setVerified(true);
 		} catch (error: any) {
 			setError(true);
-			console.log(error.response.data);
+			console.error(error.response.data);
 		}
 	}
 

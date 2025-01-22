@@ -16,7 +16,7 @@ export default function Page() {
 		.then((res) => res.json())
 		.then((data) =>  data.user)
 		.then((user) => setUser(user))
-		.catch((error) => console.log(error))
+		.catch((error) => console.error(error))
 		.finally(() => {
 			setTimeout(() =>
 				setLoading(false)

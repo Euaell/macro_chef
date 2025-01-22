@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest){
 	try {
-		console.log("Requesting user data")
 		// Extract user ID from the authentication token
 		const userId = await getDataFromToken(request);
 

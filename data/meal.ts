@@ -249,7 +249,7 @@ export async function populateMeals() {
 	// Insert the meals into the database
 	try {
 		await Meal.insertMany(mealsData);
-		console.log('Dummy meals data inserted successfully.');
+		console.info('Dummy meals data inserted successfully.');
 	} catch (error) {
 		console.error('Error inserting dummy meals data:', error);
 	}

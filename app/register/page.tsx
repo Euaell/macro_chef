@@ -67,7 +67,6 @@ export default function Page() {
 						<CldUploadWidget
 							onSuccess={(result) => {
 								if (result?.info && result.info instanceof Object) {
-									// console.log(result.info.secure_url);
 									// setImages([...images, result.info.secure_url]);
 									setImages((prevImages) => {
 										if (result?.info && result.info instanceof Object) {

@@ -56,7 +56,7 @@ export async function sendEmail({ email, emailType, userId }: EmailProps) {
 
 		// Compose email options
 		const mailOptions = {
-			from: 'no-reply@macro.me',
+			from: 'Macro <euaelesh@gmail.com>',
 			to: email,
 			subject: emailType === "VERIFY" ? "Verify your email" : "Reset your password",
 			html: emailType === "VERIFY" ? verifyEmailTemplate(hashedToken) : resetPasswordTemplate(hashedToken)

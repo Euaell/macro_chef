@@ -10,6 +10,7 @@ import MongoDBClient from "@/mongo/client";
 import { z } from "zod";
 import User from "@/model/user";
 import UserType, { UserInput, UserOutput } from "@/types/user";
+import { sendEmail } from "@/helper/mailer";
 
 
 export async function getAllUser(searchUser: string = "", sortBy?: string): Promise<UserType[]> {
@@ -44,10 +45,8 @@ export async function addUser(formState: FormState, user: FormData): Promise<For
 			password: user.get("password"),
 			confirmPassword: user.get("confirmPassword"),
 		};
-		console.log(userData);
 
 		const validatedData = createUserSchema.parse(userData);
-		console.log(validatedData);
 
         // Check if password and confirmPassword are the same
         if (validatedData.password !== validatedData.confirmPassword) {
@@ -88,6 +87,7 @@ export async function addUser(formState: FormState, user: FormData): Promise<For
 			image: validatedData.image,
 			password: hashedPassword,
 		});
+        await sendEmail({ email: validatedData.email, emailType: "VERIFY", userId: newUser.id });
 
 		return toFormState("SUCCESS", newUser.id.toString());
 	} catch (error) {
