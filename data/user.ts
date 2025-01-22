@@ -10,7 +10,6 @@ import MongoDBClient from "@/mongo/client";
 import { z } from "zod";
 import User from "@/model/user";
 import UserType, { UserInput, UserOutput } from "@/types/user";
-import { ObjectId } from "mongoose";
 
 
 export async function getAllUser(searchUser: string = "", sortBy?: string): Promise<UserType[]> {

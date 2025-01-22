@@ -2,9 +2,26 @@
 import nodemailer from "nodemailer"
 import bcryptjs from "bcryptjs"
 import UserModel from "@/model/user"
+import { ID } from "@/types/id"
 
 
-export const sendEmail = async({email, emailType, userId}:any) =>{
+interface EmailProps {
+    email: string,
+    emailType: "VERIFY" | "RESET",
+    userId: ID
+}
+
+// Verify email template html
+const verifyEmailTemplate = (token: string) => {
+    return `<p>Click <a href="${process.env.domain}/verifyemail?token=${token}">here</a> to verify your email</p>`
+}
+
+// Reset password template html
+const resetPasswordTemplate = (token: string) => {
+    return `<p>Click <a href="${process.env.domain}/resetpassword?token=${token}">here</a> to reset your password</p>`
+}
+
+export async function sendEmail({ email, emailType, userId }: EmailProps) {
 	try {
 
 		// Create a hash token based on the user's ID
@@ -32,18 +49,17 @@ export const sendEmail = async({email, emailType, userId}:any) =>{
 			host: "sandbox.smtp.mailtrap.io",
 			port: 2525,
 			auth: {
-				user: "<user_id>",
-				pass: "<password>"
+				user: process.env.MAILTRAP_USER,
+				pass: process.env.MAILTRAP_PASS,
 			}
 		});
 
 		// Compose email options
 		const mailOptions = {
-			from: '<your email id>',
+			from: 'no-reply@macro.me',
 			to: email,
 			subject: emailType === "VERIFY" ? "Verify your email" : "Reset your password",
-			html: `<p>Click <a href="${process.env.domain}/verifyemail?token=${hashedToken}">here</a> to 
-			${emailType === "VERIFY" ? "Verify your email" : "Reset your password"}</p>`
+			html: emailType === "VERIFY" ? verifyEmailTemplate(hashedToken) : resetPasswordTemplate(hashedToken)
 		}
 
 		// Send the email

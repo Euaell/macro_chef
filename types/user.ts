@@ -1,8 +1,8 @@
 
-import { ObjectId } from "mongoose";
+import { ID } from "./id";
 
 export default interface User {
-	_id: string | ObjectId;
+	_id: ID;
 	email: string;
 	image?: string;
 	password: string;
