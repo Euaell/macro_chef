@@ -17,7 +17,7 @@ export default async function Navbar() {
                     <Link href="/meals" className="text-white ml-4">Meals</Link>
 					
                     <Link href="/recipes" className="text-white ml-4">Recipes</Link>
-                    <Link href="/api/auth/signout?callbackUrl=/" className="text-white ml-4">Sign Out</Link>
+                    <Link href="/api/auth/logout?callbackUrl=/" className="text-white ml-4">Sign Out</Link>
 					<Link href="/login" className="text-white ml-4">Sign In</Link>
 
 				</div>
