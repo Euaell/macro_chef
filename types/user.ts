@@ -1,12 +1,16 @@
 import { ObjectId } from "mongoose";
 
 export default interface User {
-    id: string | ObjectId;
+    _id: string | ObjectId;
 	email: string;
-	name?: string;
 	image?: string;
-	password?: string;
-	// preferences?: UserPreferences;
+	password: string;
+}
+
+export interface UserInput {
+    email: string;
+    image?: string;
+    password: string;
 }
 
   

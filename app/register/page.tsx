@@ -10,7 +10,7 @@ import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 
 
-const MAX_RECIPE_IMAGES_TO_PREVIEW = 1;
+const MAX_IMAGES_TO_PREVIEW = 1;
 
 
 export default function Page() {
@@ -94,7 +94,7 @@ export default function Page() {
 										</button>
 										{images.map((image, index) => {
 
-											if (typeof image !== 'string' || index >= MAX_RECIPE_IMAGES_TO_PREVIEW) {
+											if (typeof image !== 'string' || index >= MAX_IMAGES_TO_PREVIEW) {
 												return null;
 											}
 											
@@ -112,9 +112,9 @@ export default function Page() {
 											);
 										})}
 
-										{images.length > MAX_RECIPE_IMAGES_TO_PREVIEW && 
+										{images.length > MAX_IMAGES_TO_PREVIEW && 
 											<div className="w-24 h-24 bg-gray-200 flex items-center justify-center rounded-md">
-												<p className="text-gray-500">+{images.length - MAX_RECIPE_IMAGES_TO_PREVIEW}</p>
+												<p className="text-gray-500">+{images.length - MAX_IMAGES_TO_PREVIEW}</p>
 											</div>
 										}
 									</div>

@@ -7,7 +7,7 @@ import MongoDBClient from "@/mongo/client";
 
 import { z } from "zod";
 import User from "@/model/user";
-import UserType from "@/types/user";
+import UserType, { UserInput } from "@/types/user";
 
 
 export async function getAllUser(searchUser: string = "", sortBy?: string): Promise<UserType[]> {
@@ -38,7 +38,6 @@ const createUserSchema = z.object({
 }).refine(data => data.password === data.confirmPassword, {
 	message: "Passwords do not match",
 })
-
 export async function addUser(formState: FormState, user: FormData): Promise<FormState> {
 	try {
 		const userData = {
@@ -74,4 +73,13 @@ export async function getUserByEmail(email: string): Promise<UserType | null> {
 	const user = await User.findOne({ email });
 
 	return user;
+}
+
+
+export async function createUser(user: UserInput): Promise<UserType> {
+    await MongoDBClient();
+
+    const newUser = await User.create(user);
+
+    return newUser;
 }
