@@ -8,19 +8,22 @@ import { useActionState, useEffect, useState } from "react";
 import SubmitButton from "@/components/AddIngredient/button";
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 
 const MAX_IMAGES_TO_PREVIEW = 1;
 
 
 export default function Page() {
+    const router = useRouter();
 	const [formState, action] = useActionState(addUser, EMPTY_FORM_STATE);
 	const [images, setImages] = useState<string[]>([]);
 	
 
 	useEffect(() => {
 		if (formState.status === "SUCCESS") {
-			// action.reset();
+			router.push("/login");
 		}
 	}, [formState.status]);
 
@@ -32,18 +35,19 @@ export default function Page() {
 				<div className="flex flex-row gap-2">
 					<div className="flex flex-1 flex-col gap-2">
 						<label htmlFor="email">Email <span className="text-xs text-red-500">*required</span></label>
-						<input required type="email" id="email" name="email" className="border-2 border-gray-300 rounded-lg p-2" placeholder="Email" />
+						<input
+                            required
+                            type="email"
+                            id="email"
+                            name="email"
+                            className="border-2 border-gray-300 rounded-lg p-2"
+                            placeholder="Email"
+                            defaultValue={formState.fieldValues?.email}
+                        />
 						<FieldError formState={formState} name="email" />
 					</div>
 				</div>
 
-				<div className="flex flex-row gap-2">
-					<div className="flex flex-1 flex-col gap-2">
-						<label htmlFor="name">Name <span className="text-xs text-red-500">*required</span></label>
-						<input required type="text" id="name" name="name" className="border-2 border-gray-300 rounded-lg p-2" placeholder="Name" />
-						<FieldError formState={formState} name="name" />
-					</div>
-				</div>
 				<div className="flex flex-col md:flex-row gap-2">
 					<div className="flex flex-col gap-2">
 						<label htmlFor="password">Password <span className="text-xs text-red-500">*required</span></label>
@@ -125,6 +129,9 @@ export default function Page() {
 					</div>
 				</div>
 				<SubmitButton label="Submit" loading={<div>Loading...</div>} />
+                <Link href="/login" className="text-blue-500">
+                    Already have an account? Login
+                </Link>
 
 				<div>
 					{formState.status === "SUCCESS" && (

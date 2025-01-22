@@ -32,6 +32,6 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ serverError: error.message, error: "Unable to handle request." }, { status: 500 });
     }
 }
