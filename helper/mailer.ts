@@ -6,19 +6,21 @@ import { ID } from "@/types/id"
 
 
 interface EmailProps {
-    email: string,
-    emailType: "VERIFY" | "RESET",
-    userId: ID
+	email: string,
+	emailType: "VERIFY" | "RESET",
+	userId: ID
 }
+
+const domain = process.env.DOMAIN || process.env.VERCEL_URL
 
 // Verify email template html
 const verifyEmailTemplate = (token: string) => {
-    return `<p>Click <a href="${process.env.domain}/verifyemail?token=${token}">here</a> to verify your email</p>`
+	return `<p>Click <a href="${domain}/verifyemail?token=${token}">here</a> to verify your email</p>`
 }
 
 // Reset password template html
 const resetPasswordTemplate = (token: string) => {
-    return `<p>Click <a href="${process.env.domain}/resetpassword?token=${token}">here</a> to reset your password</p>`
+	return `<p>Click <a href="${domain}/resetpassword?token=${token}">here</a> to reset your password</p>`
 }
 
 export async function sendEmail({ email, emailType, userId }: EmailProps) {
