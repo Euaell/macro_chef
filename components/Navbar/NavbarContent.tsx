@@ -36,10 +36,11 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 	}, [menuOpen]);
   
 	return (
-		<div className="relative">
+		<div className="relative flex justify-end w-full md:w-auto">
+
 			{/* Hamburger menu button for mobile */}
 			<button
-				className="text-white focus:outline-none md:hidden"
+				className="text-white focus:outline-none md:hidden z-20"
 				onClick={() => setMenuOpen(!menuOpen)}
 				aria-label="Toggle navigation menu"
 				aria-expanded={menuOpen}
@@ -76,14 +77,12 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 			<ul
 				id="primary-navigation"
 				ref={menuRef}
-				className={`${
-					menuOpen ? "block" : "hidden"
-				} absolute top-full left-0 right-0 bg-emerald-700 md:static md:flex md:items-center md:w-auto`}
+				className={`${menuOpen ? "block" : "hidden"} absolute top-8 z-10 shadow-lg md:shadow-none rounded-md w-full bg-emerald-600 md:bg-transparent md:static md:flex md:items-center md:w-auto`}
 			>
 				<li className="md:ml-4">
 					<Link
 						href="/ingredients"
-						className="block px-4 py-2 text-white hover:bg-emerald-600 md:inline-block md:px-2 md:py-0"
+						className="block px-4 py-2 rounded-t-md text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
 					>
 						Ingredients
 					</Link>
@@ -91,49 +90,49 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 				<li className="md:ml-4">
 					<Link
 						href="/recipes"
-						className="block px-4 py-2 text-white hover:bg-emerald-600 md:inline-block md:px-2 md:py-0"
+						className="block px-4 py-2 text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
 					>
 						Recipes
 					</Link>
 				</li>
 
-			{user ? (
-				<>
+				{user ? (
+					<>
+						<li className="md:ml-4">
+							<Link
+								href="/meals"
+								className="block px-4 py-2 text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
+							>
+							Meals
+							</Link>
+						</li>
+						<li className="md:ml-4">
+							<Link
+								href="/profile"
+								className="block px-4 py-2 text-white hover:bg-emerald-600 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
+							>
+								Profile
+							</Link>
+						</li>
+						<li className="md:ml-4">
+							<Link
+								href="/api/auth/logout?callbackUrl=/"
+								className="block px-4 py-2 rounded-b-md text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
+							>
+								Sign Out
+							</Link>
+						</li>
+					</>
+				) : (
 					<li className="md:ml-4">
 						<Link
-							href="/meals"
-							className="block px-4 py-2 text-white hover:bg-emerald-600 md:inline-block md:px-2 md:py-0"
+							href="/login"
+							className="block px-4 py-2 rounded-b-md text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
 						>
-						Meals
+							Sign In
 						</Link>
 					</li>
-					<li className="md:ml-4">
-						<Link
-							href="/profile"
-							className="block px-4 py-2 text-white hover:bg-emerald-600 md:inline-block md:px-2 md:py-0"
-						>
-							Profile
-						</Link>
-					</li>
-					<li className="md:ml-4">
-						<Link
-							href="/api/auth/logout?callbackUrl=/"
-							className="block px-4 py-2 text-white hover:bg-emerald-600 md:inline-block md:px-2 md:py-0"
-						>
-							Sign Out
-						</Link>
-					</li>
-				</>
-			) : (
-				<li className="md:ml-4">
-					<Link
-						href="/login"
-						className="block px-4 py-2 text-white hover:bg-emerald-600 md:inline-block md:px-2 md:py-0"
-					>
-						Sign In
-					</Link>
-				</li>
-			)}
+				)}
 			</ul>
 
 		</div>
