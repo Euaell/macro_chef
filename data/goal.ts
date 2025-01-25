@@ -5,13 +5,16 @@ import { toFormState } from "@/helper/toFormState";
 import GoalModel from "@/model/goal";
 import MongoDBClient from "@/mongo/client";
 import Goal from "@/types/goal";
+import { ID } from "@/types/id";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-export async function getCurrentGoal(): Promise<Goal> {
+export async function getCurrentGoal(userId: ID): Promise<Goal> {
 	await MongoDBClient();
 
-	const goal = await GoalModel.findOne({});
+	const goal = await GoalModel.findOne({
+        user: userId,
+    });
 	if (!goal) {
 		// Create default goal
 		const ketoGoal = {

@@ -11,6 +11,7 @@ import { z } from "zod";
 import User from "@/model/user";
 import UserType, { UserInput, UserOutput } from "@/types/user";
 import { sendEmail } from "@/helper/mailer";
+import { ID } from "@/types/id";
 
 
 export async function getAllUser(searchUser: string = "", sortBy?: string): Promise<UserType[]> {
@@ -24,11 +25,18 @@ export async function getAllUser(searchUser: string = "", sortBy?: string): Prom
 	return users;
 }
 
-export async function getUserById(id: string): Promise<UserOutput | null> {
+export async function getUserById(id: ID): Promise<UserOutput | null> {
 	await MongoDBClient();
 
 	const user = await User.findById(id).select("-password");
 	return user;
+}
+
+export async function getFullUserById(id: ID): Promise<UserType | null> {
+    await MongoDBClient();
+
+    const user = await User.findById(id);
+    return user;
 }
 
 const createUserSchema = z.object({
