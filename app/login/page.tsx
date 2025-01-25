@@ -40,6 +40,7 @@ export default function Page() {
 		.then((data) => {
             if (data.success) {
                 router.push(data.callbackUrl);
+                router.refresh();
             }
 			setError(data.error);
 		})
