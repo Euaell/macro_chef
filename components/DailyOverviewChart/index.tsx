@@ -8,8 +8,6 @@ import Loading from "../Loading";
 
 
 export default function DailyOverviewChart() {
-	// const goal = await getCurrentGoal();
-	// const macros = await getNutritionOverview();
 	const [goal, setGoal] = useState<Goal | null>(null);
 	const [macros, setMacros] = useState<Macros>({
 		calories: 0,

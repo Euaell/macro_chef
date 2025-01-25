@@ -1,24 +1,15 @@
 
 
 import { getCurrentGoal } from "@/data/goal";
-import { getUserById } from "@/data/user";
-import { getDataFromToken } from "@/helper/getDataFromToken";
+import { getUserServer } from "@/helper/session";
 import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET(request: NextRequest){
     try {
-        // Extract user ID from the authentication token
-        const userId = getDataFromToken(request);
-
-        // Find the user in the database based on the user ID
-        const user = await getUserById(userId);
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
+        const user = await getUserServer();
         
-        const goal = await getCurrentGoal(userId);
+        const goal = await getCurrentGoal(user._id);
 
         if (!goal) {
             return NextResponse.json({ error: "Goal not found" }, { status: 404 });

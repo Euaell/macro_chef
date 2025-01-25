@@ -6,6 +6,7 @@ import { toFormState } from "@/helper/toFormState";
 import bcryptjs from "bcryptjs";
 
 import MongoDBClient from "@/mongo/client";
+import GoalModel from "@/model/goal";
 
 import { z } from "zod";
 import User from "@/model/user";
@@ -90,10 +91,13 @@ export async function addUser(formState: FormState, user: FormData): Promise<For
 		const salt = await bcryptjs.genSalt(10)
 		const hashedPassword = await bcryptjs.hash(validatedData.password, salt)
 
+        const goal = await GoalModel.findOne({ name: "Default" });
+
 		const newUser = await User.create({
 			email: validatedData.email,
 			image: validatedData.image,
 			password: hashedPassword,
+            goal: goal,
 		});
 
 		try {
@@ -128,7 +132,12 @@ export async function getUserByEmail(email: string): Promise<UserType | null> {
 export async function createUser(user: UserInput): Promise<UserType> {
 	await MongoDBClient();
 
-	const newUser = await User.create(user);
+    const goal = await GoalModel.findOne({ name: "Default" });
+
+	const newUser = await User.create({
+        ...user,
+        goal: goal,
+    });
 
 	return newUser;
 }

@@ -15,7 +15,6 @@ const GoalSchema = new Schema<IGoal>({
         fat: { type: Number, required: true, default: 0 },
         fiber: { type: Number, required: true, default: 0 },
     },
-    user: { type: Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 
 export default mongoose.models.Goal || model<IGoal>("Goal", GoalSchema);
