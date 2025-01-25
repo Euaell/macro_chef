@@ -14,7 +14,7 @@ const UserSchema = new Schema<IUser>({
 		type: Boolean,
 		default: false,
 	},
-	 isAdmin: {
+	isAdmin: {
 		 type: Boolean,
 		 default: false,
 	},

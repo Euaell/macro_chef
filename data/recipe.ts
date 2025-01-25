@@ -4,6 +4,7 @@ import Recipe from "@/model/recipe";
 import MongoDBClient from "@/mongo/client";
 import Macros from "@/types/macro";
 import RecipeType, { RecipeInput } from "@/types/recipe";
+import User from "@/types/user";
 
 
 export async function getAllRecipe(searchRecipe: string = "", sortBy?: string): Promise<RecipeType[]> {
@@ -24,7 +25,7 @@ export async function getRecipeById(id: string): Promise<RecipeType | null> {
 	return recipe;
 }
 
-export async function addRecipe(recipe: RecipeInput): Promise<RecipeType> {
+export async function addRecipe(recipe: RecipeInput, user: User): Promise<RecipeType> {
 	await MongoDBClient();
 
 	// TODO: Calculate totalMacros
@@ -46,6 +47,7 @@ export async function addRecipe(recipe: RecipeInput): Promise<RecipeType> {
 		instructions: recipe.instructions,
 		tags: recipe.tags,
 		images: recipe.images,
+        creator: user._id,
 	});
 	return newRecipe;
 }
