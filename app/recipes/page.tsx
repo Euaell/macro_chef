@@ -4,12 +4,12 @@ import Image from "next/image";
 import placeHolderImage from "@/public/placeholder-recipe.jpg";
 import RecipeMoreButton from "@/components/Recipes/RecipeMoreButton";
 import { getAllRecipes } from "@/data/recipe";
-import { getUserServer } from "@/helper/session";
+import { getUserOptionalServer, getUserServer } from "@/helper/session";
 
 export default async function Page() {
 
 	const recipes = await getAllRecipes();
-	const user = await getUserServer();
+	const user = await getUserOptionalServer();
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 py-8">
@@ -107,8 +107,8 @@ export default async function Page() {
 				<div className="space-y-4">
 					{recipes.map((recipe) => (
 						<Link
-							key={recipe.id.toString()}
-							href={`/recipes/${recipe.id}`}
+							key={recipe._id.toString()}
+							href={`/recipes/${recipe._id}`}
 							className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
 						>
 							<div className="flex">
@@ -130,8 +130,8 @@ export default async function Page() {
 												{recipe.description}
 											</p>
 										</div>
-										{recipe.creator && recipe.creator._id.toString() === user._id.toString() && (
-											<RecipeMoreButton recipeId={recipe.id} />
+										{user && recipe.creator && recipe.creator._id.toString() === user._id.toString() && (
+											<RecipeMoreButton recipeId={recipe._id} />
 										)}
 									</div>
 									<div className="flex gap-6">

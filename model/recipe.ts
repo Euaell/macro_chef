@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { Document, model, Schema } from "mongoose";
 
 export interface IRecipe extends Document, Recipe {
-	id: Schema.Types.ObjectId;
+	_id: Schema.Types.ObjectId;
 }
 
 

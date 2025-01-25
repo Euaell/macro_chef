@@ -4,7 +4,7 @@ import { ID } from "./id";
 import User from "./user";
 
 export default interface Recipe {
-	id: ID;
+	_id: ID;
 	name: string;
 	images: string[];
 	description?: string;

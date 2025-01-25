@@ -1,4 +1,5 @@
 
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -10,6 +11,8 @@ export async function GET(request: NextRequest) {
 		const response = NextResponse.redirect(url);		
 
 		response.cookies.set("auth_token", "", { httpOnly: true, expires: new Date(0)})
+
+        revalidatePath("/");
 		return response;
 		
 	} catch (error : any) {

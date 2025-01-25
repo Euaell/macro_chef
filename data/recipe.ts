@@ -73,3 +73,10 @@ export async function addRecipe(recipe: RecipeInput, user: User): Promise<Recipe
 	});
 	return newRecipe;
 }
+
+export async function getPopularRecipes(): Promise<RecipeType[]> {
+    await MongoDBClient();
+
+    const recipes = await Recipe.find().sort({ createdAt: -1 }).limit(6);
+    return recipes;
+}

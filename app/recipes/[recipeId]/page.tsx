@@ -21,7 +21,7 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 				{/* Recipe Header */}
 				<div className="flex justify-between items-start mb-6">
 					<h1 className="text-4xl font-bold">{recipe.name}</h1>
-					<RecipeOptions recipeId={recipe.id.toString()} isCreator={isCreator} />
+					<RecipeOptions recipeId={recipe._id.toString()} isCreator={isCreator} />
 				</div>
 
 				{recipe.creator ? (

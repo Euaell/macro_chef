@@ -21,6 +21,11 @@ export const getUserServer = cache(async () => {
 	try {
 		const cookie = (await cookies()).get('auth_token');
 		const token = cookie?.value || '';
+        
+        if (!token) {
+            redirect('/login');
+        }
+
 		const payload: any = await decrypt(token);
 
 		const user = await getFullUserById(payload.id);
@@ -31,4 +36,17 @@ export const getUserServer = cache(async () => {
 	} catch (error: any) {
 		redirect('/login')
 	}
+});
+
+export const getUserOptionalServer = cache(async () => {
+    try {
+        const cookie = (await cookies()).get('auth_token');
+        const token = cookie?.value || '';
+        const payload: any = await decrypt(token);
+
+        const user = await getFullUserById(payload.id);
+        return user;
+    } catch (error: any) {
+        return null;
+    }
 });
