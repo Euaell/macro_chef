@@ -18,6 +18,7 @@ export default function MealCard({ meal }: MealCardProps) {
 		})
 		.then((res) => res.json())
 		.then((data) => {
+            console.log(data);
 			router.refresh();
 		})
 		.catch((error) => {

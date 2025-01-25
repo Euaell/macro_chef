@@ -124,7 +124,7 @@ export async function addMeal(formState: FormState, formData: FormData): Promise
 	return toFormState("SUCCESS", "Meal added successfully");
 }
 
-export async function getMeal(timeSpan: TimeSpan = TimeSpan.Week): Promise<PerDayMealsAggregate[]> {
+export async function getMeal(userId: ID, timeSpan: TimeSpan = TimeSpan.Week): Promise<PerDayMealsAggregate[]> {
 	await MongoDBClient();
 
 	const now = new Date();
@@ -150,6 +150,7 @@ export async function getMeal(timeSpan: TimeSpan = TimeSpan.Week): Promise<PerDa
 			$gte: startDate,
 			$lte: now,
 		},
+		user: userId
 	})
   
 	// Group meals by date
@@ -195,9 +196,17 @@ export async function getMeal(timeSpan: TimeSpan = TimeSpan.Week): Promise<PerDa
 	return perDayMealsAggregate;
 }
 
-export async function deleteMeal(id: ID): Promise<void> {
+export async function deleteMeal(id: ID, userId: ID): Promise<void> {
 	await MongoDBClient();
 
+	const meal = await Meal.findById(id).populate("user");
+	if (!meal) {
+		throw new Error("Meal not found");
+	}
+	if (meal.user._id.toString() !== userId.toString()) {
+		throw new Error("Unauthorized");
+	}
+	
 	await Meal.findByIdAndDelete(id);
 }
 
