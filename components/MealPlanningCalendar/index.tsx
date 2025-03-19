@@ -27,9 +27,10 @@ interface MealPlanningCalendarProps {
 		recipes: PlannedMealRecipe[];
 		totalCalories: number;
 	}[];
+	onWeekChange?: (newDate: Date) => void;
 }
 
-export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }: MealPlanningCalendarProps) {
+export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [], onWeekChange }: MealPlanningCalendarProps) {
 	const router = useRouter();
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [weekStart, setWeekStart] = useState(startOfWeek(currentDate, { weekStartsOn: 1 }));
@@ -55,6 +56,11 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
 		setCurrentDate(newDate);
 		setWeekStart(startOfWeek(newDate, { weekStartsOn: 1 }));
 		setWeekEnd(endOfWeek(newDate, { weekStartsOn: 1 }));
+		
+		// Notify parent component about week change if callback is provided
+		if (onWeekChange) {
+			onWeekChange(newDate);
+		}
 	};
 
 	// Get meals for a specific day
@@ -156,6 +162,10 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
 								setCurrentDate(today);
 								setWeekStart(startOfWeek(today, { weekStartsOn: 1 }));
 								setWeekEnd(endOfWeek(today, { weekStartsOn: 1 }));
+								// Notify parent component about week change
+								if (onWeekChange) {
+									onWeekChange(today);
+								}
 							}}
 							className="ml-2 text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded"
 							disabled={deleting}
@@ -233,7 +243,7 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
 											href={`/meal-plan/add?date=${format(day, 'yyyy-MM-dd')}`}
 											className="text-emerald-600 hover:underline text-xs"
 										>
-											+ Add more
+											+ Add more/Edit
 										</Link>
 										{plannedMealsForDay._id && (
 											<button

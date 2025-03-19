@@ -1,8 +1,8 @@
 import { getUserServer } from "@/helper/session";
-import MealPlanningCalendar from "@/components/MealPlanningCalendar";
 import Link from "next/link";
 import { getWeeklyMealPlans } from "@/data/mealPlan";
 import { getMeal } from "@/data/meal";
+import MealPlanningCalendarWrapper from "@/components/MealPlanningCalendarWrapper";
 
 export default async function MealPlanPage() {
   const user = await getUserServer();
@@ -53,9 +53,9 @@ export default async function MealPlanPage() {
         </div>
 
         <div className="w-full">
-          <MealPlanningCalendar 
-            perDayMeals={mealsAggregate} 
-            plannedMeals={plannedMeals}
+          <MealPlanningCalendarWrapper 
+            initialMeals={mealsAggregate} 
+            initialPlannedMeals={plannedMeals}
           />
         </div>
       </div>
@@ -84,4 +84,4 @@ export default async function MealPlanPage() {
       </div>
     );
   }
-} 
+}
