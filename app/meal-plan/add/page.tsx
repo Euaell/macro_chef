@@ -6,6 +6,20 @@ import Link from 'next/link';
 import { format, parse } from 'date-fns';
 import RecipeType from '@/types/recipe';
 
+type SimplifiedRecipe = {
+  _id: string;
+  name: string;
+  calories: number;
+  protein: number;
+}
+
+type SelectedRecipe = {
+  recipeId: string;
+  recipeName: string;
+  servings: number;
+  mealTime: string;
+}
+
 export default function AddMealPlanPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -16,18 +30,13 @@ export default function AddMealPlanPage() {
       ? parse(dateParam, 'yyyy-MM-dd', new Date()) 
       : new Date()
   );
-  const [recipes, setRecipes] = useState<any[]>([]);
+  const [recipes, setRecipes] = useState<SimplifiedRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedRecipes, setSelectedRecipes] = useState<{
-    recipeId: string;
-    recipeName: string;
-    servings: number;
-    mealTime: string;
-  }[]>([]);
+  const [selectedRecipes, setSelectedRecipes] = useState<SelectedRecipe[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredRecipes, setFilteredRecipes] = useState<any[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<SimplifiedRecipe[]>([]);
 
   useEffect(() => {
     const loadRecipes = async () => {
@@ -39,7 +48,7 @@ export default function AddMealPlanPage() {
         .then((recipes: RecipeType[]) => {
           // Simplify recipe objects to avoid circular references
           const simplifiedRecipes = recipes.map(recipe => ({
-            id: recipe._id.toString(),
+            _id: recipe._id.toString(),
             name: recipe.name,
             calories: recipe.totalMacros.calories,
             protein: recipe.totalMacros.protein
@@ -66,17 +75,23 @@ export default function AddMealPlanPage() {
       setFilteredRecipes(recipes);
     } else {
       const filtered = recipes.filter(recipe => 
-        recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
+        recipe.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredRecipes(filtered);
     }
   }, [searchTerm, recipes]);
 
+  useEffect(() => {
+    console.debug("==================")
+    console.debug("selectedRecipes", selectedRecipes)
+    console.debug("==================")
+  }, [selectedRecipes])
+
   const addRecipeToSelection = (recipe: any) => {
     setSelectedRecipes([
       ...selectedRecipes,
       {
-        recipeId: recipe.id,
+        recipeId: recipe._id,
         recipeName: recipe.name,
         servings: 1,
         mealTime: 'lunch'
@@ -108,35 +123,35 @@ export default function AddMealPlanPage() {
     }
 
     setSubmitting(true);
-
-    try {
-      // Directly use fetch to avoid any serialization issues with server actions
-      const response = await fetch('/api/meal-plan/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          date: format(date, 'yyyy-MM-dd'),
-          recipes: selectedRecipes.map(item => ({
-            recipeId: item.recipeId,
-            servings: item.servings,
-            mealTime: item.mealTime
-          }))
-        })
-      });
-
-      if (!response.ok) {
+    await fetch('/api/meal-plan/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        date: format(date, 'yyyy-MM-dd'),
+        recipes: selectedRecipes.map(item => ({
+          recipeId: item.recipeId,
+          servings: item.servings,
+          mealTime: item.mealTime
+        }))
+      })
+    })
+    .then(res => {
+      if (!res.ok) {
         throw new Error('Failed to save meal plan');
       }
-      
       router.push('/meal-plan');
       router.refresh();
-    } catch (err) {
+    })
+    .catch(err => {
       console.error('Error adding meal plan:', err);
       setError('Failed to save meal plan');
       setSubmitting(false);
-    }
+    })
+    .finally(() => {
+      setSubmitting(false);
+    })
   };
 
   return (
@@ -240,7 +255,7 @@ export default function AddMealPlanPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {filteredRecipes.map((recipe) => (
                 <div 
-                  key={recipe.id}
+                  key={recipe._id?.toString()}
                   className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition"
                   onClick={() => addRecipeToSelection(recipe)}
                 >

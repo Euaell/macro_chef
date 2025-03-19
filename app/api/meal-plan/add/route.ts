@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Create meal plan
     const recipeData = recipes.map(item => ({
-      recipe: new Schema.Types.ObjectId(item.recipeId),
+      recipe: item.recipeId,
       servings: item.servings,
       mealTime: item.mealTime
     }));
