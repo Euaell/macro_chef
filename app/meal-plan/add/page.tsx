@@ -37,7 +37,9 @@ export default function AddMealPlanPage() {
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRecipes, setFilteredRecipes] = useState<SimplifiedRecipe[]>([]);
+  const [loadingExisting, setLoadingExisting] = useState(false);
 
+  // Load all recipes
   useEffect(() => {
     const loadRecipes = async () => {
       await fetch('/api/recipes')
@@ -69,6 +71,34 @@ export default function AddMealPlanPage() {
 
     loadRecipes();
   }, []);
+
+  // Load existing meal plan for the selected date
+  useEffect(() => {
+    const loadExistingMealPlan = async () => {
+      if (!date) return;
+      
+      setLoadingExisting(true);
+      try {
+        const dateString = format(date, 'yyyy-MM-dd');
+        const response = await fetch(`/api/meal-plan/get-by-date?date=${dateString}`);
+        const data = await response.json();
+        
+        if (data.success && data.mealPlan) {
+          setSelectedRecipes(data.mealPlan.recipes);
+        } else {
+          // If no meal plan exists for this date, clear any selected recipes
+          setSelectedRecipes([]);
+        }
+      } catch (err) {
+        console.error("Error loading existing meal plan:", err);
+        // Don't set error state here to avoid confusing the user
+      } finally {
+        setLoadingExisting(false);
+      }
+    };
+
+    loadExistingMealPlan();
+  }, [date]);
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -177,6 +207,11 @@ export default function AddMealPlanPage() {
               onChange={(e) => setDate(new Date(e.target.value))}
               className="w-full p-2 border rounded"
             />
+            {loadingExisting && (
+              <div className="mt-2 text-sm text-gray-500">
+                Loading saved plan...
+              </div>
+            )}
           </div>
 
           {/* Selected Recipes */}

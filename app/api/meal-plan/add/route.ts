@@ -27,6 +27,22 @@ export async function POST(request: NextRequest) {
     // Connect to MongoDB
     await MongoDBClient();
 
+    // Check if a meal plan already exists for this date
+    const parsedDate = new Date(date);
+    const startOfDay = new Date(parsedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(parsedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingMealPlan = await MealPlan.findOne({
+      user: user._id,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    });
+
     // Calculate total macros
     const totalMacros = {
       calories: 0,
@@ -53,30 +69,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create meal plan
+    // Create recipe data for database
     const recipeData = recipes.map(item => ({
       recipe: item.recipeId,
       servings: item.servings,
       mealTime: item.mealTime
     }));
 
-    const mealPlan = await MealPlan.create({
-      date: new Date(date),
-      recipes: recipeData,
-      totalMacros,
-      user: user._id
-    });
+    let mealPlan;
+    let message = "Meal plan created successfully";
+
+    if (existingMealPlan) {
+      // Update existing meal plan
+      mealPlan = await MealPlan.findByIdAndUpdate(
+        existingMealPlan._id,
+        {
+          recipes: recipeData,
+          totalMacros
+        },
+        { new: true }
+      );
+      message = "Meal plan updated successfully";
+    } else {
+      // Create new meal plan
+      mealPlan = await MealPlan.create({
+        date: new Date(date),
+        recipes: recipeData,
+        totalMacros,
+        user: user._id
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: "Meal plan created successfully",
+      message,
       mealPlanId: mealPlan._id 
     });
   } catch (error: any) {
-    console.error('Error creating meal plan:', error);
+    console.error('Error creating/updating meal plan:', error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message || 'Failed to create meal plan'
+      error: error.message || 'Failed to create/update meal plan'
     }, { status: 500 });
   }
 } 
