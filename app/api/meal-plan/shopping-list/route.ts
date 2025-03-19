@@ -1,25 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateShoppingList } from "@/data/mealPlan";
 import { getUserServer } from "@/helper/session";
+import { generateShoppingList } from "@/data/mealPlan";
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getUserServer();
-    const dateParam = request.nextUrl.searchParams.get('date');
-    const date = dateParam ? new Date(dateParam) : new Date();
+    const searchParams = request.nextUrl.searchParams;
+    const dateParam = searchParams.get('date');
+    
+    if (!dateParam) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Date parameter is required'
+      }, { status: 400 });
+    }
 
-    const shoppingList = await generateShoppingList(user._id, date);
+    // Parse the date
+    const date = new Date(dateParam);
+    
+    // Generate shopping list for the week
+    const shoppingListItems = await generateShoppingList(user._id, date);
     
     return NextResponse.json({ 
-      shoppingList,
-      startDate: date,
-      success: true 
+      success: true, 
+      items: shoppingListItems
     });
   } catch (error: any) {
     console.error('Error generating shopping list:', error);
     return NextResponse.json({ 
-      error: 'Failed to generate shopping list',
-      details: error.message
+      success: false, 
+      error: error.message || 'Failed to generate shopping list'
     }, { status: 500 });
   }
 } 

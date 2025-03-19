@@ -28,9 +28,23 @@ interface MealPlanningCalendarProps {
 		totalCalories: number;
 	}[];
 	onWeekChange?: (newDate: Date) => void;
+	weeklyIngredients?: {
+		category: string;
+		items: {
+			name: string;
+			amount: string;
+		}[];
+	}[];
+	loadingIngredients?: boolean;
 }
 
-export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [], onWeekChange }: MealPlanningCalendarProps) {
+export default function MealPlanningCalendar({ 
+	perDayMeals, 
+	plannedMeals = [], 
+	onWeekChange,
+	weeklyIngredients = [],
+	loadingIngredients = false
+}: MealPlanningCalendarProps) {
 	const router = useRouter();
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [weekStart, setWeekStart] = useState(startOfWeek(currentDate, { weekStartsOn: 1 }));
@@ -98,40 +112,6 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [], o
 		start: weekStart,
 		end: weekEnd
 	});
-
-	// Group ingredients by category for shopping list
-	const getWeeklyIngredients = () => {
-		// This could be replaced with actual data from generateShoppingList
-		// For now, we'll use sample data
-		return [
-		{ 
-			category: 'Protein',
-			items: [
-			{ name: 'Chicken breast', amount: '500g' },
-			{ name: 'Ground beef', amount: '300g' },
-			{ name: 'Eggs', amount: '12' }
-			]
-		},
-		{
-			category: 'Vegetables',
-			items: [
-			{ name: 'Spinach', amount: '200g' },
-			{ name: 'Bell peppers', amount: '3' },
-			{ name: 'Onions', amount: '2' }
-			]
-		},
-		{
-			category: 'Carbs',
-			items: [
-			{ name: 'Rice', amount: '500g' },
-			{ name: 'Sweet potatoes', amount: '3' },
-			{ name: 'Oats', amount: '200g' }
-			]
-		}
-		];
-	};
-
-
 
 	return (
 		<div className="bg-white rounded-lg shadow p-4 w-full">
@@ -277,7 +257,7 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [], o
 				<div className="flex justify-between items-center mb-3">
 					<h3 className="font-bold">Weekly Ingredients</h3>
 					<Link 
-						href="/meal-plan/shopping-list" 
+						href={`/meal-plan/shopping-list?week=${format(weekStart, 'yyyy-MM-dd')}`}
 						className="text-sm bg-emerald-700 text-white px-3 py-1 rounded-lg"
 					>
 						View Shopping List
@@ -285,18 +265,24 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [], o
 				</div>
 				<div className="text-sm text-gray-600">
 					<p>Based on your meal plan for this week, you&apos;ll need:</p>
-					<div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-						{getWeeklyIngredients().map(category => (
-							<div key={category.category} className="bg-gray-50 rounded p-2">
-								<div className="font-medium">{category.category}</div>
-								<ul className="list-disc list-inside text-xs">
-									{category.items.map((item, index) => (
-										<li key={index}>{item.name} - {item.amount}</li>
-									))}
-								</ul>
-							</div>
-						))}
-					</div>
+					{loadingIngredients ? (
+						<div className="mt-2 text-gray-500">Loading ingredients...</div>
+					) : weeklyIngredients.length > 0 ? (
+						<div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+							{weeklyIngredients.map(category => (
+								<div key={category.category} className="bg-gray-50 rounded p-2">
+									<div className="font-medium">{category.category}</div>
+									<ul className="list-disc list-inside text-xs">
+										{category.items.map((item, index) => (
+											<li key={index}>{item.name} - {item.amount}</li>
+										))}
+									</ul>
+								</div>
+							))}
+						</div>
+					) : (
+						<div className="mt-2 text-gray-500">No ingredients needed for this week.</div>
+					)}
 				</div>
 			</div>
 		</div>

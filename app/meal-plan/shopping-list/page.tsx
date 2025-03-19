@@ -2,19 +2,44 @@
 
 import { useState, useEffect } from 'react';
 import { ShoppingListItem } from '@/types/mealPlan';
-import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, parse } from 'date-fns';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function ShoppingListPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const weekParam = searchParams.get('week');
+  
+  // Initialize date from URL or use current date
+  const initialDate = weekParam 
+    ? parse(weekParam, 'yyyy-MM-dd', new Date())
+    : new Date();
+    
   const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [startDate, setStartDate] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
-  const [endDate, setEndDate] = useState<Date>(endOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [currentDate, setCurrentDate] = useState<Date>(initialDate);
+  const [startDate, setStartDate] = useState<Date>(startOfWeek(initialDate, { weekStartsOn: 1 }));
+  const [endDate, setEndDate] = useState<Date>(endOfWeek(initialDate, { weekStartsOn: 1 }));
   const [showCompleted, setShowCompleted] = useState(false);
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
 
+  // Update URL when week changes
+  useEffect(() => {
+    // Skip initial render if no week param and we're on current week
+    if (!weekParam && format(startDate, 'yyyy-MM-dd') === format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd')) {
+      return;
+    }
+    
+    // Create a new URLSearchParams object
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('week', format(currentDate, 'yyyy-MM-dd'));
+    
+    // Update URL without refreshing the page
+    router.push(`/meal-plan/shopping-list?${params.toString()}`, { scroll: false });
+  }, [currentDate, startDate, router, searchParams, weekParam]);
+  
   useEffect(() => {
     loadShoppingList();
   }, [currentDate]);
@@ -35,7 +60,7 @@ export default function ShoppingListPage() {
       }
       
       const data = await res.json();
-      setItems(data.shoppingList || []);
+      setItems(data.items || []);
       setLoading(false);
     } catch (err) {
       setError('Failed to load shopping list');
@@ -91,7 +116,7 @@ export default function ShoppingListPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Shopping List</h1>
         <Link 
-          href="/meal-plan" 
+          href={`/meal-plan?week=${format(currentDate, 'yyyy-MM-dd')}`}
           className="bg-emerald-700 text-white px-4 py-2 rounded-lg"
         >
           Back to Meal Plan

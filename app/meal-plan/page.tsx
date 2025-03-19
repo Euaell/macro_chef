@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getWeeklyMealPlans } from "@/data/mealPlan";
 import { getMeal } from "@/data/meal";
 import MealPlanningCalendarWrapper from "@/components/MealPlanningCalendarWrapper";
+import { format } from "date-fns";
 
-export default async function MealPlanPage() {
+export default async function MealPlanPage({ searchParams }: { searchParams: { week?: string } }) {
   const user = await getUserServer();
   const mealsAggregate = await getMeal(user._id);
   
@@ -32,19 +33,22 @@ export default async function MealPlanPage() {
       };
     });
 
+    // Prepare week parameter for links
+    const weekParam = searchParams?.week ? `?week=${searchParams.week}` : '';
+
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold">Meal Planning</h1>
           <div className="flex gap-3">
             <Link 
-              href="/meal-plan/add" 
+              href={`/meal-plan/add${weekParam}`}
               className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm sm:text-base"
             >
               Add to Meal Plan
             </Link>
             <Link 
-              href="/meal-plan/shopping-list" 
+              href={`/meal-plan/shopping-list${weekParam}`}
               className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg text-sm sm:text-base"
             >
               Shopping List
@@ -70,7 +74,7 @@ export default async function MealPlanPage() {
           <h1 className="text-2xl sm:text-3xl font-bold">Meal Planning</h1>
           <div className="flex gap-3">
             <Link 
-              href="/meal-plan/add" 
+              href="/meal-plan/add"
               className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm sm:text-base"
             >
               Add to Meal Plan

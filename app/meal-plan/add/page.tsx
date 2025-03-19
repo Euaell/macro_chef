@@ -24,6 +24,7 @@ export default function AddMealPlanPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dateParam = searchParams.get('date');
+  const weekParam = searchParams.get('week');
   
   const [date, setDate] = useState<Date>(
     dateParam 
@@ -165,7 +166,12 @@ export default function AddMealPlanPage() {
       if (!res.ok) {
         throw new Error('Failed to save meal plan');
       }
-      router.push('/meal-plan');
+      // Redirect back to the meal plan page with week parameter if it exists
+      if (weekParam) {
+        router.push(`/meal-plan?week=${weekParam}`);
+      } else {
+        router.push('/meal-plan');
+      }
       router.refresh();
     })
     .catch(err => {
@@ -183,7 +189,7 @@ export default function AddMealPlanPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Add to Meal Plan</h1>
         <Link 
-          href="/meal-plan" 
+          href={weekParam ? `/meal-plan?week=${weekParam}` : "/meal-plan"}
           className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
         >
           Cancel
