@@ -11,8 +11,9 @@ export default async function MealPlanPage() {
   
   // Transform meal plans into the format expected by the MealPlanningCalendar component
   const plannedMeals = mealPlans.map(mealPlan => ({
+    _id: mealPlan._id,
     date: mealPlan.date,
-    recipes: mealPlan.recipes.map(item => item.recipe),
+    recipes: mealPlan.recipes,
     totalCalories: mealPlan.totalMacros.calories
   }));
 

@@ -8,7 +8,7 @@ import MealPlanType, { MealPlanInput, ShoppingListItem } from "@/types/mealPlan"
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import RecipeType from "@/types/recipe";
 import { getUserServer } from "@/helper/session";
-
+import Recipe from "@/model/recipe";
 export async function getUserMealPlans(userId: ID): Promise<MealPlanType[]> {
   await MongoDBClient();
   
@@ -27,6 +27,8 @@ export async function getWeeklyMealPlans(userId: ID, date = new Date()): Promise
   
   const startDate = startOfWeek(date, { weekStartsOn: 1 });
   const endDate = endOfWeek(date, { weekStartsOn: 1 });
+
+  await Recipe.find();  // FIXME: This is a dummy line to fix the unregeistered model error
   
   const mealPlans = await MealPlan.find({
     user: userId,

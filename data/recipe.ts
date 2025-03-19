@@ -42,7 +42,7 @@ export async function getUserRecipes(userId: ID): Promise<RecipeType[]> {
 export async function getRecipeById(id: string): Promise<RecipeType | null> {
 	await MongoDBClient();
     
-    await ingredient.find();  // This is a dummy line to fix the unregeistered model error
+    await ingredient.find();  // FIXME: This is a dummy line to fix the unregeistered model error
 
 	const recipe = await Recipe.findById(id)
         .populate("creator")

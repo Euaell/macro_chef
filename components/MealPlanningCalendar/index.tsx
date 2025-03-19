@@ -10,12 +10,18 @@ import { useRouter } from 'next/navigation';
 import { deleteMealPlan } from '@/data/mealPlan';
 import { ID } from '@/types/id';
 
+type PlannedMealRecipe = {
+    recipe: RecipeType;
+    servings: number;
+    mealTime: "breakfast" | "lunch" | "dinner" | "snack";
+}
+
 interface MealPlanningCalendarProps {
 	perDayMeals: PerDayMealsAggregate[];
 	plannedMeals?: {
-		_id?: ID;
+		_id: ID;
 		date: Date;
-		recipes: RecipeType[];
+		recipes: PlannedMealRecipe[];
 		totalCalories: number;
 	}[];
 }
@@ -27,7 +33,7 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
 	const [weekEnd, setWeekEnd] = useState(endOfWeek(currentDate, { weekStartsOn: 1 }));
 	const [weekDays, setWeekDays] = useState<Date[]>([]);
 	const [deleting, setDeleting] = useState(false);
-	
+
 	// Generate days for the week
 	useEffect(() => {
 		const days = [];
@@ -115,6 +121,8 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
 		}
 		];
 	};
+
+
 
 	return (
 		<div className="bg-white rounded-lg shadow p-4 w-full">
@@ -212,8 +220,8 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
 									</div>
 									<div className="max-h-24 overflow-y-auto mt-1">
 										{plannedMealsForDay.recipes.map((recipe, idx) => (
-											<div key={`${recipe._id.toString()}-${idx}`} className="text-xs bg-emerald-50 p-1 rounded mb-1 flex justify-between items-center">
-												<span>{recipe.name}</span>
+											<div key={`${recipe.recipe._id.toString()}-${idx}`} className="text-xs bg-emerald-50 p-1 rounded mb-1 flex justify-between items-center">
+												<span>{recipe.recipe.name}</span>
 											</div>
 										))}
 									</div>
