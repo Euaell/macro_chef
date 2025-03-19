@@ -34,7 +34,7 @@ interface MealPlanningCalendarWrapperProps {
 
 export default function MealPlanningCalendarWrapper({ 
   initialMeals, 
-  initialPlannedMeals 
+  initialPlannedMeals
 }: MealPlanningCalendarWrapperProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
