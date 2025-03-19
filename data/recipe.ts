@@ -18,7 +18,7 @@ export async function getAllRecipes(
 	const query = searchRecipe
 		? { name: { $regex: new RegExp(searchRecipe, "i") } }
 		: {};
-  
+
 	let sortOptions = {};
 	if (sortBy === "Name") {
 		sortOptions = { name: 1 };
@@ -27,7 +27,7 @@ export async function getAllRecipes(
 	} else if (sortBy === "Calories") {
 		sortOptions = { "totalMacros.calories": 1 };
 	}
-  
+
 	const recipes = await Recipe.find(query).sort(sortOptions).populate("creator");
 	return recipes;
 }
@@ -48,7 +48,8 @@ export async function getRecipeById(id: string): Promise<RecipeType | null> {
         .populate("creator")
         .populate({
             path: "ingredients.ingredient",
-            refPath: "ingredients.isRecipe"
+            // refPath: "ingredients.isRecipe",
+			model: "Recipe"
         });
         
 	return recipe;
@@ -73,7 +74,7 @@ export async function addRecipe(recipe: RecipeInput, user: User): Promise<Recipe
 	});
 
 	// Calculate totalMacros
-	let totalMacros: Macros = {
+	const totalMacros: Macros = {
 		calories: 0,
 		protein: 0,
 		fat: 0,

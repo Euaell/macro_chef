@@ -62,24 +62,39 @@ export async function addMealPlan(mealPlanInput: MealPlanInput, userId?: ID): Pr
     fiber: 0
   };
   
-  for (const recipeItem of mealPlanInput.recipes) {
-    const recipe = recipeItem.recipe as RecipeType;
-    const servingRatio = recipeItem.servings / recipe.servings;
-    
-    totalMacros.calories += recipe.totalMacros.calories * servingRatio;
-    totalMacros.protein += recipe.totalMacros.protein * servingRatio;
-    totalMacros.carbs += recipe.totalMacros.carbs * servingRatio;
-    totalMacros.fat += recipe.totalMacros.fat * servingRatio;
-    totalMacros.fiber += recipe.totalMacros.fiber * servingRatio;
+  // Create recipe objects with just the _id for saving to database
+  const recipeData = mealPlanInput.recipes.map(item => {
+    // If recipe is just an ID reference (simplified from client), use it directly
+    const recipeId = typeof item.recipe === 'object' && '_id' in item.recipe 
+      ? item.recipe._id 
+      : (item.recipe as any)._id;
+      
+    return {
+      recipe: recipeId,
+      servings: item.servings,
+      mealTime: item.mealTime
+    };
+  });
+  
+  // If we have complete recipe objects, calculate macros
+  if (mealPlanInput.recipes.some(item => typeof item.recipe === 'object' && 'totalMacros' in item.recipe)) {
+    for (const recipeItem of mealPlanInput.recipes) {
+      if (typeof recipeItem.recipe === 'object' && 'totalMacros' in recipeItem.recipe) {
+        const recipe = recipeItem.recipe as RecipeType;
+        const servingRatio = recipeItem.servings / recipe.servings;
+        
+        totalMacros.calories += recipe.totalMacros.calories * servingRatio;
+        totalMacros.protein += recipe.totalMacros.protein * servingRatio;
+        totalMacros.carbs += recipe.totalMacros.carbs * servingRatio;
+        totalMacros.fat += recipe.totalMacros.fat * servingRatio;
+        totalMacros.fiber += recipe.totalMacros.fiber * servingRatio;
+      }
+    }
   }
   
   const mealPlan = await MealPlan.create({
     date: mealPlanInput.date,
-    recipes: mealPlanInput.recipes.map(item => ({
-      recipe: item.recipe._id,
-      servings: item.servings,
-      mealTime: item.mealTime
-    })),
+    recipes: recipeData,
     totalMacros,
     user: userId
   });
@@ -111,8 +126,9 @@ export async function generateShoppingList(userId?: ID, date = new Date()): Prom
     path: "recipes.recipe",
     model: "Recipe",
     populate: {
-      path: "ingredients.ingredient",
-      // refPath: "ingredients.isRecipe"
+      path: "ingredients.ingredient"
+      // Note: refPath doesn't work with older mongoose versions
+      // We'll handle both ingredient and recipe types in the processing code
     }
   });
   
@@ -127,8 +143,12 @@ export async function generateShoppingList(userId?: ID, date = new Date()): Prom
       // Process each ingredient in the recipe
       for (const ingredientItem of recipe.ingredients) {
         // Skip if it's a sub-recipe (process those ingredients separately)
-        // Using string comparison as isRecipe is stored as a string enum in the database
-        if (ingredientItem.isRecipe && ingredientItem.isRecipe) {
+        // Use type assertions to avoid TypeScript errors
+        const isSubRecipe = 
+          (typeof ingredientItem.isRecipe === 'string' && ingredientItem.isRecipe === 'Recipe') || 
+          (typeof ingredientItem.isRecipe === 'boolean' && ingredientItem.isRecipe === true);
+        
+        if (isSubRecipe) {
           // In a real implementation, we would recursively process sub-recipes
           // For now, we'll skip sub-recipes to keep things simpler
           continue;
@@ -178,4 +198,4 @@ export async function generateShoppingList(userId?: ID, date = new Date()): Prom
 export async function deleteMealPlan(mealPlanId: ID): Promise<void> {
   await MongoDBClient();
   await MealPlan.findByIdAndDelete(mealPlanId);
-} 
+}

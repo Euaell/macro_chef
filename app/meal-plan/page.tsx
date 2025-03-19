@@ -3,7 +3,6 @@ import MealPlanningCalendar from "@/components/MealPlanningCalendar";
 import Link from "next/link";
 import { getWeeklyMealPlans } from "@/data/mealPlan";
 import { getMeal } from "@/data/meal";
-import { format } from "date-fns";
 
 export default async function MealPlanPage() {
   const user = await getUserServer();

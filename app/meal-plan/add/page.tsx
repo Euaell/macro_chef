@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getAllRecipes } from '@/data/recipe';
-import { addMealPlan } from '@/data/mealPlan';
-import Recipe from '@/types/recipe';
 import Link from 'next/link';
 import { format, parse } from 'date-fns';
+import RecipeType from '@/types/recipe';
 
 export default function AddMealPlanPage() {
   const router = useRouter();
@@ -18,29 +16,46 @@ export default function AddMealPlanPage() {
       ? parse(dateParam, 'yyyy-MM-dd', new Date()) 
       : new Date()
   );
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedRecipes, setSelectedRecipes] = useState<{
-    recipe: Recipe;
+    recipeId: string;
+    recipeName: string;
     servings: number;
     mealTime: string;
   }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<any[]>([]);
 
   useEffect(() => {
     const loadRecipes = async () => {
-      try {
-        const data = await getAllRecipes();
-        setRecipes(data);
-        setFilteredRecipes(data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load recipes');
-        setLoading(false);
-      }
+      await fetch('/api/recipes')
+        .then(res => res.json())
+        .then(data => {
+          return data.recipes
+        })
+        .then((recipes: RecipeType[]) => {
+          // Simplify recipe objects to avoid circular references
+          const simplifiedRecipes = recipes.map(recipe => ({
+            id: recipe._id.toString(),
+            name: recipe.name,
+            calories: recipe.totalMacros.calories,
+            protein: recipe.totalMacros.protein
+          }));
+          setRecipes(simplifiedRecipes);
+          setFilteredRecipes(simplifiedRecipes);
+        })
+        .catch(err => {
+          setError('Failed to load recipes');
+          console.debug("==================")
+          console.debug(err)
+          console.debug("==================")
+        })
+        .finally(() => {
+          setLoading(false);
+        })
     };
 
     loadRecipes();
@@ -57,11 +72,12 @@ export default function AddMealPlanPage() {
     }
   }, [searchTerm, recipes]);
 
-  const addRecipeToSelection = (recipe: Recipe) => {
+  const addRecipeToSelection = (recipe: any) => {
     setSelectedRecipes([
       ...selectedRecipes,
       {
-        recipe,
+        recipeId: recipe.id,
+        recipeName: recipe.name,
         servings: 1,
         mealTime: 'lunch'
       }
@@ -94,13 +110,30 @@ export default function AddMealPlanPage() {
     setSubmitting(true);
 
     try {
-      await addMealPlan({ 
-        date, 
-        recipes: selectedRecipes 
-      }, 'user_id');
+      // Directly use fetch to avoid any serialization issues with server actions
+      const response = await fetch('/api/meal-plan/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: format(date, 'yyyy-MM-dd'),
+          recipes: selectedRecipes.map(item => ({
+            recipeId: item.recipeId,
+            servings: item.servings,
+            mealTime: item.mealTime
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save meal plan');
+      }
+      
       router.push('/meal-plan');
       router.refresh();
     } catch (err) {
+      console.error('Error adding meal plan:', err);
       setError('Failed to save meal plan');
       setSubmitting(false);
     }
@@ -145,9 +178,9 @@ export default function AddMealPlanPage() {
             ) : (
               <ul className="space-y-4">
                 {selectedRecipes.map((item, index) => (
-                  <li key={`${item.recipe._id}-${index}`} className="border-b pb-3">
+                  <li key={`${item.recipeId}-${index}`} className="border-b pb-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">{item.recipe.name}</span>
+                      <span className="font-medium">{item.recipeName}</span>
                       <button
                         type="button"
                         onClick={() => removeRecipeFromSelection(index)}
@@ -207,13 +240,13 @@ export default function AddMealPlanPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {filteredRecipes.map((recipe) => (
                 <div 
-                  key={recipe._id.toString()}
+                  key={recipe.id}
                   className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition"
                   onClick={() => addRecipeToSelection(recipe)}
                 >
                   <h3 className="font-medium">{recipe.name}</h3>
                   <p className="text-sm text-gray-600">
-                    {Math.round(recipe.totalMacros.calories)} cal | {Math.round(recipe.totalMacros.protein)}g protein
+                    {Math.round(recipe.calories)} cal | {Math.round(recipe.protein)}g protein
                   </p>
                 </div>
               ))}

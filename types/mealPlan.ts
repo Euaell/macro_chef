@@ -9,7 +9,7 @@ export default interface MealPlan {
   recipes: {
     recipe: Recipe;
     servings: number;
-    mealTime: string; // breakfast, lunch, dinner, snack
+    mealTime: "breakfast" | "lunch" | "dinner" | "snack";
   }[];
   totalMacros: Macros;
   user: User;
@@ -17,10 +17,13 @@ export default interface MealPlan {
   updatedAt: Date;
 }
 
+// Define a type that can be either a full Recipe or just an ID reference
+export type RecipeReference = Recipe | { _id: ID };
+
 export interface MealPlanInput {
   date: Date;
   recipes: {
-    recipe: Recipe;
+    recipe: RecipeReference;
     servings: number;
     mealTime: string;
   }[];
