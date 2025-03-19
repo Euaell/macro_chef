@@ -81,12 +81,6 @@ export default function AddMealPlanPage() {
     }
   }, [searchTerm, recipes]);
 
-  useEffect(() => {
-    console.debug("==================")
-    console.debug("selectedRecipes", selectedRecipes)
-    console.debug("==================")
-  }, [selectedRecipes])
-
   const addRecipeToSelection = (recipe: any) => {
     setSelectedRecipes([
       ...selectedRecipes,

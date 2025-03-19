@@ -48,8 +48,7 @@ export async function getRecipeById(id: string): Promise<RecipeType | null> {
         .populate("creator")
         .populate({
             path: "ingredients.ingredient",
-            // refPath: "ingredients.isRecipe",
-			model: "Recipe"
+			model: "Ingredient"
         });
         
 	return recipe;

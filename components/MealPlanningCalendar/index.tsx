@@ -5,21 +5,24 @@ import { PerDayMealsAggregate } from '@/types/meal';
 import { format, addDays, startOfWeek, endOfWeek, addWeeks, subWeeks, isToday, isWithinInterval } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 import Link from 'next/link';
-import RecipeType from '@/types/recipe';
 import { useRouter } from 'next/navigation';
 import { deleteMealPlan } from '@/data/mealPlan';
 import { ID } from '@/types/id';
 
 type PlannedMealRecipe = {
-    recipe: RecipeType;
-    servings: number;
-    mealTime: "breakfast" | "lunch" | "dinner" | "snack";
+	recipe: {
+		_id: ID;
+		name: string;
+		[key: string]: any; // Allow any additional properties
+	};
+	servings: number;
+	mealTime: string;
 }
 
 interface MealPlanningCalendarProps {
 	perDayMeals: PerDayMealsAggregate[];
 	plannedMeals?: {
-		_id: ID;
+		_id: any; // Make _id more flexible
 		date: Date;
 		recipes: PlannedMealRecipe[];
 		totalCalories: number;
