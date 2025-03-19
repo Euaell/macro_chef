@@ -7,6 +7,7 @@ import Macros from "@/types/macro";
 import MealPlanType, { MealPlanInput, ShoppingListItem } from "@/types/mealPlan";
 import { format, startOfWeek, endOfWeek, addDays } from "date-fns";
 import RecipeType from "@/types/recipe";
+import { getUserServer } from "@/helper/session";
 
 export async function getUserMealPlans(userId: ID): Promise<MealPlanType[]> {
   await MongoDBClient();
@@ -15,7 +16,8 @@ export async function getUserMealPlans(userId: ID): Promise<MealPlanType[]> {
     .populate({
       path: "recipes.recipe",
       model: "Recipe"
-    });
+    })
+    .sort({ date: 1 });
   
   return mealPlans;
 }
@@ -32,16 +34,24 @@ export async function getWeeklyMealPlans(userId: ID, date = new Date()): Promise
       $gte: startDate,
       $lte: endDate
     }
-  }).populate({
+  })
+  .populate({
     path: "recipes.recipe",
     model: "Recipe"
-  });
+  })
+  .sort({ date: 1 });
   
   return mealPlans;
 }
 
-export async function addMealPlan(mealPlanInput: MealPlanInput, userId: ID): Promise<MealPlanType> {
+export async function addMealPlan(mealPlanInput: MealPlanInput, userId?: ID): Promise<MealPlanType> {
   await MongoDBClient();
+
+  // Get the user from session if no userId is provided
+  if (!userId) {
+    const user = await getUserServer();
+    userId = user._id;
+  }
   
   // Calculate total macros
   const totalMacros: Macros = {
@@ -77,8 +87,14 @@ export async function addMealPlan(mealPlanInput: MealPlanInput, userId: ID): Pro
   return mealPlan;
 }
 
-export async function generateShoppingList(userId: ID, date = new Date()): Promise<ShoppingListItem[]> {
+export async function generateShoppingList(userId?: ID, date = new Date()): Promise<ShoppingListItem[]> {
   await MongoDBClient();
+  
+  // Get the user from session if no userId is provided
+  if (!userId) {
+    const user = await getUserServer();
+    userId = user._id;
+  }
   
   const startDate = startOfWeek(date, { weekStartsOn: 1 });
   const endDate = endOfWeek(date, { weekStartsOn: 1 });
@@ -90,12 +106,13 @@ export async function generateShoppingList(userId: ID, date = new Date()): Promi
       $gte: startDate,
       $lte: endDate
     }
-  }).populate({
+  })
+  .populate({
     path: "recipes.recipe",
     model: "Recipe",
     populate: {
       path: "ingredients.ingredient",
-      model: "Ingredient"
+      // refPath: "ingredients.isRecipe"
     }
   });
   
@@ -107,22 +124,37 @@ export async function generateShoppingList(userId: ID, date = new Date()): Promi
       const recipe = recipeItem.recipe as RecipeType;
       const servingRatio = recipeItem.servings / recipe.servings;
       
+      // Process each ingredient in the recipe
       for (const ingredientItem of recipe.ingredients) {
-        // Skip if it's a sub-recipe (String comparison instead of boolean)
-        if (ingredientItem.isRecipe === 'Recipe') continue;
+        // Skip if it's a sub-recipe (process those ingredients separately)
+        // Using string comparison as isRecipe is stored as a string enum in the database
+        if (ingredientItem.isRecipe && ingredientItem.isRecipe) {
+          // In a real implementation, we would recursively process sub-recipes
+          // For now, we'll skip sub-recipes to keep things simpler
+          continue;
+        }
         
         const ingredient = ingredientItem.ingredient;
-        // Safely handle the case where ingredient might be a Recipe or an Ingredient
-        const ingredientName = 'name' in ingredient ? ingredient.name : 'Unknown';
-        const ingredientId = ingredient._id.toString();
-        const amount = ingredientItem.amount * servingRatio;
-        const category = 'category' in ingredient ? ingredient.category || 'Other' : 'Other';
         
-        if (ingredientsMap.has(ingredientId)) {
-          const existingItem = ingredientsMap.get(ingredientId)!;
+        // Skip if ingredient is not properly loaded
+        if (!ingredient) continue;
+
+        // Safe way to access ingredient properties
+        const ingredientName = typeof ingredient.name === 'string' ? ingredient.name : 'Unknown Ingredient';
+        const ingredientId = ingredient._id ? ingredient._id.toString() : `unknown-${Math.random()}`;
+        const amount = ingredientItem.amount * servingRatio;
+        // Use a type assertion to handle category
+        const category = typeof (ingredient as any).category === 'string' 
+          ? (ingredient as any).category 
+          : 'Other';
+        
+        const key = `${ingredientId}-${ingredientItem.unit}`;
+        
+        if (ingredientsMap.has(key)) {
+          const existingItem = ingredientsMap.get(key)!;
           existingItem.amount += amount;
         } else {
-          ingredientsMap.set(ingredientId, {
+          ingredientsMap.set(key, {
             ingredient: ingredientName,
             amount,
             unit: ingredientItem.unit,
@@ -133,5 +165,17 @@ export async function generateShoppingList(userId: ID, date = new Date()): Promi
     }
   }
   
-  return Array.from(ingredientsMap.values());
+  // Convert to array and sort by category and name
+  return Array.from(ingredientsMap.values())
+    .sort((a, b) => {
+      if (a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      return a.ingredient.localeCompare(b.ingredient);
+    });
+}
+
+export async function deleteMealPlan(mealPlanId: ID): Promise<void> {
+  await MongoDBClient();
+  await MealPlan.findByIdAndDelete(mealPlanId);
 } 

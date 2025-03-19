@@ -5,12 +5,14 @@ import { PerDayMealsAggregate } from '@/types/meal';
 import { format, addDays, startOfWeek, endOfWeek, addWeeks, subWeeks, isToday, isWithinInterval } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 import Link from 'next/link';
-import MealCard from '../MealCard';
 import RecipeType from '@/types/recipe';
+import { useRouter } from 'next/navigation';
+import { deleteMealPlan } from '@/data/mealPlan';
 
 interface MealPlanningCalendarProps {
   perDayMeals: PerDayMealsAggregate[];
   plannedMeals?: {
+    _id?: string; // Add _id for deletion
     date: Date;
     recipes: RecipeType[];
     totalCalories: number;
@@ -18,10 +20,12 @@ interface MealPlanningCalendarProps {
 }
 
 export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }: MealPlanningCalendarProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekStart, setWeekStart] = useState(startOfWeek(currentDate, { weekStartsOn: 1 }));
   const [weekEnd, setWeekEnd] = useState(endOfWeek(currentDate, { weekStartsOn: 1 }));
   const [weekDays, setWeekDays] = useState<Date[]>([]);
+  const [deleting, setDeleting] = useState(false);
   
   // Generate days for the week
   useEffect(() => {
@@ -55,11 +59,61 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
     return plannedMeals.find(meal => format(new Date(meal.date), 'yyyy-MM-dd') === dayStr);
   };
 
+  // Handle meal plan deletion
+  const handleDeleteMealPlan = async (mealPlanId: string) => {
+    if (!mealPlanId) return;
+    
+    if (confirm('Are you sure you want to delete this meal plan?')) {
+      try {
+        setDeleting(true);
+        await deleteMealPlan(mealPlanId);
+        router.refresh();
+      } catch (error) {
+        console.error('Failed to delete meal plan:', error);
+        alert('Failed to delete meal plan');
+      } finally {
+        setDeleting(false);
+      }
+    }
+  };
+
   // Check if date is current week
   const isCurrentWeek = isWithinInterval(new Date(), {
     start: weekStart,
     end: weekEnd
   });
+
+  // Group ingredients by category for shopping list
+  const getWeeklyIngredients = () => {
+    // This could be replaced with actual data from generateShoppingList
+    // For now, we'll use sample data
+    return [
+      { 
+        category: 'Protein',
+        items: [
+          { name: 'Chicken breast', amount: '500g' },
+          { name: 'Ground beef', amount: '300g' },
+          { name: 'Eggs', amount: '12' }
+        ]
+      },
+      {
+        category: 'Vegetables',
+        items: [
+          { name: 'Spinach', amount: '200g' },
+          { name: 'Bell peppers', amount: '3' },
+          { name: 'Onions', amount: '2' }
+        ]
+      },
+      {
+        category: 'Carbs',
+        items: [
+          { name: 'Rice', amount: '500g' },
+          { name: 'Sweet potatoes', amount: '3' },
+          { name: 'Oats', amount: '200g' }
+        ]
+      }
+    ];
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-4 w-full">
@@ -69,6 +123,7 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
           <button 
             onClick={() => navigateWeek('prev')}
             className="p-2 rounded-full hover:bg-gray-100"
+            disabled={deleting}
           >
             <i className="ri-arrow-left-s-line"></i>
           </button>
@@ -78,6 +133,7 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
           <button 
             onClick={() => navigateWeek('next')}
             className="p-2 rounded-full hover:bg-gray-100"
+            disabled={deleting}
           >
             <i className="ri-arrow-right-s-line"></i>
           </button>
@@ -90,6 +146,7 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
                 setWeekEnd(endOfWeek(today, { weekStartsOn: 1 }));
               }}
               className="ml-2 text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded"
+              disabled={deleting}
             >
               Today
             </button>
@@ -154,10 +211,27 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
                     </div>
                     <div className="max-h-24 overflow-y-auto mt-1">
                       {plannedMealsForDay.recipes.map((recipe, idx) => (
-                        <div key={`${recipe._id.toString()}-${idx}`} className="text-xs bg-emerald-50 p-1 rounded mb-1">
-                          {recipe.name}
+                        <div key={`${recipe._id.toString()}-${idx}`} className="text-xs bg-emerald-50 p-1 rounded mb-1 flex justify-between items-center">
+                          <span>{recipe.name}</span>
                         </div>
                       ))}
+                    </div>
+                    <div className="mt-2 flex justify-between">
+                      <Link 
+                        href={`/meal-plan/add?date=${format(day, 'yyyy-MM-dd')}`}
+                        className="text-emerald-600 hover:underline text-xs"
+                      >
+                        + Add more
+                      </Link>
+                      {plannedMealsForDay._id && (
+                        <button
+                          onClick={() => handleDeleteMealPlan(plannedMealsForDay._id!)}
+                          className="text-red-500 hover:text-red-700 text-xs"
+                          disabled={deleting}
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -180,38 +254,26 @@ export default function MealPlanningCalendar({ perDayMeals, plannedMeals = [] }:
       <div className="mt-6 border-t pt-4">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-bold">Weekly Ingredients</h3>
-          <button className="text-sm bg-emerald-700 text-white px-3 py-1 rounded-lg">
-            Generate Shopping List
-          </button>
+          <Link 
+            href="/meal-plan/shopping-list" 
+            className="text-sm bg-emerald-700 text-white px-3 py-1 rounded-lg"
+          >
+            View Shopping List
+          </Link>
         </div>
         <div className="text-sm text-gray-600">
-          <p>Based on your meal plan for this week, you'll need:</p>
-          <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-            {/* This would be generated from planned meals */}
-            <div className="bg-gray-50 rounded p-2">
-              <div className="font-medium">Protein</div>
-              <ul className="list-disc list-inside text-xs">
-                <li>Chicken breast - 500g</li>
-                <li>Ground beef - 300g</li>
-                <li>Eggs - 12</li>
-              </ul>
-            </div>
-            <div className="bg-gray-50 rounded p-2">
-              <div className="font-medium">Vegetables</div>
-              <ul className="list-disc list-inside text-xs">
-                <li>Spinach - 200g</li>
-                <li>Bell peppers - 3</li>
-                <li>Onions - 2</li>
-              </ul>
-            </div>
-            <div className="bg-gray-50 rounded p-2">
-              <div className="font-medium">Carbs</div>
-              <ul className="list-disc list-inside text-xs">
-                <li>Rice - 500g</li>
-                <li>Sweet potatoes - 3</li>
-                <li>Oats - 200g</li>
-              </ul>
-            </div>
+          <p>Based on your meal plan for this week, you&apos;ll need:</p>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {getWeeklyIngredients().map(category => (
+              <div key={category.category} className="bg-gray-50 rounded p-2">
+                <div className="font-medium">{category.category}</div>
+                <ul className="list-disc list-inside text-xs">
+                  {category.items.map((item, index) => (
+                    <li key={index}>{item.name} - {item.amount}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </div>

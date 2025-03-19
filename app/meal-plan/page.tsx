@@ -1,32 +1,21 @@
-import { getMeal } from "@/data/meal";
 import { getUserServer } from "@/helper/session";
 import MealPlanningCalendar from "@/components/MealPlanningCalendar";
 import Link from "next/link";
+import { getWeeklyMealPlans } from "@/data/mealPlan";
+import { getMeal } from "@/data/meal";
+import { format } from "date-fns";
 
 export default async function MealPlanPage() {
   const user = await getUserServer();
   const mealsAggregate = await getMeal(user._id);
+  const mealPlans = await getWeeklyMealPlans(user._id);
   
-  // For now, we're using dummy data for planned meals
-  // This would be replaced with actual data from a meal plan service
-  const plannedMeals = [
-    {
-      date: new Date(), // Today
-      recipes: [
-        {
-          _id: "1",
-          name: "Chicken Stir Fry",
-          totalMacros: { calories: 450, protein: 35, carbs: 30, fat: 15, fiber: 5 }
-        },
-        {
-          _id: "2",
-          name: "Protein Smoothie",
-          totalMacros: { calories: 300, protein: 25, carbs: 35, fat: 5, fiber: 8 }
-        }
-      ],
-      totalCalories: 750
-    }
-  ];
+  // Transform meal plans into the format expected by the MealPlanningCalendar component
+  const plannedMeals = mealPlans.map(mealPlan => ({
+    date: mealPlan.date,
+    recipes: mealPlan.recipes.map(item => item.recipe),
+    totalCalories: mealPlan.totalMacros.calories
+  }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,7 +40,7 @@ export default async function MealPlanPage() {
       <div className="w-full">
         <MealPlanningCalendar 
           perDayMeals={mealsAggregate} 
-          plannedMeals={plannedMeals as any}
+          plannedMeals={plannedMeals}
         />
       </div>
     </div>
