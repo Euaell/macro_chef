@@ -46,27 +46,69 @@ export async function getRecipeById(id: string): Promise<RecipeType | null> {
 
 	const recipe = await Recipe.findById(id)
         .populate("creator")
-        .populate("ingredients.ingredient");
+        .populate({
+            path: "ingredients.ingredient",
+            refPath: "ingredients.isRecipe"
+        });
+        
 	return recipe;
 }
 
 export async function addRecipe(recipe: RecipeInput, user: User): Promise<RecipeType> {
 	await MongoDBClient();
 
-	// TODO: Calculate totalMacros
+	// Process ingredients to set the correct isRecipe value
+	const processedIngredients = recipe.ingredients.map(ing => {
+		if (ing.isRecipe) {
+			return {
+				...ing,
+				isRecipe: 'Recipe',
+			};
+		} else {
+			return {
+				...ing,
+				isRecipe: 'Ingredient',
+			};
+		}
+	});
+
+	// Calculate totalMacros
 	let totalMacros: Macros = {
-		calories: recipe.ingredients.reduce((acc, curr) => acc + curr.ingredient.macros.calories * (curr.amount / curr.ingredient.servingSize), 0),
-		protein: recipe.ingredients.reduce((acc, curr) => acc + curr.ingredient.macros.protein * (curr.amount / curr.ingredient.servingSize), 0),
-		fat: recipe.ingredients.reduce((acc, curr) => acc + curr.ingredient.macros.fat * (curr.amount / curr.ingredient.servingSize), 0),
-		carbs: recipe.ingredients.reduce((acc, curr) => acc + curr.ingredient.macros.carbs * (curr.amount / curr.ingredient.servingSize), 0),
-		fiber: recipe.ingredients.reduce((acc, curr) => acc + curr.ingredient.macros.fiber * (curr.amount / curr.ingredient.servingSize), 0),
+		calories: 0,
+		protein: 0,
+		fat: 0,
+		carbs: 0,
+		fiber: 0,
 	};
 
+	// Loop through ingredients to calculate macros
+	for (const ing of processedIngredients) {
+		let ingredientMacros;
+		let servingRatio;
+		
+		if (ing.isRecipe === 'Recipe') {
+			// Handle recipe as ingredient
+			const recipeIngredient = ing.ingredient as RecipeType;
+			ingredientMacros = recipeIngredient.totalMacros;
+			servingRatio = ing.amount / recipeIngredient.servings;
+		} else {
+			// Handle regular ingredient
+			const regularIngredient = ing.ingredient as any; // Using any for now
+			ingredientMacros = regularIngredient.macros;
+			servingRatio = ing.amount / regularIngredient.servingSize;
+		}
+
+		totalMacros.calories += ingredientMacros.calories * servingRatio;
+		totalMacros.protein += ingredientMacros.protein * servingRatio;
+		totalMacros.fat += ingredientMacros.fat * servingRatio;
+		totalMacros.carbs += ingredientMacros.carbs * servingRatio;
+		totalMacros.fiber += ingredientMacros.fiber * servingRatio;
+	}
 
 	const newRecipe = await Recipe.create({
 		name: recipe.name,
 		description: recipe.description,
-		ingredients: recipe.ingredients,
+		ingredients: processedIngredients,
 		totalMacros,
 		servings: recipe.servings,
 		instructions: recipe.instructions,
