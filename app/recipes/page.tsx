@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import Image from "next/image";
 import placeHolderImage from "@/public/placeholder-recipe.jpg";
@@ -12,27 +11,27 @@ export default async function Page() {
 	const user = await getUserOptionalServer();
 
 	return (
-		<div className="max-w-7xl mx-auto px-4 py-8">
+		<div className="max-w-7xl mx-auto px-4 py-8 animate-fade-in-up">
 			{/* Your Recipes */}
 			<div className="mb-12">
-				<h2 className="text-2xl font-bold mb-6 text-gray-800">Your Recipes</h2>
+				<h2 className="text-2xl font-bold mb-6 text-emerald-800">Your Recipes</h2>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{/* Recipe cards */}
-					<div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4">
+					<div className="bg-white/90 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow p-4 border border-emerald-100 animate-fade-in-up">
 						<div className="flex items-center justify-between mb-4">
-							<h3 className="text-lg font-semibold">Favorite Recipes</h3>
+							<h3 className="text-lg font-semibold text-emerald-900">Favorite Recipes</h3>
 							<span className="text-gray-500">12 recipes</span>
 						</div>
 						<div className="flex gap-2">
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe thumbnail" 
-								className="w-16 h-16 rounded-full object-cover"
+								className="w-16 h-16 rounded-full object-cover animate-zoom-in"
 							/>
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe thumbnail" 
-								className="w-16 h-16 rounded-full object-cover"
+								className="w-16 h-16 rounded-full object-cover animate-zoom-in"
 							/>
 							<div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
 								<span className="text-gray-600">+10</span>
@@ -40,42 +39,42 @@ export default async function Page() {
 						</div>
 					</div>
 					
-					<div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4">
+					<div className="bg-white/90 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow p-4 border border-emerald-100 animate-fade-in-up">
 						<div className="flex items-center justify-between mb-4">
-							<h3 className="text-lg font-semibold">Added Recipes</h3>
+							<h3 className="text-lg font-semibold text-emerald-900">Added Recipes</h3>
 							<span className="text-gray-500">12 recipes</span>
 						</div>
 						<div className="flex gap-2">
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe thumbnail" 
-								className="w-16 h-16 rounded-full object-cover"
+								className="w-16 h-16 rounded-full object-cover animate-zoom-in"
 							/>
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe thumbnail" 
-								className="w-16 h-16 rounded-full object-cover"
+								className="w-16 h-16 rounded-full object-cover animate-zoom-in"
 							/>
 							<div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
 								<span className="text-gray-600">+10</span>
 							</div>
 						</div>
 					</div>
-					<div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4">
+					<div className="bg-white/90 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow p-4 border border-emerald-100 animate-fade-in-up">
 						<div className="flex items-center justify-between mb-4">
-							<h3 className="text-lg font-semibold">Recent Recipes</h3>
+							<h3 className="text-lg font-semibold text-emerald-900">Recent Recipes</h3>
 							<span className="text-gray-500">12 recipes</span>
 						</div>
 						<div className="flex gap-2">
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe thumbnail" 
-								className="w-16 h-16 rounded-full object-cover"
+								className="w-16 h-16 rounded-full object-cover animate-zoom-in"
 							/>
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe thumbnail" 
-								className="w-16 h-16 rounded-full object-cover"
+								className="w-16 h-16 rounded-full object-cover animate-zoom-in"
 							/>
 							<div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
 								<span className="text-gray-600">+10</span>
@@ -111,13 +110,13 @@ export default async function Page() {
 							href={`/recipes/${recipe._id}`}
 							className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
 						>
-							<div className="flex">
-								<div className="w-48 h-48 bg-gray-200 rounded-l-lg relative">
+							<div className="flex flex-col md:flex-row">
+								<div className="w-full md:w-48 h-48 overflow-hidden bg-gray-200 rounded-tl-lg rounded-tr-lg md:rounded-bl-lg md:rounded-tr-none relative">
 									<Image
 										src={recipe.images[0] || placeHolderImage}
 										alt={recipe.name}
 										fill
-										className="object-cover rounded-l-lg"
+										className="object-cover"
 									/>
 								</div>
 								<div className="flex-1 p-6">

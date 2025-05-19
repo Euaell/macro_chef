@@ -1,4 +1,3 @@
-
 "use client";
 
 import SubmitButton from "@/components/AddIngredient/button";
@@ -18,8 +17,8 @@ export default function Page() {
 	}, [formState.status]);
 
 	return (
-		<div className="flex flex-col py-4 md:px-10 lg:px-16 gap-4">
-			<h1 className="text-4xl font-bold">Add Ingredient</h1>
+		<section className="max-w-xl mx-auto bg-white/90 rounded-2xl shadow-xl p-8 mt-8 animate-fade-in-up">
+			<h1 className="text-2xl font-bold mb-4 text-emerald-800">Add Ingredient</h1>
 
 			<form action={action} className="flex flex-col gap-4">
 				<div className="flex flex-row gap-2">
@@ -74,6 +73,6 @@ export default function Page() {
 					{formState.message && <p>{formState.message}</p>}
 				</div>
 			</form>
-		</div>
+		</section>
 	)
 }

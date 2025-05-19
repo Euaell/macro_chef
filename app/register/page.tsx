@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FieldError } from "@/components/FieldError";
@@ -28,8 +27,8 @@ export default function Page() {
 	}, [formState.status]);
 
 	return (
-		<div className="flex flex-col gap-4 w-full md:mx-auto md:max-w-fit">
-			<h1 className="text-4xl font-bold">Register</h1>
+		<section className="max-w-md mx-auto bg-white/90 rounded-2xl shadow-xl p-8 mt-8 animate-fade-in-up">
+			<h1 className="text-2xl font-bold mb-4 text-emerald-800">Register</h1>
 
 			<form action={action} className="flex flex-col gap-4">
 				<div className="flex flex-row gap-2">
@@ -138,6 +137,6 @@ export default function Page() {
 					)}
 				</div>
 			</form>
-		</div>
+		</section>
 	)
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FieldError } from "@/components/FieldError";
@@ -18,54 +17,56 @@ export default function GoalForm() {
 	}, [formState.status]);
 
 	return (
-		<form action={action} className="flex flex-col gap-4">
-			<div className="flex flex-row gap-2">
-				<div className="flex flex-1 flex-col gap-2">
-					<label htmlFor="name">Goal Name</label>
-					<input
-						type="text"
-						id="name"
-						name="name"
-						className="border-2 border-gray-300 rounded-lg p-2"
-					/>
-					<FieldError formState={formState} name="name" />
+		<section className="max-w-xl mx-auto bg-white/90 rounded-2xl shadow-xl p-8 mt-8 animate-fade-in-up">
+			<h1 className="text-2xl font-bold mb-4 text-emerald-800">Set Your Nutrition Goal</h1>
+			<form action={action} className="flex flex-col gap-4">
+				<div className="flex flex-row gap-2">
+					<div className="flex flex-1 flex-col gap-2">
+						<label htmlFor="name">Goal Name</label>
+						<input
+							type="text"
+							id="name"
+							name="name"
+							className="border-2 border-gray-300 rounded-lg p-2"
+						/>
+						<FieldError formState={formState} name="name" />
+					</div>
 				</div>
-			</div>
-			<div className="flex flex-col xl:flex-row gap-2">
-				<div className="flex flex-col md:flex-row gap-2">
-					<div className="flex flex-1 flex-col gap-2">
-						<label htmlFor="calories">Calories</label>
-						<input
-							type="number"
-							id="calories"
-							name="calories"
-							min={0}
-							className="border-2 border-gray-300 rounded-lg p-2"
-						/>
-						<FieldError formState={formState} name="calories" />
-					</div>
-					<div className="flex flex-1 flex-col gap-2">
-						<label htmlFor="protein">Protein</label>
-						<input
-							type="number"
-							id="protein"
-							name="protein"
-							min={0}
-							className="border-2 border-gray-300 rounded-lg p-2"
-						/>
-						<FieldError formState={formState} name="protein" />
-					</div>
-					<div className="flex flex-1 flex-col gap-2">
-						<label htmlFor="fat">Fat</label>
-						<input
-							type="number"
-							id="fat"
-							name="fat"
-							min={0}
-							className="border-2 border-gray-300 rounded-lg p-2"
-						/>
-						<FieldError formState={formState} name="fat" />
-					</div>
+				<div className="flex flex-col xl:flex-row gap-2">
+					<div className="flex flex-col md:flex-row gap-2">
+						<div className="flex flex-1 flex-col gap-2">
+							<label htmlFor="calories">Calories</label>
+							<input
+								type="number"
+								id="calories"
+								name="calories"
+								min={0}
+								className="border-2 border-gray-300 rounded-lg p-2"
+							/>
+							<FieldError formState={formState} name="calories" />
+						</div>
+						<div className="flex flex-1 flex-col gap-2">
+							<label htmlFor="protein">Protein</label>
+							<input
+								type="number"
+								id="protein"
+								name="protein"
+								min={0}
+								className="border-2 border-gray-300 rounded-lg p-2"
+							/>
+							<FieldError formState={formState} name="protein" />
+						</div>
+						<div className="flex flex-1 flex-col gap-2">
+							<label htmlFor="fat">Fat</label>
+							<input
+								type="number"
+								id="fat"
+								name="fat"
+								min={0}
+								className="border-2 border-gray-300 rounded-lg p-2"
+							/>
+							<FieldError formState={formState} name="fat" />
+						</div>
 					</div>
 					<div className="flex flex-col md:flex-row gap-2">
 						<div className="flex flex-1 flex-col gap-2">
@@ -90,18 +91,19 @@ export default function GoalForm() {
 							/>
 							<FieldError formState={formState} name="fiber" />
 						</div>
+					</div>
 				</div>
-			</div>
 
-			<div>
-				<SubmitButton disabled={false} label="Update Goal" loading={<>Loading...</>} />
-			</div>
-
-			{formState.message && (
 				<div>
-					<p>{formState.message}</p>
+					<SubmitButton disabled={false} label="Update Goal" loading={<>Loading...</>} />
 				</div>
-			)}
-		</form>
+
+				{formState.message && (
+					<div>
+						<p>{formState.message}</p>
+					</div>
+				)}
+			</form>
+		</section>
 	)
 }

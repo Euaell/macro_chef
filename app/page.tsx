@@ -10,24 +10,23 @@ export default async function Home() {
 	const popularRecipes = await getPopularRecipes();
 
 	return (
-		<div className="flex flex-col items-center justify-center py-2 w-full">
-			<div className="w-full max-w-4xl p-4 sm:p-6 mb-6 sm:mb-8 bg-white rounded-lg shadow-lg">
-				<h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">Popular Recipes</h2>
+		<div className="flex flex-col items-center justify-center py-2 w-full animate-fade-in-up">
+			<div className="w-full max-w-4xl p-4 sm:p-6 mb-6 sm:mb-8 bg-white/90 rounded-2xl shadow-2xl border border-emerald-100 animate-fade-in-up">
+				<h2 className="text-xl sm:text-2xl font-bold mb-4 text-emerald-800">Popular Recipes</h2>
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 overflow-x-auto p-2">
 					{popularRecipes.map((recipe) => (
-						<Link key={recipe._id.toString()} href={`/recipes/${recipe._id}`} className="bg-white rounded-lg shadow p-4 hover:shadow-xl cursor-pointer transition-shadow">
+						<Link key={recipe._id.toString()} href={`/recipes/${recipe._id}`} className="bg-white rounded-xl shadow-md hover:shadow-xl cursor-pointer transition-shadow border border-emerald-50 hover:border-emerald-200 animate-fade-in-up">
 							<Image 
 								src={placeHolderImage} 
 								alt="Recipe" 
-								className="w-full h-36 sm:h-48 object-cover rounded-lg mb-3"
+								className="w-full h-36 sm:h-48 object-cover rounded-lg mb-3 animate-zoom-in"
 								width={400}
 								height={300}
 							/>
-							<h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-1">{recipe.name}</h3>
+							<h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-1 text-emerald-900">{recipe.name}</h3>
 							<p className="text-sm sm:text-base text-gray-600">{recipe.totalMacros.calories.toFixed()} calories | {recipe.totalMacros.protein.toFixed()}g protein</p>
 						</Link>
 					))}
-				{/* Add more recipe cards as needed */}
 				</div>
 			</div>
 
