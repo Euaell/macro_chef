@@ -131,8 +131,16 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 						</li>
 						<li className="md:ml-4">
 							<Link
+								href="/dashboard"
+								className="block px-4 py-2 text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
+							>
+								Dashboard
+							</Link>
+						</li>
+						<li className="md:ml-4">
+							<Link
 								href="/profile"
-								className="block px-4 py-2 text-white hover:bg-emerald-600 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
+								className="block px-4 py-2 text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
 							>
 								Profile
 							</Link>
@@ -143,6 +151,13 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 								className="block px-4 py-2 rounded-b-md text-white hover:bg-emerald-500 md:hover:bg-transparent md:inline-block md:px-2 md:py-0"
 							>
 								Sign Out
+							</button>
+						</li>
+						<li className="md:ml-4">
+							<button className="text-white hover:text-emerald-200 transition-colors relative">
+								Notifications
+								{/* Placeholder for notification count */}
+								<span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-2 py-1">3</span>
 							</button>
 						</li>
 					</>
