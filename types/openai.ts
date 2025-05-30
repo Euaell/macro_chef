@@ -17,6 +17,9 @@ export const RecipeSchema = z.object({
         })
     ),
     instructions: z.array(z.string()),
+    fromSystem: z.object({
+        id: z.string()
+    }).nullable()
 });
 export const RecipesSchema = z.object({
     recipes: z.array(

@@ -4,7 +4,6 @@ import Recipe from "@/types/recipe";
 import { z } from "zod";
 import Ingredient from "@/model/ingredient";
 import RecipeModel from "@/model/recipe";
-import { getUserServer } from "@/helper/session";
 import { ID } from "@/types/id";
 import Macros from "@/types/macro";
 import mongoose from "mongoose";
@@ -14,7 +13,16 @@ type RecipeFromIngredients = z.infer<typeof RecipeSchema>;
 export async function recipesFromIngredients(data: RecipeFromIngredients, userId: ID): Promise<Recipe> {
     await MongoDBClient();
     
-    try {        
+    try {     
+        if (data.fromSystem) {
+            // fetch existing recipe from the system
+            const existingRecipe = await RecipeModel.findById(data.fromSystem.id)
+                .populate("creator");
+            if (existingRecipe) {
+                // If the recipe already exists, return it
+                return existingRecipe as unknown as Recipe;
+            }
+        }
         // Get all ingredient IDs from the data
         const ingredientIds = data.ingredients.map(ing => ing.id);
         

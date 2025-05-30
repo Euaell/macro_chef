@@ -6,7 +6,7 @@ const openai = new OpenAI();
 
 export async function openAIChatRecipeSuggestions(input: OpenAIChatInput): Promise<OpenAIRecipesResponseSchema> {    
 	const completion = await openai.chat.completions.parse({
-		model: "gpt-4.1-nano",
+		model: "gpt-4.1-mini",
 		messages: [
 			{
 				role: "developer",
@@ -20,7 +20,10 @@ export async function openAIChatRecipeSuggestions(input: OpenAIChatInput): Promi
 	This is the Current goal of the user: ${JSON.stringify(input.currentGoal, null, 2)}
 	Make sure the provided recipes help achieve the goal mentioned above.
 	Here are the recipes already in the system: ${JSON.stringify(input.recipesInSystem, null, 2)}
-	Make sure the recipes you suggest are not already in the system. Give 6 unique recipes.
+	Make sure the recipes you suggest are not already in the system. Give enough recipes to meet the user's goal. 
+	You can include recipes from the system if they are not already consumed today.
+	Make sure to give just enough recipes to meet the user's goal, not too many.
+	The summation of the macros of the provided recipes plus the macros of the meals consumed today should be close to the user's goal.
 				`.trim(),
 			},
 			{
