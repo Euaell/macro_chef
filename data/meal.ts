@@ -13,6 +13,11 @@ import { z } from "zod";
 import { getFullUserById } from "./user";
 import User from "@/types/user";
 import { getUserServer } from "@/helper/session";
+import { getAllIngredient } from "./ingredient";
+import { getCurrentGoal } from "./goal";
+import { openAIChatRecipeSuggestions } from "@/utils/openAIChat";
+import Recipe from "@/types/recipe";
+import { recipesFromIngredients } from "@/helper/recipesFromIngredients";
 
 
 export async function getAllMeal(): Promise<MealType[]> {
@@ -269,4 +274,27 @@ export async function populateMeals() {
 	} catch (error) {
 		console.error('Error inserting dummy meals data:', error);
 	}
+}
+
+export async function getRecipesSuggestion(userId: ID): Promise<Recipe[]> {
+	await MongoDBClient();
+
+	// Fetch meals for the user
+	const todaysMeal = await getTodayMeal(userId);
+	const ingredients = await getAllIngredient();
+	const currentGoal = await getCurrentGoal(userId);
+
+	// Get openAI meal suggestions
+	const meals = await openAIChatRecipeSuggestions({
+		ingredients: ingredients,
+		currentGoal: currentGoal,
+		mealsConsumedToday: todaysMeal,
+	});
+
+	const recipes = await Promise.all(meals.recipes.map(async (recipe) => {
+		return await recipesFromIngredients(recipe);
+	}));
+
+	return recipes;
+	// return recipes.filter((recipe) => recipe !== null) as Recipe[];
 }
