@@ -287,14 +287,15 @@ export async function getRecipesSuggestion(userId: ID): Promise<Recipe[]> {
 	const allRecipes = await getAllRecipes();
 
 	// Get openAI meal suggestions
-	const meals = await openAIChatRecipeSuggestions({
+	const suggestions = await openAIChatRecipeSuggestions({
 		ingredients: ingredients,
 		currentGoal: currentGoal,
 		mealsConsumedToday: todaysMeal,
 		recipesInSystem: allRecipes,
 	});
+	console.debug("Total macros from OpenAI suggestions:", suggestions.totalMacros);
 
-	const recipes = await Promise.all(meals.recipes.map(async (recipe) => {
+	const recipes = await Promise.all(suggestions.recipes.map(async (recipe) => {
 		return await recipesFromIngredients(recipe, userId);
 	}));
 

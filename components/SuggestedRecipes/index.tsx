@@ -1,79 +1,48 @@
-'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Loading from '@/components/Loading';
 import placeHolderImage from '@/public/placeholder-recipe.jpg';
 import type Recipe from '@/types/recipe';
+import type User from '@/types/user';
 
-export default function SuggestedRecipes() {
-	const [suggestions, setSuggestions] = useState<Recipe[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [loadingMessage, setLoadingMessage] = useState("Finding recipes that match your goals...");
+interface SuggestedRecipesProps {
+  user?: User;
+  suggestions?: Recipe[];
+  serverError?: string;
+}
 
-	useEffect(() => {
-		async function fetchSuggestions() {
-		try {
-			setLoading(true);
-			const response = await fetch('/api/recipes/suggestion');
-			
-			if (!response.ok) {
-			throw new Error(`Failed to fetch suggestions: ${response.status}`);
-			}
-			
-			const data = await response.json();
-			setSuggestions(data);
-		} catch (err) {
-			console.error('Error fetching recipe suggestions:', err);
-			setError('Failed to load recipe suggestions. Please try again later.');
-		} finally {
-			setLoading(false);
-		}
-		}
+export default function SuggestedRecipes({ user, suggestions, serverError }: SuggestedRecipesProps) {
 
-		fetchSuggestions();
-	}, []);
-
-	// Cycle through different loading messages
-	useEffect(() => {
-		if (!loading) return;
-		
-		const messages = [
-			"Finding recipes that match your goals...",
-			"Analyzing your ingredient preferences...",
-			"Calculating nutritional balance...",
-			"Personalizing recipe suggestions...",
-			"Almost there..."
-		];
-		
-		let currentIndex = 0;
-		const interval = setInterval(() => {
-			currentIndex = (currentIndex + 1) % messages.length;
-			setLoadingMessage(messages[currentIndex]);
-		}, 2000);
-		
-		return () => clearInterval(interval);
-	}, [loading]);
-
-	if (error) {
+	if (serverError) {
 		return (
-			<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-				<p className="text-red-600">{error}</p>
-			</div>
+		<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+			<p className="text-red-600">{serverError}</p>
+		</div>
 		);
 	}
+
 	return (
 		<div className="max-w-7xl mx-auto px-4 py-8">
-			<h1 className="text-3xl font-bold mb-8 text-gray-800">Suggested Recipes For You</h1>
+			<div className="flex justify-between items-center mb-8">
+				<h1 className="text-3xl font-bold text-gray-800">Today&apos;s Suggested Recipes For You</h1>
+				
+				{/* Regenerate button for admins */}
+				{user?.isAdmin && (
+					<Link
+						href="/suggestions?regenerate=true"
+						className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+					>
+						<span className="mr-2">
+							<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+							</svg>
+						</span>
+						Regenerate Suggestions
+					</Link>
+				)}
+			</div>
 			
-			{loading ? (
-				<div className="flex flex-col justify-center items-center py-12">
-					<Loading />
-					<p className="mt-4 text-gray-600 animate-pulse">{loadingMessage}</p>
-				</div>
-				) : suggestions.length === 0 ? (
+			{suggestions?.length === 0 ? (
 					<div className="bg-gray-50 rounded-lg p-8 text-center">
 						<h3 className="text-xl font-semibold mb-4">No Suggestions Available</h3>
 						<p className="text-gray-600">
@@ -82,7 +51,7 @@ export default function SuggestedRecipes() {
 					</div>
 				) : (
 					<div className="space-y-6">
-						{suggestions.map((recipe) => (
+						{suggestions?.map((recipe) => (
 							<Link
 								key={recipe._id.toString()}
 								href={`/recipes/${recipe._id}`}

@@ -25,6 +25,13 @@ export const RecipesSchema = z.object({
     recipes: z.array(
         RecipeSchema
     ),
+    totalMacros: z.object({
+        calories: z.number(),
+        protein: z.number(),
+        carbohydrates: z.number(),
+        fat: z.number(),
+        fiber: z.number().default(0)
+    })
 });
 
 export type OpenAIRecipesResponseSchema = z.infer<typeof RecipesSchema>;
