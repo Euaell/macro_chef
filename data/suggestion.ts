@@ -47,7 +47,7 @@ export async function getTodaySuggestions(userId: ID): Promise<Recipe[]> {
   const newRecipes = await getRecipesSuggestionHelper(userId);
   
   // Create a new suggestion document
-  const newSuggestion = await Suggestion.create({
+  await Suggestion.create({
     user: userId,
     recipes: newRecipes.map(recipe => recipe._id),
   });
