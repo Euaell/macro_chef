@@ -18,6 +18,7 @@ import { getCurrentGoal } from "./goal";
 import { openAIChatRecipeSuggestions } from "@/utils/openAIChat";
 import Recipe from "@/types/recipe";
 import { recipesFromIngredients } from "@/helper/recipesFromIngredients";
+import { getAllRecipes } from "./recipe";
 
 
 export async function getAllMeal(): Promise<MealType[]> {
@@ -283,16 +284,18 @@ export async function getRecipesSuggestion(userId: ID): Promise<Recipe[]> {
 	const todaysMeal = await getTodayMeal(userId);
 	const ingredients = await getAllIngredient();
 	const currentGoal = await getCurrentGoal(userId);
+	const allRecipes = await getAllRecipes();
 
 	// Get openAI meal suggestions
 	const meals = await openAIChatRecipeSuggestions({
 		ingredients: ingredients,
 		currentGoal: currentGoal,
 		mealsConsumedToday: todaysMeal,
+		recipesInSystem: allRecipes,
 	});
 
 	const recipes = await Promise.all(meals.recipes.map(async (recipe) => {
-		return await recipesFromIngredients(recipe);
+		return await recipesFromIngredients(recipe, userId);
 	}));
 
 	return recipes;

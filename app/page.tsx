@@ -4,6 +4,7 @@ import placeHolderImage from "@/public/placeholder-recipe.jpg";
 import DailyOverviewChart from "@/components/DailyOverviewChart";
 import { getUserOptionalServer } from "@/helper/session";
 import { getPopularRecipes } from "@/data/recipe";
+import RecipeSuggestions from "@/components/RecipeSuggestions";
 
 export default async function Home() {
 	const user = await getUserOptionalServer();
@@ -29,6 +30,11 @@ export default async function Home() {
 					))}
 				{/* Add more recipe cards as needed */}
 				</div>
+			</div>
+
+			{/* Personalized Recipe Suggestions */}
+			<div className="w-full max-w-4xl p-4 sm:p-6 mb-6 sm:mb-8 bg-white rounded-lg shadow-lg">
+				<RecipeSuggestions />
 			</div>
 
 			{/* Add your own and log meal */}

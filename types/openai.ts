@@ -3,6 +3,7 @@ import { z } from 'zod';
 import Ingredient from './ingredient';
 import { GoalVersion } from './goal';
 import MealType from './meal';
+import Recipe from './recipe';
 
 
 export const RecipeSchema = z.object({
@@ -29,4 +30,5 @@ export interface OpenAIChatInput {
     ingredients: Ingredient[];
     currentGoal: GoalVersion;
     mealsConsumedToday: MealType[];
+    recipesInSystem: Recipe[];
 }
