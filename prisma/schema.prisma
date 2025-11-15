@@ -12,33 +12,39 @@ datasource db {
 }
 
 // ============================================
-// USER & AUTHENTICATION
+// USER & AUTHENTICATION (BetterAuth Compatible)
 // ============================================
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
+  emailVerified Boolean   @default(false)
   username      String?   @unique
   name          String?
-  password      String
   image         String?
   bio           String?
-  isVerified    Boolean   @default(false)
+
+  // BetterAuth fields
+  twoFactorEnabled Boolean @default(false)
+  banned         Boolean   @default(false)
+  banReason      String?
+  banExpires     DateTime?
+
+  // Admin & permissions
   isAdmin       Boolean   @default(false)
+  role          String    @default("user") // user, trainer, admin
 
   // Social settings
   isPublic      Boolean   @default(true)
 
-  // Verification & Reset
-  verifyToken   String?
-  verifyTokenExpiry DateTime?
-  resetToken    String?
-  resetTokenExpiry  DateTime?
-
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
+  // BetterAuth relations
+  sessions      Session[]
+  accounts      Account[]
+
+  // App relations
   goals         Goal[]
   recipes       Recipe[]
   mealPlans     MealPlan[]
@@ -59,8 +65,128 @@ model User {
   bodyCompositions BodyComposition[]
   achievements  UserAchievement[]
 
+  // Organization features (for trainer/coaching)
+  organizationMemberships OrganizationMember[]
+
   @@index([email])
   @@index([username])
+}
+
+// BetterAuth Session model
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// BetterAuth Account model (for social providers)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  accountId         String
+  providerId        String
+  accessToken       String? @db.Text
+  refreshToken      String? @db.Text
+  idToken           String? @db.Text
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope             String?
+  password          String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+// BetterAuth Verification model
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+}
+
+// BetterAuth Two Factor model
+model TwoFactor {
+  id        String   @id @default(cuid())
+  secret    String
+  backupCodes String
+  userId    String   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Organization model (for trainer/coaching features)
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logo        String?
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     OrganizationMember[]
+  invitations OrganizationInvitation[]
+
+  @@index([slug])
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String   @default("member") // owner, admin, trainer, member
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model OrganizationInvitation {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  role           String   @default("member")
+  status         String   @default("pending") // pending, accepted, expired
+  expiresAt      DateTime
+  inviterId      String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, email])
+  @@index([email])
+  @@index([organizationId])
 }
 
 model Follow {

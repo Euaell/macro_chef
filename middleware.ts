@@ -1,31 +1,54 @@
-import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { auth } from '@/lib/auth';
 
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+export async function middleware(request: NextRequest) {
+  const { nextUrl } = request;
 
-  // Define public routes that don't require authentication
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+  ];
+
   const isPublicRoute =
-    nextUrl.pathname === '/' ||
-    nextUrl.pathname === '/login' ||
-    nextUrl.pathname === '/register' ||
+    publicRoutes.includes(nextUrl.pathname) ||
     nextUrl.pathname.startsWith('/api/auth') ||
-    nextUrl.pathname.startsWith('/verify');
+    nextUrl.pathname.startsWith('/verify') ||
+    nextUrl.pathname.startsWith('/_next') ||
+    nextUrl.pathname.startsWith('/static');
 
   // Allow access to public routes
   if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // Redirect to login if not authenticated
-  if (!isLoggedIn) {
+  // Check authentication using BetterAuth
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session) {
+      const callbackUrl = encodeURIComponent(nextUrl.pathname + nextUrl.search);
+      return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, nextUrl));
+    }
+
+    // Check if user is banned
+    if (session.user.banned) {
+      return NextResponse.redirect(new URL('/banned', nextUrl));
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    // If there's an error checking the session, redirect to login
     const callbackUrl = encodeURIComponent(nextUrl.pathname + nextUrl.search);
     return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, nextUrl));
   }
-
-  return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|public).*)'],

@@ -13,13 +13,30 @@ async function main() {
     update: {},
     create: {
       email: 'admin@macrochef.com',
+      emailVerified: true,
       username: 'admin',
       name: 'Admin User',
-      password: hashedPassword,
-      isVerified: true,
       isAdmin: true,
+      role: 'admin',
       isPublic: true,
       bio: 'MacroChef Administrator',
+    },
+  });
+
+  // Create account with password for admin
+  await prisma.account.upsert({
+    where: {
+      providerId_accountId: {
+        providerId: 'credential',
+        accountId: admin.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: admin.id,
+      accountId: admin.id,
+      providerId: 'credential',
+      password: hashedPassword,
     },
   });
   console.log('✅ Created admin user:', admin.email);
@@ -31,13 +48,30 @@ async function main() {
     update: {},
     create: {
       email: 'test@macrochef.com',
+      emailVerified: true,
       username: 'testuser',
       name: 'Test User',
-      password: testUserPassword,
-      isVerified: true,
       isAdmin: false,
+      role: 'user',
       isPublic: true,
       bio: 'Fitness enthusiast and meal prep lover',
+    },
+  });
+
+  // Create account with password for test user
+  await prisma.account.upsert({
+    where: {
+      providerId_accountId: {
+        providerId: 'credential',
+        accountId: testUser.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: testUser.id,
+      accountId: testUser.id,
+      providerId: 'credential',
+      password: testUserPassword,
     },
   });
   console.log('✅ Created test user:', testUser.email);
