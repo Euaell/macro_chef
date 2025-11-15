@@ -1,52 +1,32 @@
+import { auth } from '@/auth';
+import { NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+export default auth((req) => {
+  const { nextUrl } = req;
+  const isLoggedIn = !!req.auth;
 
-const publicPaths = ['/', '/recipes', '/login', '/signup', '/verifyemail']
+  // Define public routes that don't require authentication
+  const isPublicRoute =
+    nextUrl.pathname === '/' ||
+    nextUrl.pathname === '/login' ||
+    nextUrl.pathname === '/register' ||
+    nextUrl.pathname.startsWith('/api/auth') ||
+    nextUrl.pathname.startsWith('/verify');
 
-export function middleware(request: NextRequest) {
-	const path = request.nextUrl.pathname
-	const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
+  // Allow access to public routes
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
-	// Define paths that are considered public (accessible without a token)
-	const isPublicPath = publicPaths.includes(path)
+  // Redirect to login if not authenticated
+  if (!isLoggedIn) {
+    const callbackUrl = encodeURIComponent(nextUrl.pathname + nextUrl.search);
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, nextUrl));
+  }
 
-	// Get the token from the cookies
-	const token = request.cookies.get('auth_token')?.value || ''
+  return NextResponse.next();
+});
 
-	// Redirect logic based on the path and token presence
-	// if(isPublicPath && token) {
-
-	// 	// If trying to access a public path with a token, redirect to the home page
-	// 	return NextResponse.redirect(new URL('/', request.nextUrl))
-	// }
-
-	// If trying to access a protected path without a token, redirect to the login page
-	if (!isPublicPath && !token) {
-		return NextResponse.redirect(new URL('/login?callbackUrl=' + path + (callbackUrl ? '&callbackUrl=' + callbackUrl : ''), request.nextUrl))
-	}
-
-	// TODO: Add logic to check if the token is valid and not expired
-		
-}
-
-// It specifies the paths for which this middleware should be executed. 
 export const config = {
-	matcher: [
-		'/',
-		'/recipes/:path*',
-		'/profile',
-		'/login',
-		'/signup',
-		'/verifyemail',
-		'/meals/:path*',
-		'/ingredients/add',
-		'/meal-plan',
-		'/meal-plan/:path*',
-		'/meal-plan/add',
-		'/meal-plan/add/:path*',
-		'/meal-plan/edit/:path*',
-		'/meal-plan/delete/:path*',
-		
-	]
-}
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public).*)'],
+};

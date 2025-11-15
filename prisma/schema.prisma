@@ -1,0 +1,553 @@
+// Prisma Schema for MacroChef
+// PostgreSQL database with comprehensive features
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  name          String?
+  password      String
+  image         String?
+  bio           String?
+  isVerified    Boolean   @default(false)
+  isAdmin       Boolean   @default(false)
+
+  // Social settings
+  isPublic      Boolean   @default(true)
+
+  // Verification & Reset
+  verifyToken   String?
+  verifyTokenExpiry DateTime?
+  resetToken    String?
+  resetTokenExpiry  DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  goals         Goal[]
+  recipes       Recipe[]
+  mealPlans     MealPlan[]
+  meals         Meal[]
+  suggestions   Suggestion[]
+  ingredients   Ingredient[]
+
+  // Social features
+  followers     Follow[]   @relation("Following")
+  following     Follow[]   @relation("Follower")
+  recipeLikes   RecipeLike[]
+  recipeComments RecipeComment[]
+  collections   Collection[]
+  activities    Activity[]
+
+  // Fitness features
+  workouts      Workout[]
+  bodyCompositions BodyComposition[]
+  achievements  UserAchievement[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// ============================================
+// INGREDIENTS
+// ============================================
+
+model Ingredient {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+
+  // Serving info
+  servingSize Float
+  servingUnit String
+
+  // Nutritional info (per serving)
+  calories    Float
+  protein     Float
+  carbs       Float
+  fat         Float
+  fiber       Float    @default(0)
+  sugar       Float?
+  saturatedFat Float?
+  sodium      Float?
+
+  verified    Boolean  @default(false)
+  createdBy   String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  creator     User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  recipeIngredients RecipeIngredient[]
+
+  @@index([name])
+  @@index([createdBy])
+}
+
+// ============================================
+// RECIPES
+// ============================================
+
+model Recipe {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  images      String[] // Array of image URLs
+  tags        String[]
+
+  // Serving info
+  servings    Int      @default(1)
+  prepTime    Int?     // in minutes
+  cookTime    Int?     // in minutes
+  difficulty  String?  // easy, medium, hard
+
+  // Instructions
+  instructions Json    // Array of instruction steps
+
+  // Total nutritional info
+  calories    Float    @default(0)
+  protein     Float    @default(0)
+  carbs       Float    @default(0)
+  fat         Float    @default(0)
+  fiber       Float    @default(0)
+
+  // Metadata
+  isPublic    Boolean  @default(true)
+  createdBy   String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  ingredients RecipeIngredient[]
+  subRecipes  RecipeSubRecipe[] @relation("ParentRecipe")
+  parentRecipes RecipeSubRecipe[] @relation("SubRecipe")
+
+  // Social
+  likes       RecipeLike[]
+  comments    RecipeComment[]
+  collections CollectionRecipe[]
+  suggestions SuggestionRecipe[]
+
+  // Meal planning
+  mealPlanRecipes MealPlanRecipe[]
+  mealRecipes     MealRecipe[]
+
+  @@index([createdBy])
+  @@index([name])
+  @@index([isPublic])
+}
+
+model RecipeIngredient {
+  id           String     @id @default(cuid())
+  recipeId     String
+  ingredientId String
+  quantity     Float
+  unit         String
+  notes        String?
+
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, ingredientId])
+  @@index([recipeId])
+  @@index([ingredientId])
+}
+
+model RecipeSubRecipe {
+  id            String   @id @default(cuid())
+  parentRecipeId String
+  subRecipeId   String
+  servings      Float    @default(1)
+
+  parentRecipe  Recipe   @relation("ParentRecipe", fields: [parentRecipeId], references: [id], onDelete: Cascade)
+  subRecipe     Recipe   @relation("SubRecipe", fields: [subRecipeId], references: [id], onDelete: Cascade)
+
+  @@unique([parentRecipeId, subRecipeId])
+  @@index([parentRecipeId])
+  @@index([subRecipeId])
+}
+
+model RecipeLike {
+  id        String   @id @default(cuid())
+  recipeId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, userId])
+  @@index([recipeId])
+  @@index([userId])
+}
+
+model RecipeComment {
+  id        String   @id @default(cuid())
+  recipeId  String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([userId])
+}
+
+// ============================================
+// COLLECTIONS (Recipe organization)
+// ============================================
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isPublic    Boolean  @default(false)
+  userId      String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes     CollectionRecipe[]
+
+  @@index([userId])
+}
+
+model CollectionRecipe {
+  id           String     @id @default(cuid())
+  collectionId String
+  recipeId     String
+  order        Int        @default(0)
+  addedAt      DateTime   @default(now())
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, recipeId])
+  @@index([collectionId])
+  @@index([recipeId])
+}
+
+// ============================================
+// MEAL PLANNING
+// ============================================
+
+model MealPlan {
+  id        String   @id @default(cuid())
+  date      DateTime
+  userId    String
+
+  // Total macros for the day
+  calories  Float    @default(0)
+  protein   Float    @default(0)
+  carbs     Float    @default(0)
+  fat       Float    @default(0)
+  fiber     Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes   MealPlanRecipe[]
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+model MealPlanRecipe {
+  id         String   @id @default(cuid())
+  mealPlanId String
+  recipeId   String
+  mealTime   String   // breakfast, lunch, dinner, snack
+  servings   Float    @default(1)
+
+  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([mealPlanId])
+  @@index([recipeId])
+}
+
+// ============================================
+// MEAL LOGGING (Actual consumption)
+// ============================================
+
+model Meal {
+  id        String   @id @default(cuid())
+  name      String
+  mealType  String   // breakfast, lunch, dinner, snack
+  date      DateTime @default(now())
+  userId    String
+
+  // Total macros
+  calories  Float    @default(0)
+  protein   Float    @default(0)
+  carbs     Float    @default(0)
+  fat       Float    @default(0)
+  fiber     Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes   MealRecipe[]
+
+  @@index([userId])
+  @@index([date])
+}
+
+model MealRecipe {
+  id       String @id @default(cuid())
+  mealId   String
+  recipeId String
+  servings Float  @default(1)
+
+  meal     Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([mealId])
+  @@index([recipeId])
+}
+
+// ============================================
+// GOALS & TARGETS
+// ============================================
+
+model Goal {
+  id        String   @id @default(cuid())
+  userId    String
+
+  // Current active version
+  name      String
+  calories  Float
+  protein   Float
+  carbs     Float
+  fat       Float
+  fiber     Float    @default(0)
+
+  // Goal metadata
+  startDate DateTime @default(now())
+  endDate   DateTime?
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions  GoalVersion[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model GoalVersion {
+  id        String   @id @default(cuid())
+  goalId    String
+
+  name      String
+  calories  Float
+  protein   Float
+  carbs     Float
+  fat       Float
+  fiber     Float    @default(0)
+
+  createdAt DateTime @default(now())
+
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+// ============================================
+// AI SUGGESTIONS
+// ============================================
+
+model Suggestion {
+  id        String   @id @default(cuid())
+  userId    String
+  context   Json?    // AI context data
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes   SuggestionRecipe[]
+
+  @@index([userId])
+}
+
+model SuggestionRecipe {
+  id           String     @id @default(cuid())
+  suggestionId String
+  recipeId     String
+  order        Int        @default(0)
+
+  suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([suggestionId])
+  @@index([recipeId])
+}
+
+// ============================================
+// FITNESS - WORKOUTS
+// ============================================
+
+model Workout {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  date        DateTime @default(now())
+  duration    Int?     // in minutes
+  caloriesBurned Float?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises   Exercise[]
+
+  @@index([userId])
+  @@index([date])
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  workoutId   String
+  name        String
+  sets        Int?
+  reps        Int?
+  weight      Float?
+  duration    Int?     // in seconds
+  distance    Float?   // in meters
+  notes       String?
+
+  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  @@index([workoutId])
+}
+
+// ============================================
+// FITNESS - BODY COMPOSITION
+// ============================================
+
+model BodyComposition {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime @default(now())
+
+  weight        Float?
+  bodyFat       Float?   // percentage
+  muscleMass    Float?   // kg or lbs
+  visceralFat   Int?     // rating
+  bmi           Float?
+
+  // Measurements (in cm or inches)
+  chest         Float?
+  waist         Float?
+  hips          Float?
+  arms          Float?
+  thighs        Float?
+
+  notes         String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}
+
+// ============================================
+// GAMIFICATION - ACHIEVEMENTS
+// ============================================
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  icon        String?
+  category    String   // fitness, nutrition, social, recipes
+  points      Int      @default(0)
+
+  // Criteria (JSON object defining unlock conditions)
+  criteria    Json
+
+  createdAt   DateTime @default(now())
+
+  users       UserAchievement[]
+
+  @@index([category])
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+// ============================================
+// ACTIVITY FEED
+// ============================================
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // recipe_created, workout_completed, achievement_unlocked, etc.
+  data        Json     // Activity-specific data
+  isPublic    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isPublic])
+}

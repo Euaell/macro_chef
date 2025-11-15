@@ -1,0 +1,142 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: macrochef_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-macrochef}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-macrochef_password}
+      POSTGRES_DB: ${POSTGRES_DB:-macrochef}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-macrochef}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - macrochef_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: macrochef_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - macrochef_network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: macrochef_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-macrochef}:${POSTGRES_PASSWORD:-macrochef_password}@db:5432/${POSTGRES_DB:-macrochef}?schema=public
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379
+
+      # NextAuth
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+
+      # OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # Cloudinary
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+
+      # Email
+      EMAIL_SERVER_HOST: ${EMAIL_SERVER_HOST}
+      EMAIL_SERVER_PORT: ${EMAIL_SERVER_PORT}
+      EMAIL_SERVER_USER: ${EMAIL_SERVER_USER}
+      EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+
+      # App
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    networks:
+      - macrochef_network
+    volumes:
+      # Mount for development (optional - comment out for production)
+      # - .:/app
+      # - /app/node_modules
+      # - /app/.next
+      - app_uploads:/app/public/uploads
+
+  # Database migration runner (run once)
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: macrochef_migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-macrochef}:${POSTGRES_PASSWORD:-macrochef_password}@db:5432/${POSTGRES_DB:-macrochef}?schema=public
+    command: npx prisma migrate deploy
+    networks:
+      - macrochef_network
+    profiles:
+      - tools
+
+  # Prisma Studio (database GUI)
+  studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: macrochef_studio
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-macrochef}:${POSTGRES_PASSWORD:-macrochef_password}@db:5432/${POSTGRES_DB:-macrochef}?schema=public
+    command: npx prisma studio --port 5555 --hostname 0.0.0.0
+    ports:
+      - "5555:5555"
+    networks:
+      - macrochef_network
+    profiles:
+      - tools
+
+networks:
+  macrochef_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_uploads:
+    driver: local
