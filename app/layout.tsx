@@ -4,8 +4,8 @@ import Navbar from "@/components/Navbar";
 import 'remixicon/fonts/remixicon.css';
 
 export const metadata: Metadata = {
-	title: "MacroChef - Recipe Manager",
-	description: "A simple recipe manager to help you track your macros.",
+	title: "NutriForge - Meal Planning & Nutrition Tracking",
+	description: "Forge your perfect nutrition plan with NutriForge - meal planning, recipe management, and macro tracking.",
 };
 
 export default function RootLayout(
@@ -24,7 +24,7 @@ export default function RootLayout(
 
 				<footer className="bg-gray-800 text-white text-center py-4 mt-auto">
 					<div className="container mx-auto">
-						<p>&copy; {new Date().getFullYear()} MacroChef</p>
+						<p>&copy; {new Date().getFullYear()} NutriForge</p>
 					</div>
 				</footer>
 			</body>

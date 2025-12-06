@@ -1,6 +1,6 @@
-# MacroChef - Meal Planning, Nutrition & Fitness Tracking Application
+# NutriForge - Meal Planning, Nutrition & Fitness Tracking Application
 
-MacroChef is a comprehensive web application for meal planning, recipe management, and nutrition tracking. It helps users plan their meals, organize shopping lists, and track their nutritional intake.
+NutriForge is a comprehensive web application for meal planning, recipe management, and nutrition tracking. It helps users forge their perfect nutrition plan, organize shopping lists, and track their nutritional intake.
 
 ## Features
 
@@ -74,8 +74,8 @@ MacroChef is a comprehensive web application for meal planning, recipe managemen
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/macro_chef.git
-   cd macro_chef
+   git clone https://github.com/yourusername/nutriforge.git
+   cd nutriforge
    ```
 
 2. Install dependencies

@@ -12,8 +12,8 @@ export default async function Navbar() {
 		<nav className="bg-emerald-700 p-4">
 			<div className="flex justify-between items-center">
 				<Link href="/" className="flex flex-row items-center gap-2">
-					<Image src={logoTransparent} alt="MacroChef" width={50} height={50} />
-					<span className="text-white text-2xl font-bold">MacroChef</span>
+					<Image src={logoTransparent} alt="NutriForge" width={50} height={50} />
+					<span className="text-white text-2xl font-bold">NutriForge</span>
 				</Link>
 				<NavbarContent user={user} />
 			</div>
