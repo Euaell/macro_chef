@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { regenerateSuggestions } from '@/data/suggestion';
 import { getUserServer } from '@/helper/session';
 import { redirect } from 'next/navigation';

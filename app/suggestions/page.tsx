@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import SuggestedRecipes from '@/components/SuggestedRecipes';
 import { getTodaySuggestions } from '@/data/suggestion';
 import { getUserServer } from '@/helper/session';

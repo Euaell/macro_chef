@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import RecipeOptions from "@/components/RecipeOptions";
 import { getRecipeById } from "@/data/recipe";

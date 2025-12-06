@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import TableHeaderCell from "@/components/IngredientTable/TableHeaderCell";
 import { getAllIngredient } from "@/data/ingredient";

@@ -1,0 +1,465 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId       String?   @unique
+  email         String    @unique
+  username      String?   @unique
+  firstName     String?
+  lastName      String?
+  password      String?
+  imageUrl      String?
+  isVerified    Boolean   @default(false)
+  isAdmin       Boolean   @default(false)
+
+  forgotPasswordToken       String?
+  forgotPasswordTokenExpiry DateTime?
+  verifyToken               String?
+  verifyTokenExpiry         DateTime?
+
+  preferences   UserPreferences?
+  recipes       Recipe[]
+  ingredients   Ingredient[]
+  mealPlans     MealPlan[]
+  nutritionLogs NutritionLog[]
+  goals         Goal[]
+  workouts      Workout[]
+  bodyMetrics   BodyMetric[]
+  achievements  UserAchievement[]
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  following     Follow[]      @relation("UserFollows")
+  followers     Follow[]      @relation("UserFollowers")
+  meals         Meal[]
+  suggestions   Suggestion[]
+
+  trainersAssigned CoachRelationship[] @relation("ClientRelationships")
+  clientsCoached   CoachRelationship[] @relation("CoachRelationships")
+  sentMessages     Message[]           @relation("SentMessages")
+  receivedMessages Message[]           @relation("ReceivedMessages")
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String   @unique @db.ObjectId
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  theme                 String   @default("light")
+  measurementSystem     String   @default("metric")
+  defaultMealPlanView   String   @default("week")
+  notificationsEnabled  Boolean  @default(true)
+
+  profileVisibility     String   @default("public")
+  showAchievements      Boolean  @default(true)
+  showWorkouts          Boolean  @default(true)
+  showNutrition         Boolean  @default(false)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("user_preferences")
+}
+
+// ==================== NUTRITION ====================
+
+model Ingredient {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  servingSize   Float    @default(1)
+  servingUnit   String   @default("g")
+  macros        Macros
+
+  userId        String?  @db.ObjectId
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic      Boolean  @default(false)
+  verified      Boolean  @default(false)
+
+  recipeIngredients RecipeIngredient[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("ingredients")
+}
+
+model Recipe {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String?
+  instructions  String[]
+  servings      Int      @default(1)
+  prepTime      Int?
+  cookTime      Int?
+  totalMacros   Macros
+
+  ingredients   RecipeIngredient[]
+  images        String[]
+  tags          String[]
+
+  userId        String   @db.ObjectId
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic      Boolean  @default(false)
+
+  mealPlanItems MealPlanItem[]
+  nutritionLogs NutritionLog[]
+  suggestions   Suggestion[] @relation(fields: [suggestionIds], references: [id])
+  suggestionIds String[] @db.ObjectId
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tags])
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  recipeId     String     @db.ObjectId
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId String     @db.ObjectId
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  amount       Float
+  unit         String?
+
+  @@map("recipe_ingredients")
+}
+
+// ==================== MEAL PLANNING ====================
+
+model MealPlan {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String         @db.ObjectId
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  items     MealPlanItem[]
+  totalMacros Macros?
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId, date])
+  @@map("meal_plans")
+}
+
+model MealPlanItem {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  mealPlanId String   @db.ObjectId
+  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  recipeId   String   @db.ObjectId
+  recipe     Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  mealTime   String
+  servings   Float    @default(1)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("meal_plan_items")
+}
+
+// ==================== MEAL TRACKING ====================
+
+model Meal {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  mealType   String
+  totalMacros Macros
+
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@map("meals")
+}
+
+// ==================== NUTRITION TRACKING ====================
+
+model NutritionLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  mealType  String
+  recipeId  String?  @db.ObjectId
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  servings  Float
+  macros    Macros
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@map("nutrition_logs")
+}
+
+model Goal {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String?
+  description  String?
+  targetMacros Macros
+  versions     GoalVersion[]
+  startDate    DateTime @default(now())
+  endDate      DateTime?
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, isActive])
+  @@map("goals")
+}
+
+type GoalVersion {
+  name        String?
+  targetMacro Macros
+  createdAt   DateTime @default(now())
+}
+
+// ==================== SUGGESTIONS ====================
+
+model Suggestion {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes   Recipe[] @relation(fields: [recipeIds], references: [id])
+  recipeIds String[] @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("suggestions")
+}
+
+// ==================== WORKOUTS ====================
+
+model Workout {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @db.ObjectId
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  date          DateTime
+  duration      Int
+  caloriesBurned Float?
+  notes         String?
+  exercises     Exercise[]
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([userId, date])
+  @@map("workouts")
+}
+
+model Exercise {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  workoutId  String   @db.ObjectId
+  workout    Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  name       String
+  sets       Int?
+  reps       Int?
+  weight     Float?
+  duration   Int?
+  distance   Float?
+  notes      String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("exercises")
+}
+
+// ==================== BODY TRACKING ====================
+
+model BodyMetric {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  weight      Float
+  bodyFat     Float?
+  muscleMass  Float?
+  chest       Float?
+  waist       Float?
+  hips        Float?
+  thighs      Float?
+  arms        Float?
+  notes       String?
+  photos      String[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
+  @@map("body_metrics")
+}
+
+// ==================== GAMIFICATION ====================
+
+model Achievement {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  key         String            @unique
+  name        String
+  description String
+  category    String
+  iconUrl     String?
+  points      Int               @default(0)
+  criteria    Json
+  users       UserAchievement[]
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String      @db.ObjectId
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+  progress      Float       @default(100)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@map("user_achievements")
+}
+
+// ==================== SOCIAL ====================
+
+model Post {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  images    String[]
+  type      String
+  metadata  Json?
+  comments  Comment[]
+  likes     Like[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@map("likes")
+}
+
+model Follow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String   @db.ObjectId
+  follower    User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String   @db.ObjectId
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// ==================== COACHING ====================
+
+model CoachRelationship {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  coachId   String   @db.ObjectId
+  coach     User     @relation("CoachRelationships", fields: [coachId], references: [id], onDelete: Cascade)
+  clientId  String   @db.ObjectId
+  client    User     @relation("ClientRelationships", fields: [clientId], references: [id], onDelete: Cascade)
+  status    String   @default("pending")
+
+  canViewNutrition Boolean @default(true)
+  canViewWorkouts  Boolean @default(true)
+  canViewBody      Boolean @default(true)
+  canSetGoals      Boolean @default(true)
+
+  startDate DateTime @default(now())
+  endDate   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([coachId, clientId])
+  @@index([coachId])
+  @@index([clientId])
+  @@map("coach_relationships")
+}
+
+model Message {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String   @db.ObjectId
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String
+  read       Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([senderId, receiverId, createdAt])
+  @@map("messages")
+}
+
+// ==================== EMBEDDED TYPES ====================
+
+type Macros {
+  calories Float
+  protein  Float
+  carbs    Float
+  fat      Float
+  fiber    Float?
+}

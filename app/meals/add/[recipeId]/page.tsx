@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import AddMealFromRecipe from "@/components/AddMealFromRecipe";
 import { getRecipeById } from "@/data/recipe";

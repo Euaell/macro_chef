@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { getMeal, getTodayMeal } from "@/data/meal";
 import MealMacrosChart from "@/components/MealMacrosChart";

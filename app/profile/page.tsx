@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { getUserServer } from "@/helper/session";
 

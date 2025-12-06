@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getUserServer } from "@/helper/session";
 import Link from "next/link";
 import { getWeeklyMealPlans } from "@/data/mealPlan";
