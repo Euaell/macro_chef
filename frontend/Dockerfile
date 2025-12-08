@@ -1,4 +1,4 @@
-# Development Dockerfile for Next.js with hot reload
+# Frontend Development Dockerfile
 FROM node:22-alpine
 
 WORKDIR /app
@@ -11,9 +11,6 @@ RUN \
   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install; \
   else npm install; \
   fi
-
-# Copy source
-COPY . .
 
 EXPOSE 3000
 

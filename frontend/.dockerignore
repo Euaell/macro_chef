@@ -5,14 +5,11 @@ node_modules
 
 # Testing
 coverage
+__tests__
 
 # Next.js
 .next
 out
-
-# Production
-build
-dist
 
 # Misc
 .DS_Store
@@ -30,9 +27,6 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Vercel
-.vercel
-
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
@@ -43,27 +37,13 @@ next-env.d.ts
 *.swp
 *.swo
 
-# Backend (not needed in frontend container)
-backend
-
 # Git
 .git
 .gitignore
 
 # Documentation
 *.md
-LICENSE
 
 # Docker
 Dockerfile*
-docker-compose*
 .dockerignore
-
-# Tests
-__tests__
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
-playwright-report
-test-results

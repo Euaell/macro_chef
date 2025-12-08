@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Development Docker Compose for Mizan Platform
+# Usage: docker-compose up
+
 services:
   # PostgreSQL Database
   postgres:
@@ -38,18 +41,22 @@ services:
     networks:
       - mizan-network
 
-  # Next.js Frontend
-  mizan-frontend:
+  # Next.js Frontend (Development with hot reload)
+  frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: mizan-frontend
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DATABASE_URL=postgres://mizan:${DB_PASSWORD:-mizan_dev_password}@postgres:5432/mizan
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_this_in_production}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev_secret_change_in_production}
       - BETTER_AUTH_URL=http://localhost:3000
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
       - NEXT_PUBLIC_API_URL=http://localhost:5000
@@ -63,19 +70,21 @@ services:
     networks:
       - mizan-network
 
-  # .NET Backend API
-  mizan-api:
+  # .NET Backend API (Development with hot reload)
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: mizan-api
+    container_name: mizan-backend
     ports:
       - "5000:8080"
+    volumes:
+      - ./backend:/src
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__PostgreSQL=Host=postgres;Database=mizan;Username=mizan;Password=${DB_PASSWORD:-mizan_dev_password}
       - ConnectionStrings__Redis=redis:6379
-      - BetterAuth__JwksUrl=http://mizan-frontend:3000/api/auth/jwks
+      - BetterAuth__JwksUrl=http://frontend:3000/api/auth/jwks
       - BetterAuth__Issuer=http://localhost:3000
       - BetterAuth__Audience=mizan-api
       - Cors__Origins__0=http://localhost:3000

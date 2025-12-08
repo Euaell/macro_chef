@@ -1,14 +1,12 @@
-# .NET 8 Backend Dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+# Backend Development Dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Copy solution and project files
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+# Copy solution and project files for restore
 COPY ["Mizan.sln", "./"]
 COPY ["Mizan.Api/Mizan.Api.csproj", "Mizan.Api/"]
 COPY ["Mizan.Application/Mizan.Application.csproj", "Mizan.Application/"]
@@ -16,29 +14,8 @@ COPY ["Mizan.Domain/Mizan.Domain.csproj", "Mizan.Domain/"]
 COPY ["Mizan.Infrastructure/Mizan.Infrastructure.csproj", "Mizan.Infrastructure/"]
 COPY ["Mizan.Tests/Mizan.Tests.csproj", "Mizan.Tests/"]
 
-# Restore dependencies
 RUN dotnet restore "Mizan.Api/Mizan.Api.csproj"
 
-# Copy source code
-COPY . .
+EXPOSE 8080
 
-# Build
-WORKDIR "/src/Mizan.Api"
-RUN dotnet build "Mizan.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "Mizan.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
-USER appuser
-
-ENV ASPNETCORE_URLS=http://+:8080
-ENV ASPNETCORE_ENVIRONMENT=Production
-
-ENTRYPOINT ["dotnet", "Mizan.Api.dll"]
+CMD ["dotnet", "watch", "run", "--project", "Mizan.Api/Mizan.Api.csproj", "--urls", "http://0.0.0.0:8080"]
