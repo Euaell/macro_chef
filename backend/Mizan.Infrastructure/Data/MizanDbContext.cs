@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
 
 namespace Mizan.Infrastructure.Data;
 
-public class MizanDbContext : DbContext
+public class MizanDbContext : DbContext, IMizanDbContext
 {
     public MizanDbContext(DbContextOptions<MizanDbContext> options) : base(options)
     {
