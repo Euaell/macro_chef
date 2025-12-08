@@ -1,52 +1,70 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+// Paths that don't require authentication
+const publicPaths = [
+	"/",
+	"/login",
+	"/signup",
+	"/register",
+	"/verify-email",
+	"/forgot-password",
+	"/reset-password",
+	"/api/auth",
+];
 
-const publicPaths = ['/', '/recipes', '/login', '/signup', '/verifyemail']
+// Paths that are always public (recipes can be viewed but not created without auth)
+const publicReadPaths = ["/recipes"];
 
 export function middleware(request: NextRequest) {
-	const path = request.nextUrl.pathname
-	const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
+	const path = request.nextUrl.pathname;
 
-	// Define paths that are considered public (accessible without a token)
-	const isPublicPath = publicPaths.includes(path)
+	// Check if the path is public
+	const isPublicPath = publicPaths.some(
+		(p) => path === p || path.startsWith(p + "/")
+	);
 
-	// Get the token from the cookies
-	const token = request.cookies.get('auth_token')?.value || ''
+	// Check if it's a public read path (like viewing recipes)
+	const isPublicReadPath = publicReadPaths.some(
+		(p) => path === p || (path.startsWith(p + "/") && !path.includes("/create") && !path.includes("/edit"))
+	);
 
-	// Redirect logic based on the path and token presence
-	// if(isPublicPath && token) {
-
-	// 	// If trying to access a public path with a token, redirect to the home page
-	// 	return NextResponse.redirect(new URL('/', request.nextUrl))
-	// }
-
-	// If trying to access a protected path without a token, redirect to the login page
-	if (!isPublicPath && !token) {
-		return NextResponse.redirect(new URL('/login?callbackUrl=' + path + (callbackUrl ? '&callbackUrl=' + callbackUrl : ''), request.nextUrl))
+	// Allow all API routes through (BetterAuth handles its own auth)
+	if (path.startsWith("/api/")) {
+		return NextResponse.next();
 	}
 
-	// TODO: Add logic to check if the token is valid and not expired
-		
+	// Get session token from BetterAuth cookie
+	const sessionToken =
+		request.cookies.get("better-auth.session_token")?.value ||
+		request.cookies.get("__Secure-better-auth.session_token")?.value;
+
+	// Redirect logged-in users away from auth pages
+	if ((path === "/login" || path === "/signup" || path === "/register") && sessionToken) {
+		return NextResponse.redirect(new URL("/", request.nextUrl));
+	}
+
+	// If trying to access a protected path without a session, redirect to login
+	if (!isPublicPath && !isPublicReadPath && !sessionToken) {
+		const callbackUrl = encodeURIComponent(path);
+		return NextResponse.redirect(
+			new URL(`/login?callbackUrl=${callbackUrl}`, request.nextUrl)
+		);
+	}
+
+	return NextResponse.next();
 }
 
-// It specifies the paths for which this middleware should be executed. 
+// Configure which paths the middleware runs on
 export const config = {
 	matcher: [
-		'/',
-		'/recipes/:path*',
-		'/profile',
-		'/login',
-		'/signup',
-		'/verifyemail',
-		'/meals/:path*',
-		'/ingredients/add',
-		'/meal-plan',
-		'/meal-plan/:path*',
-		'/meal-plan/add',
-		'/meal-plan/add/:path*',
-		'/meal-plan/edit/:path*',
-		'/meal-plan/delete/:path*',
-		
-	]
-}
+		/*
+		 * Match all request paths except:
+		 * - _next/static (static files)
+		 * - _next/image (image optimization files)
+		 * - favicon.ico (favicon file)
+		 * - public files (public directory)
+		 */
+		"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+	],
+};
