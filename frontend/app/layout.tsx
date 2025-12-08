@@ -4,8 +4,8 @@ import Navbar from "@/components/Navbar";
 import 'remixicon/fonts/remixicon.css';
 
 export const metadata: Metadata = {
-	title: "MacroChef - Recipe Manager",
-	description: "A simple recipe manager to help you track your macros.",
+	title: "Mizan - Balanced Nutrition & Fitness",
+	description: "Your personal nutrition and fitness companion. Track meals, plan diets, and achieve your health goals with AI-powered coaching.",
 };
 
 export default function RootLayout(
@@ -13,21 +13,39 @@ export default function RootLayout(
 ) {
 	return (
 		<html lang="en">
-			<body
-				className={`antialiased bg-gray-100 flex flex-col min-h-screen`}
-			>
-				{/* navbar */}
+			<body className="antialiased min-h-screen flex flex-col">
 				<Navbar />
-				<main className="p-3 sm:p-5 md:p-8 max-w-full overflow-x-hidden overflow-y-auto flex-grow">
-					{children}
+				<main className="flex-grow">
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+						{children}
+					</div>
 				</main>
 
-				<footer className="bg-gray-800 text-white text-center py-4 mt-auto">
-					<div className="container mx-auto">
-						<p>&copy; {new Date().getFullYear()} MacroChef</p>
+				<footer className="border-t border-slate-200 bg-white/50 backdrop-blur-sm">
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+						<div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+							<div className="flex items-center gap-2">
+								<span className="text-lg font-bold bg-gradient-to-r from-brand-600 to-brand-700 bg-clip-text text-transparent">
+									Mizan
+								</span>
+								<span className="text-slate-400">•</span>
+								<span className="text-sm text-slate-500">ሚዛን</span>
+							</div>
+							<p className="text-sm text-slate-500">
+								&copy; {new Date().getFullYear()} Mizan. All rights reserved.
+							</p>
+							<div className="flex items-center gap-4">
+								<a href="#" className="text-slate-400 hover:text-slate-600 transition-colors">
+									<i className="ri-github-fill text-xl" />
+								</a>
+								<a href="#" className="text-slate-400 hover:text-slate-600 transition-colors">
+									<i className="ri-twitter-x-fill text-xl" />
+								</a>
+							</div>
+						</div>
 					</div>
 				</footer>
 			</body>
 		</html>
-	)
+	);
 }

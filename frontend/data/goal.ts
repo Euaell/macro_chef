@@ -5,45 +5,24 @@ import { createErrorState, createSuccessState, FormState } from "@/helper/FormEr
 
 export interface UserGoal {
     id: string;
-    goalType: string;
-    targetCalories: number;
-    targetProtein: number;
-    targetCarbs: number;
-    targetFat: number;
+    goalType?: string;
+    targetCalories?: number;
+    targetProteinGrams?: number;
+    targetCarbsGrams?: number;
+    targetFatGrams?: number;
     targetWeight?: number;
-    weightUnit: string;
+    weightUnit?: string;
     targetDate?: string;
     isActive: boolean;
 }
 
 /**
  * Get the current user's active goal
- * Note: Backend may need a dedicated goals endpoint
  */
 export async function getCurrentGoal(): Promise<UserGoal | null> {
     try {
-        // The daily nutrition endpoint may return target values
-        const today = new Date().toISOString().split("T")[0];
-        const result = await apiClient<{
-            targetCalories?: number;
-            targetProtein?: number;
-            targetCarbs?: number;
-            targetFat?: number;
-        }>(`/api/Nutrition/daily?date=${today}`);
-
-        if (result.targetCalories) {
-            return {
-                id: "current",
-                goalType: "maintenance",
-                targetCalories: result.targetCalories,
-                targetProtein: result.targetProtein || 150,
-                targetCarbs: result.targetCarbs || 200,
-                targetFat: result.targetFat || 65,
-                weightUnit: "kg",
-                isActive: true,
-            };
-        }
-        return null;
+        const result = await apiClient<UserGoal>("/api/Goals");
+        return result;
     } catch (error) {
         console.error("Failed to get current goal:", error);
         return null;
@@ -52,18 +31,32 @@ export async function getCurrentGoal(): Promise<UserGoal | null> {
 
 /**
  * Create or update user goal
- * Note: Backend may need a dedicated goals endpoint
  */
 export async function createGoal(prevState: FormState, formData: FormData): Promise<FormState> {
     try {
-        const targetCalories = parseInt(formData.get("targetCalories") as string);
+        const goalType = formData.get("goalType") as string || "maintenance";
+        const targetCalories = parseInt(formData.get("calories") as string);
+        const targetProtein = parseFloat(formData.get("protein") as string);
+        const targetCarbs = parseFloat(formData.get("carbs") as string);
+        const targetFat = parseFloat(formData.get("fat") as string);
 
         if (isNaN(targetCalories)) {
-            return createErrorState("Target calories are required");
+            return createErrorState("Target calories are required", [
+                { field: "calories", message: "Valid calories required" }
+            ]);
         }
 
-        // Note: Backend may need a POST /api/Goals endpoint
-        console.log("Goals endpoint may not be implemented in backend yet");
+        await apiClient("/api/Goals", {
+            method: "POST",
+            body: JSON.stringify({
+                goalType,
+                targetCalories: isNaN(targetCalories) ? null : targetCalories,
+                targetProteinGrams: isNaN(targetProtein) ? null : targetProtein,
+                targetCarbsGrams: isNaN(targetCarbs) ? null : targetCarbs,
+                targetFatGrams: isNaN(targetFat) ? null : targetFat,
+            }),
+        });
+
         return createSuccessState("Goal saved successfully!");
     } catch (error) {
         console.error("Failed to create goal:", error);

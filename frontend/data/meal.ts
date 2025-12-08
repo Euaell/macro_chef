@@ -10,33 +10,22 @@ export interface MealEntry {
     name: string;
     mealType: string;
     servings: number;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
+    calories?: number;
+    proteinGrams?: number;
+    carbsGrams?: number;
+    fatGrams?: number;
     loggedAt: Date;
 }
 
-export interface DailyNutrition {
+export interface FoodDiaryResult {
     date: string;
-    totalCalories: number;
-    totalProtein: number;
-    totalCarbs: number;
-    totalFat: number;
-    targetCalories?: number;
-    targetProtein?: number;
-    targetCarbs?: number;
-    targetFat?: number;
-    mealBreakdown?: MealSummary[];
-}
-
-export interface MealSummary {
-    mealType: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    itemCount: number;
+    entries: MealEntry[];
+    totals: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+    };
 }
 
 /**
@@ -45,21 +34,8 @@ export interface MealSummary {
 export async function getTodayMeal(): Promise<MealEntry[]> {
     try {
         const today = new Date().toISOString().split("T")[0];
-        const result = await apiClient<DailyNutrition>(`/api/Nutrition/daily?date=${today}`);
-
-        // The API returns aggregated data, not individual entries
-        // Return meal breakdown as entries if available
-        return (result.mealBreakdown || []).map((m, idx) => ({
-            id: `meal-${idx}`,
-            name: m.mealType,
-            mealType: m.mealType,
-            servings: m.itemCount,
-            calories: m.calories,
-            protein: m.protein,
-            carbs: m.carbs,
-            fat: m.fat,
-            loggedAt: new Date(),
-        }));
+        const result = await apiClient<FoodDiaryResult>(`/api/Meals?date=${today}`);
+        return result.entries || [];
     } catch (error) {
         console.error("Failed to get today's meals:", error);
         return [];
@@ -71,22 +47,25 @@ export async function getTodayMeal(): Promise<MealEntry[]> {
  */
 export async function getMeal(date: string): Promise<MealEntry[]> {
     try {
-        const result = await apiClient<DailyNutrition>(`/api/Nutrition/daily?date=${date}`);
-
-        return (result.mealBreakdown || []).map((m, idx) => ({
-            id: `meal-${idx}`,
-            name: m.mealType,
-            mealType: m.mealType,
-            servings: m.itemCount,
-            calories: m.calories,
-            protein: m.protein,
-            carbs: m.carbs,
-            fat: m.fat,
-            loggedAt: new Date(),
-        }));
+        const result = await apiClient<FoodDiaryResult>(`/api/Meals?date=${date}`);
+        return result.entries || [];
     } catch (error) {
         console.error("Failed to get meals:", error);
         return [];
+    }
+}
+
+/**
+ * Get daily totals
+ */
+export async function getDailyTotals(date?: string): Promise<FoodDiaryResult["totals"] | null> {
+    try {
+        const queryDate = date || new Date().toISOString().split("T")[0];
+        const result = await apiClient<FoodDiaryResult>(`/api/Meals?date=${queryDate}`);
+        return result.totals;
+    } catch (error) {
+        console.error("Failed to get daily totals:", error);
+        return null;
     }
 }
 
@@ -97,11 +76,15 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
     try {
         const recipeId = formData.get("recipeId") as string;
         const foodId = formData.get("foodId") as string;
-        const mealType = formData.get("mealType") as string || "other";
+        const mealType = formData.get("mealType") as string || "snack";
         const servings = parseFloat(formData.get("servings") as string) || 1;
         const date = (formData.get("date") as string) || new Date().toISOString().split("T")[0];
+        const calories = parseInt(formData.get("calories") as string);
+        const protein = parseFloat(formData.get("protein") as string);
+        const carbs = parseFloat(formData.get("carbs") as string);
+        const fat = parseFloat(formData.get("fat") as string);
 
-        await apiClient("/api/Nutrition/log", {
+        await apiClient("/api/Meals", {
             method: "POST",
             body: JSON.stringify({
                 recipeId: recipeId || null,
@@ -109,6 +92,10 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
                 entryDate: date,
                 mealType,
                 servings,
+                calories: isNaN(calories) ? null : calories,
+                proteinGrams: isNaN(protein) ? null : protein,
+                carbsGrams: isNaN(carbs) ? null : carbs,
+                fatGrams: isNaN(fat) ? null : fat,
             }),
         });
 

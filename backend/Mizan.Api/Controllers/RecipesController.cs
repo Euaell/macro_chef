@@ -24,11 +24,20 @@ public class RecipesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RecipeDetailDto>> GetRecipeById(Guid id)
+    {
+        var result = await _mediator.Send(new GetRecipeByIdQuery(id));
+        if (result == null)
+            return NotFound();
+        return Ok(result);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<CreateRecipeResult>> CreateRecipe([FromBody] CreateRecipeCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetRecipes), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetRecipeById), new { id = result.Id }, result);
     }
 }

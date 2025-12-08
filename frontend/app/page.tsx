@@ -10,81 +10,175 @@ export default async function Home() {
 	const popularRecipes = await getPopularRecipes();
 
 	return (
-		<div className="flex flex-col items-center justify-center py-2 w-full">
-			<div className="w-full max-w-4xl p-4 sm:p-6 mb-6 sm:mb-8 bg-white rounded-lg shadow-lg">
-				<h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">Popular Recipes</h2>
-				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 overflow-x-auto p-2">
-					{popularRecipes.map((recipe) => (
-						<Link key={recipe._id.toString()} href={`/recipes/${recipe._id}`} className="bg-white rounded-lg shadow p-4 hover:shadow-xl cursor-pointer transition-shadow">
-							<Image 
-								src={placeHolderImage} 
-								alt="Recipe" 
-								className="w-full h-36 sm:h-48 object-cover rounded-lg mb-3"
+		<div className="space-y-8">
+			{/* Hero Section for non-authenticated users */}
+			{!user && (
+				<div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 p-8 sm:p-12">
+					<div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+					<div className="absolute top-0 right-0 w-96 h-96 bg-brand-400/30 rounded-full blur-3xl" />
+					<div className="absolute bottom-0 left-0 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl" />
+
+					<div className="relative z-10 max-w-2xl">
+						<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white/90 text-sm mb-6">
+							<i className="ri-sparkling-2-fill text-amber-300" />
+							AI-Powered Nutrition Coaching
+						</div>
+						<h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
+							Find Your <span className="text-amber-300">Balance</span>
+						</h1>
+						<p className="text-lg text-white/80 mb-8 leading-relaxed">
+							Track your nutrition, plan meals, and achieve your fitness goals with personalized AI coaching. Mizan helps you find the perfect balance.
+						</p>
+						<div className="flex flex-col sm:flex-row gap-4">
+							<Link
+								href="/register"
+								className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-brand-700 font-semibold rounded-xl hover:bg-brand-50 transition-colors shadow-lg"
+							>
+								Get Started Free
+								<i className="ri-arrow-right-line" />
+							</Link>
+							<Link
+								href="/login"
+								className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20"
+							>
+								Sign In
+							</Link>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Quick Stats for authenticated users */}
+			{user && (
+				<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+					{[
+						{ label: 'Calories Today', value: '1,850', target: '2,200', icon: 'ri-fire-line', color: 'text-orange-500', bg: 'bg-orange-50' },
+						{ label: 'Protein', value: '95g', target: '120g', icon: 'ri-heart-pulse-line', color: 'text-red-500', bg: 'bg-red-50' },
+						{ label: 'Water', value: '6 cups', target: '8 cups', icon: 'ri-drop-line', color: 'text-blue-500', bg: 'bg-blue-50' },
+						{ label: 'Streak', value: '7 days', target: '', icon: 'ri-medal-line', color: 'text-amber-500', bg: 'bg-amber-50' },
+					].map((stat) => (
+						<div key={stat.label} className="card p-4">
+							<div className="flex items-center gap-3 mb-2">
+								<div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
+									<i className={`${stat.icon} text-xl ${stat.color}`} />
+								</div>
+								<span className="text-sm text-slate-500">{stat.label}</span>
+							</div>
+							<div className="flex items-baseline gap-2">
+								<span className="text-2xl font-bold text-slate-900">{stat.value}</span>
+								{stat.target && <span className="text-sm text-slate-400">/ {stat.target}</span>}
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+
+			{/* Quick Actions */}
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+				<Link href="/meals/add" className="group card-hover p-6">
+					<div className="flex items-start gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/25 group-hover:shadow-brand-500/40 transition-shadow">
+							<i className="ri-add-circle-line text-2xl text-white" />
+						</div>
+						<div>
+							<h3 className="font-semibold text-slate-900 mb-1">Log Meal</h3>
+							<p className="text-sm text-slate-500">Track what you eat</p>
+						</div>
+					</div>
+				</Link>
+
+				<Link href="/recipes/add" className="group card-hover p-6">
+					<div className="flex items-start gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center shadow-lg shadow-accent-500/25 group-hover:shadow-accent-500/40 transition-shadow">
+							<i className="ri-restaurant-line text-2xl text-white" />
+						</div>
+						<div>
+							<h3 className="font-semibold text-slate-900 mb-1">Create Recipe</h3>
+							<p className="text-sm text-slate-500">Add your own recipes</p>
+						</div>
+					</div>
+				</Link>
+
+				<Link href="/suggestions" className="group card-hover p-6 sm:col-span-2 lg:col-span-1">
+					<div className="flex items-start gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/25 group-hover:shadow-violet-500/40 transition-shadow">
+							<i className="ri-magic-line text-2xl text-white" />
+						</div>
+						<div>
+							<h3 className="font-semibold text-slate-900 mb-1">AI Coach</h3>
+							<p className="text-sm text-slate-500">Get personalized advice</p>
+						</div>
+					</div>
+				</Link>
+			</div>
+
+			{/* Popular Recipes */}
+			<div className="card p-6">
+				<div className="flex items-center justify-between mb-6">
+					<div>
+						<h2 className="section-title">Popular Recipes</h2>
+						<p className="text-sm text-slate-500 mt-1">Discover community favorites</p>
+					</div>
+					<Link href="/recipes" className="btn-secondary text-sm">
+						View All
+						<i className="ri-arrow-right-line" />
+					</Link>
+				</div>
+
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+					{popularRecipes.length > 0 ? popularRecipes.map((recipe) => (
+						<Link
+							key={recipe._id.toString()}
+							href={`/recipes/${recipe._id}`}
+							className="group relative rounded-2xl overflow-hidden bg-slate-100"
+						>
+							<Image
+								src={placeHolderImage}
+								alt={recipe.name}
+								className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
 								width={400}
 								height={300}
 							/>
-							<h3 className="text-base sm:text-lg font-semibold mb-2 line-clamp-1">{recipe.name}</h3>
-							<p className="text-sm sm:text-base text-gray-600">{recipe.totalMacros.calories.toFixed()} calories | {recipe.totalMacros.protein.toFixed()}g protein</p>
+							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+							<div className="absolute bottom-0 left-0 right-0 p-4">
+								<h3 className="font-semibold text-white mb-1 line-clamp-1">{recipe.name}</h3>
+								<div className="flex items-center gap-3 text-sm text-white/80">
+									<span className="flex items-center gap-1">
+										<i className="ri-fire-line" />
+										{recipe.totalMacros.calories.toFixed()} kcal
+									</span>
+									<span className="flex items-center gap-1">
+										<i className="ri-heart-pulse-line" />
+										{recipe.totalMacros.protein.toFixed()}g protein
+									</span>
+								</div>
+							</div>
 						</Link>
-					))}
-				{/* Add more recipe cards as needed */}
-				</div>
-			</div>
-
-			{/* Add your own and log meal */}
-			<div className="w-full max-w-4xl p-4 sm:p-6 mb-6 sm:mb-8 bg-white rounded-lg shadow-lg">
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-					<div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-						<h3 className="text-lg sm:text-xl font-semibold mb-3">Add Your Recipe</h3>
-						<Link href="/recipes/add" className="bg-orange-600 inline-block text-white px-4 sm:px-6 py-2 rounded-full hover:bg-green-600 transition-colors">
-							Create Recipe
-						</Link>
-					</div>
-					<div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-						<h3 className="text-lg sm:text-xl font-semibold mb-3">Log Your Meal</h3>
-						<Link href='/meals/add' className="bg-emerald-500 inline-block text-white px-4 sm:px-6 py-2 rounded-full hover:bg-blue-600 transition-colors">
-							Log Meal
-						</Link>
-					</div>
-				</div>
-			</div>
-
-			{/* Nutrition status with chart and more */}
-			<div className="relative w-full max-w-4xl min-h-fit h-64">
-				<div className={`p-4 sm:p-6 bg-white rounded-lg shadow-lg ${!user ? 'blur-sm' : ''}`}>
-					<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
-						<h2 className="text-xl sm:text-2xl font-bold text-gray-800">Nutrition Overview</h2>
-						<Link href={"/goal"} className="bg-emerald-700 text-white px-3 sm:px-4 py-1 sm:py-2 text-sm sm:text-base rounded-lg">Set Goal</Link>
-					</div>
-					{user && (
-						<DailyOverviewChart />
+					)) : (
+						<div className="col-span-full text-center py-12 text-slate-500">
+							<i className="ri-restaurant-line text-4xl mb-2 block opacity-50" />
+							<p>No recipes yet. Be the first to add one!</p>
+						</div>
 					)}
 				</div>
-
-				{/* Authentication overlay */}
-				{!user && (
-					<div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-15 rounded-lg">
-						<div className="text-center text-white mb-6 px-4">
-							<h3 className="text-xl sm:text-2xl font-bold mb-2">Track Your Nutrition</h3>
-							<p className="mb-6">Sign in to access detailed nutrition tracking</p>
-							<div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-								<Link 
-									href="login" 
-									className="bg-blue-500 text-white px-5 sm:px-6 py-2 rounded-full hover:bg-blue-600 transition-colors w-full sm:w-auto"
-								>
-									Sign In
-								</Link>
-								<Link 
-									href="/register" 
-									className="bg-green-500 text-white px-5 sm:px-6 py-2 rounded-full hover:bg-green-600 transition-colors w-full sm:w-auto"
-								>
-									Register
-								</Link>
-							</div>
-						</div>
-					</div>
-				)}
 			</div>
+
+			{/* Nutrition Overview */}
+			{user && (
+				<div className="card p-6">
+					<div className="flex items-center justify-between mb-6">
+						<div>
+							<h2 className="section-title">Nutrition Overview</h2>
+							<p className="text-sm text-slate-500 mt-1">Your daily progress</p>
+						</div>
+						<Link href="/goal" className="btn-primary text-sm">
+							<i className="ri-target-line" />
+							Set Goals
+						</Link>
+					</div>
+					<DailyOverviewChart />
+				</div>
+			)}
 		</div>
-	)
+	);
 }

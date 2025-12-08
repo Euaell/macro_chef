@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mizan.Application.Commands;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
@@ -20,5 +22,13 @@ public class FoodsController : ControllerBase
     {
         var result = await _mediator.Send(query);
         return Ok(result);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<ActionResult<CreateFoodResult>> CreateFood([FromBody] CreateFoodCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(SearchFoods), new { id = result.Id }, result);
     }
 }

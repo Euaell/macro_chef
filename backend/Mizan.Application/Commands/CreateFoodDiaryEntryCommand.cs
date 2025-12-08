@@ -1,0 +1,75 @@
+using MediatR;
+using Mizan.Application.Interfaces;
+using Mizan.Domain.Entities;
+
+namespace Mizan.Application.Commands;
+
+public record CreateFoodDiaryEntryCommand : IRequest<CreateFoodDiaryEntryResult>
+{
+    public Guid? FoodId { get; init; }
+    public Guid? RecipeId { get; init; }
+    public DateOnly? EntryDate { get; init; }
+    public string MealType { get; init; } = "snack";
+    public decimal Servings { get; init; } = 1;
+    public int? Calories { get; init; }
+    public decimal? ProteinGrams { get; init; }
+    public decimal? CarbsGrams { get; init; }
+    public decimal? FatGrams { get; init; }
+}
+
+public record CreateFoodDiaryEntryResult
+{
+    public Guid Id { get; init; }
+    public bool Success { get; init; }
+    public string? Message { get; init; }
+}
+
+public class CreateFoodDiaryEntryCommandHandler : IRequestHandler<CreateFoodDiaryEntryCommand, CreateFoodDiaryEntryResult>
+{
+    private readonly IMizanDbContext _context;
+    private readonly ICurrentUserService _currentUser;
+
+    public CreateFoodDiaryEntryCommandHandler(IMizanDbContext context, ICurrentUserService currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
+
+    public async Task<CreateFoodDiaryEntryResult> Handle(CreateFoodDiaryEntryCommand request, CancellationToken cancellationToken)
+    {
+        if (!_currentUser.UserId.HasValue)
+        {
+            return new CreateFoodDiaryEntryResult
+            {
+                Success = false,
+                Message = "User not authenticated"
+            };
+        }
+
+        var entry = new FoodDiaryEntry
+        {
+            Id = Guid.NewGuid(),
+            UserId = _currentUser.UserId.Value,
+            FoodId = request.FoodId,
+            RecipeId = request.RecipeId,
+            EntryDate = request.EntryDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            MealType = request.MealType,
+            Servings = request.Servings,
+            Calories = request.Calories,
+            ProteinGrams = request.ProteinGrams,
+            CarbsGrams = request.CarbsGrams,
+            FatGrams = request.FatGrams,
+            LoggedAt = DateTime.UtcNow
+        };
+
+        _context.FoodDiaryEntries.Add(entry);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return new CreateFoodDiaryEntryResult
+        {
+            Id = entry.Id,
+            Success = true,
+            Message = "Entry logged successfully"
+        };
+    }
+}

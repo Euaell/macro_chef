@@ -46,17 +46,18 @@ export async function getIngredientById(id: string): Promise<Ingredient | null> 
 
 /**
  * Add a new ingredient (food) via the backend API
- * Note: Backend may need a dedicated POST endpoint for foods
  */
 export async function addIngredient(prevState: FormState, formData: FormData): Promise<FormState> {
     try {
         const name = formData.get("name") as string;
         const brand = formData.get("brand") as string;
         const barcode = formData.get("barcode") as string;
+        const servingSize = parseFloat(formData.get("servingSize") as string) || 100;
         const calories = parseInt(formData.get("calories") as string);
         const protein = parseFloat(formData.get("protein") as string);
         const carbs = parseFloat(formData.get("carbs") as string);
         const fat = parseFloat(formData.get("fat") as string);
+        const fiber = parseFloat(formData.get("fiber") as string);
 
         if (!name || isNaN(calories)) {
             return createErrorState("Name and calories are required", [
@@ -65,8 +66,22 @@ export async function addIngredient(prevState: FormState, formData: FormData): P
             ]);
         }
 
-        // Note: Backend may need a POST /api/Foods endpoint
-        console.log("Add ingredient endpoint may not be implemented in backend yet");
+        await apiClient("/api/Foods", {
+            method: "POST",
+            body: JSON.stringify({
+                name,
+                brand: brand || null,
+                barcode: barcode || null,
+                servingSize,
+                servingUnit: "g",
+                caloriesPer100g: calories,
+                proteinPer100g: isNaN(protein) ? 0 : protein,
+                carbsPer100g: isNaN(carbs) ? 0 : carbs,
+                fatPer100g: isNaN(fat) ? 0 : fat,
+                fiberPer100g: isNaN(fiber) ? null : fiber,
+            }),
+        });
+
         return createSuccessState("Ingredient added successfully!");
     } catch (error) {
         console.error("Failed to add ingredient:", error);
