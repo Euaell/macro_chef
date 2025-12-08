@@ -11,7 +11,7 @@ export default function Page() {
 	const [formState, action] = useActionState(addMeal, EMPTY_FORM_STATE);
 
 	useEffect(() => {
-		if (formState.status === "SUCCESS") {
+		if (formState.status === "success") {
 			// Optionally reset the form or perform other actions on success
 			// action.reset();
 		}

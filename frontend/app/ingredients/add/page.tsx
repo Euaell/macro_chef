@@ -12,7 +12,7 @@ export default function Page() {
 	
 
 	useEffect(() => {
-		if (formState.status === "SUCCESS") {
+		if (formState.status === "success") {
 			// action.reset();
 		}
 	}, [formState.status]);

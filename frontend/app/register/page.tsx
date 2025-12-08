@@ -22,7 +22,7 @@ export default function Page() {
 	
 
 	useEffect(() => {
-		if (formState.status === "SUCCESS") {
+		if (formState.status === "success") {
 			router.push("/login");
 		}
 	}, [formState.status]);
@@ -42,7 +42,7 @@ export default function Page() {
 							name="email"
 							className="border-2 border-gray-300 rounded-lg p-2"
 							placeholder="Email"
-							defaultValue={formState.fieldValues?.email}
+							defaultValue=""
 						/>
 						<FieldError formState={formState} name="email" />
 					</div>
@@ -133,7 +133,7 @@ export default function Page() {
 				</Link>
 
 				<div>
-					{formState.status === "SUCCESS" && (
+					{formState.status === "success" && (
 						<div className="text-emerald-700">User created successfully!</div>
 					)}
 				</div>

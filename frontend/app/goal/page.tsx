@@ -12,7 +12,7 @@ export default function GoalForm() {
 	const [formState, action] = useActionState(createGoal, EMPTY_FORM_STATE);
 
 	useEffect(() => {
-		if (formState.status === "SUCCESS") {
+		if (formState.status === "success") {
 			// Optionally reset form or display a success message
 		}
 	}, [formState.status]);

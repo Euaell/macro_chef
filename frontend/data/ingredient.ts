@@ -23,8 +23,8 @@ export interface Ingredient {
  */
 export async function getAllIngredient(): Promise<Ingredient[]> {
     try {
-        const result = await apiClient<{ foods: Ingredient[] }>("/api/Foods/search?Limit=100");
-        return result.foods || [];
+        const result = await apiClient<{ Foods: Ingredient[] }>("/api/Foods/search?Limit=100");
+        return result.Foods || [];
     } catch (error) {
         console.error("Failed to get ingredients:", error);
         return [];
@@ -36,9 +36,8 @@ export async function getAllIngredient(): Promise<Ingredient[]> {
  */
 export async function getIngredientById(id: string): Promise<Ingredient | null> {
     try {
-        const result = await apiClient<{ foods: Ingredient[] }>(`/api/Foods/search?Limit=1`);
-        // Note: Backend may need a dedicated get-by-id endpoint
-        return result.foods?.find(f => f.id === id) || null;
+        const result = await apiClient<{ Foods: Ingredient[] }>(`/api/Foods/search?SearchTerm=&Limit=100`);
+        return result.Foods?.find(f => f.id === id) || null;
     } catch (error) {
         console.error("Failed to get ingredient:", error);
         return null;
