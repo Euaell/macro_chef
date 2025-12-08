@@ -78,24 +78,11 @@ If a user mentions eating something, offer to log it for them.";
             var builder = Kernel.CreateBuilder();
 
             var apiKey = _configuration["OpenAI:ApiKey"]
-                ?? _configuration["AzureOpenAI:ApiKey"]
                 ?? throw new InvalidOperationException("OpenAI API key not configured");
 
-            var azureEndpoint = _configuration["AzureOpenAI:Endpoint"];
-
-            if (!string.IsNullOrEmpty(azureEndpoint))
-            {
-                builder.AddAzureOpenAIChatCompletion(
-                    deploymentName: _configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4o",
-                    endpoint: azureEndpoint,
-                    apiKey: apiKey);
-            }
-            else
-            {
-                builder.AddOpenAIChatCompletion(
-                    modelId: "gpt-4o",
-                    apiKey: apiKey);
-            }
+            builder.AddOpenAIChatCompletion(
+                modelId: "gpt-4o",
+                apiKey: apiKey);
 
             var kernel = builder.Build();
             var chatService = kernel.GetRequiredService<IChatCompletionService>();
@@ -161,24 +148,11 @@ Be as accurate as possible with portion estimates. If you cannot identify a food
         var builder = Kernel.CreateBuilder();
 
         var apiKey = _configuration["OpenAI:ApiKey"]
-            ?? _configuration["AzureOpenAI:ApiKey"]
             ?? throw new InvalidOperationException("OpenAI API key not configured");
 
-        var azureEndpoint = _configuration["AzureOpenAI:Endpoint"];
-
-        if (!string.IsNullOrEmpty(azureEndpoint))
-        {
-            builder.AddAzureOpenAIChatCompletion(
-                deploymentName: _configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4o",
-                endpoint: azureEndpoint,
-                apiKey: apiKey);
-        }
-        else
-        {
-            builder.AddOpenAIChatCompletion(
-                modelId: _configuration["OpenAI:ModelId"] ?? "gpt-4o",
-                apiKey: apiKey);
-        }
+        builder.AddOpenAIChatCompletion(
+            modelId: _configuration["OpenAI:ModelId"] ?? "gpt-4o",
+            apiKey: apiKey);
 
         var kernel = builder.Build();
 

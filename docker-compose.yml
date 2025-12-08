@@ -18,7 +18,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mizan -d mizan"]
+      test: [ "CMD-SHELL", "pg_isready -U mizan -d mizan" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -34,7 +34,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -59,7 +59,16 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev_secret_change_in_production}
       - BETTER_AUTH_URL=http://localhost:3000
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      - API_URL=${API_URL:-http://mizan-backend:8080}
+      - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+      - NEXT_PUBLIC_CLOUDINARY_API_KEY=${NEXT_PUBLIC_CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
@@ -89,9 +98,6 @@ services:
       - BetterAuth__Audience=mizan-api
       - Cors__Origins__0=http://localhost:3000
       - OpenAI__ApiKey=${OPENAI_API_KEY:-}
-      - AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT:-}
-      - AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY:-}
-      - AzureOpenAI__DeploymentName=${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
     depends_on:
       postgres:
         condition: service_healthy

@@ -37,7 +37,8 @@ export async function apiClient<T>(
 ): Promise<T> {
   const token = await getApiToken();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const baseUrl = (typeof window === 'undefined' ? process.env.API_URL : process.env.NEXT_PUBLIC_API_URL) || "http://localhost:5000";
+  const apiUrl = baseUrl;
 
   const response = await fetch(`${apiUrl}${endpoint}`, {
     ...options,

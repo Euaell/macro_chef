@@ -1,4 +1,4 @@
-import { FormState } from "@/helper/FormErrorHandler";
+import { FormState, getFieldError } from "@/helper/FormErrorHandler";
 
 type FieldErrorProps = {
 	formState: FormState;
@@ -6,9 +6,13 @@ type FieldErrorProps = {
 };
 
 export function FieldError({ formState, name }: FieldErrorProps) {
+	const error = getFieldError(formState, name);
+	if (!error) return null;
+
 	return (
 		<span className="text-xs text-red-400">
-			{formState.fieldErrors[name]?.[0]}
+			{error}
 		</span>
 	)
 }
+

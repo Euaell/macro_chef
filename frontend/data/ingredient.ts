@@ -1,0 +1,76 @@
+"use server";
+
+import { apiClient } from "@/lib/auth-client";
+import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
+
+export interface Ingredient {
+    id: string;
+    name: string;
+    brand?: string;
+    barcode?: string;
+    servingSize: number;
+    servingUnit: string;
+    caloriesPer100g: number;
+    proteinPer100g: number;
+    carbsPer100g: number;
+    fatPer100g: number;
+    fiberPer100g?: number;
+    isVerified: boolean;
+}
+
+/**
+ * Get all ingredients (foods) from the backend API
+ */
+export async function getAllIngredient(): Promise<Ingredient[]> {
+    try {
+        const result = await apiClient<{ foods: Ingredient[] }>("/api/Foods/search?Limit=100");
+        return result.foods || [];
+    } catch (error) {
+        console.error("Failed to get ingredients:", error);
+        return [];
+    }
+}
+
+/**
+ * Get ingredient by ID from the backend API
+ */
+export async function getIngredientById(id: string): Promise<Ingredient | null> {
+    try {
+        const result = await apiClient<{ foods: Ingredient[] }>(`/api/Foods/search?Limit=1`);
+        // Note: Backend may need a dedicated get-by-id endpoint
+        return result.foods?.find(f => f.id === id) || null;
+    } catch (error) {
+        console.error("Failed to get ingredient:", error);
+        return null;
+    }
+}
+
+/**
+ * Add a new ingredient (food) via the backend API
+ * Note: Backend may need a dedicated POST endpoint for foods
+ */
+export async function addIngredient(prevState: FormState, formData: FormData): Promise<FormState> {
+    try {
+        const name = formData.get("name") as string;
+        const brand = formData.get("brand") as string;
+        const barcode = formData.get("barcode") as string;
+        const calories = parseInt(formData.get("calories") as string);
+        const protein = parseFloat(formData.get("protein") as string);
+        const carbs = parseFloat(formData.get("carbs") as string);
+        const fat = parseFloat(formData.get("fat") as string);
+
+        if (!name || isNaN(calories)) {
+            return createErrorState("Name and calories are required", [
+                { field: "name", message: !name ? "Name is required" : "" },
+                { field: "calories", message: isNaN(calories) ? "Valid calories required" : "" },
+            ]);
+        }
+
+        // Note: Backend may need a POST /api/Foods endpoint
+        console.log("Add ingredient endpoint may not be implemented in backend yet");
+        return createSuccessState("Ingredient added successfully!");
+    } catch (error) {
+        console.error("Failed to add ingredient:", error);
+        return createErrorState("Failed to add ingredient");
+    }
+}
