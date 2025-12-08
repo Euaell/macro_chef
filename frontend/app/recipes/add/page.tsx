@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
-
 
 type SelectedIngredient = {
 	ingredient: Ingredient | null;
@@ -17,9 +17,7 @@ type SelectedIngredient = {
 	unit: "gram";
 }
 
-// TODO: variable according to screen size
-const MAX_RECIPE_IMAGES_TO_PREVIEW = 1;
-
+const MAX_RECIPE_IMAGES_TO_PREVIEW = 3;
 
 export default function Page() {
 	const [name, setName] = useState('');
@@ -28,6 +26,7 @@ export default function Page() {
 	const [instructions, setInstructions] = useState('');
 	const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
 	const [servings, setServings] = useState(1);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const [tags, setTags] = useState<Set<string>>(new Set<string>());
 	const [currentTag, setCurrentTag] = useState('');
@@ -35,9 +34,7 @@ export default function Page() {
 	const [ingredientSearch, setIngredientSearch] = useState<Ingredient[]>([]);
 	const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
 
-	// dropdown options ref
 	const dropdownRef = useRef<HTMLDivElement>(null);
-
 	const router = useRouter();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -101,14 +98,12 @@ export default function Page() {
 	function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>) {
 		if (e.key === 'Enter' && currentTag.trim()) {
 			e.preventDefault();
-			// setTags([...tags, currentTag.trim()]);
 			setTags(new Set([...tags, currentTag.trim().toUpperCase()]));
 			setCurrentTag('');
 		}
 	}
 
 	function handleRemoveTag(tagToRemove: string) {
-		// setTags(tags.filter(tag => tag !== tagToRemove));
 		const newTags = new Set(tags);
 		newTags.delete(tagToRemove);
 		setTags(newTags);
@@ -134,10 +129,10 @@ export default function Page() {
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
+		setIsSubmitting(true);
 		const recipeData: RecipeInput = {
 			name,
 			description,
-			// ingredients: selectedIngredients,
 			ingredients: selectedIngredients.map(ing => ({
 				ingredient: ing.ingredient!,
 				amount: ing.amount!,
@@ -158,78 +153,94 @@ export default function Page() {
 		})
 		.then(res => res.json())
 		.then(() => router.push('/recipes'))
+		.finally(() => setIsSubmitting(false))
 	}
 
 	return (
-		<div className="max-w-4xl mx-auto p-6">
-			<h1 className="text-3xl font-bold mb-6">Add New Recipe</h1>
-			<div className="flex justify-end mb-4">
+		<div className="max-w-4xl mx-auto space-y-6">
+			{/* Header */}
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-4">
+					<Link href="/recipes" className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+						<i className="ri-arrow-left-line text-xl text-slate-600" />
+					</Link>
+					<div>
+						<h1 className="text-2xl font-bold text-slate-900">Create Recipe</h1>
+						<p className="text-slate-500">Add a new recipe to your collection</p>
+					</div>
+				</div>
 				<button
 					type="button"
 					onClick={() => setIsModalOpen(true)}
-					className="bg-emerald-700 text-white px-4 py-2 rounded-md hover:bg-emerald-600"
+					className="btn-secondary"
 				>
+					<i className="ri-pie-chart-2-line" />
 					View Macros
 				</button>
 			</div>
+
+			{/* Macros Modal */}
 			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-				<h2 className="text-xl font-bold mb-4">Recipe Macros Overview</h2>
-				<table className="w-full mb-4 border">
-					<thead>
-						<tr className="bg-gray-100">
-							<th className="p-2 text-left">Ingredient</th>
-							<th className="p-2 text-right">Amount</th>
-							<th className="p-2 text-right">Unit</th>
-							<th className="p-2 text-right">Calories</th>
-							<th className="p-2 text-right">Protein</th>
-							<th className="p-2 text-right">Carbs</th>
-							<th className="p-2 text-right">Fat</th>
-							<th className="p-2 text-right">Fiber</th>
-						</tr>
-					</thead>
-					<tbody>
-						{selectedIngredients.map((ing, idx) => {
-							if (!ing.ingredient || !ing.amount) return null;
-							const ratio = ing.amount / (ing.ingredient.servingSize || 1);
-							return (
-								<tr key={idx}>
-									<td className="p-2">{ing.ingredient.name}</td>
-									<td className="p-2 text-right">{ing.amount}</td>
-									<td className="p-2 text-right">{ing.ingredient.servingUnit}</td>
-									<td className="p-2 text-right">{((ing.ingredient.macros.calories || 0) * ratio).toFixed(1)}</td>
-									<td className="p-2 text-right">{((ing.ingredient.macros.protein || 0) * ratio).toFixed(1)}</td>
-									<td className="p-2 text-right">{((ing.ingredient.macros.carbs || 0) * ratio).toFixed(1)}</td>
-									<td className="p-2 text-right">{((ing.ingredient.macros.fat || 0) * ratio).toFixed(1)}</td>
-									<td className="p-2 text-right">{((ing.ingredient.macros.fiber || 0) * ratio).toFixed(1)}</td>
-								</tr>
-							);
-						})}
-					</tbody>
-					<tfoot>
-						<tr className="font-bold bg-emerald-50">
-							<td className="p-2">Total</td>
-							<td colSpan={2}></td>
-							<td className="p-2 text-right">{totalMacros.calories.toFixed(1)}</td>
-							<td className="p-2 text-right">{totalMacros.protein.toFixed(1)}</td>
-							<td className="p-2 text-right">{totalMacros.carbs.toFixed(1)}</td>
-							<td className="p-2 text-right">{totalMacros.fat.toFixed(1)}</td>
-							<td className="p-2 text-right">{totalMacros.fiber.toFixed(1)}</td>
-						</tr>
-					</tfoot>
-				</table>
+				<h2 className="text-xl font-bold text-slate-900 mb-4">Recipe Macros Overview</h2>
+				<div className="overflow-x-auto">
+					<table className="w-full text-sm">
+						<thead>
+							<tr className="bg-slate-50">
+								<th className="p-3 text-left font-medium text-slate-600 rounded-tl-xl">Ingredient</th>
+								<th className="p-3 text-right font-medium text-slate-600">Amount</th>
+								<th className="p-3 text-right font-medium text-slate-600">Calories</th>
+								<th className="p-3 text-right font-medium text-slate-600">Protein</th>
+								<th className="p-3 text-right font-medium text-slate-600">Carbs</th>
+								<th className="p-3 text-right font-medium text-slate-600">Fat</th>
+								<th className="p-3 text-right font-medium text-slate-600 rounded-tr-xl">Fiber</th>
+							</tr>
+						</thead>
+						<tbody className="divide-y divide-slate-100">
+							{selectedIngredients.map((ing, idx) => {
+								if (!ing.ingredient || !ing.amount) return null;
+								const ratio = ing.amount / (ing.ingredient.servingSize || 1);
+								return (
+									<tr key={idx} className="hover:bg-slate-50">
+										<td className="p-3 text-slate-900">{ing.ingredient.name}</td>
+										<td className="p-3 text-right text-slate-600">{ing.amount}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.calories || 0) * ratio).toFixed(0)}</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.protein || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.carbs || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.fat || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.fiber || 0) * ratio).toFixed(1)}g</td>
+									</tr>
+								);
+							})}
+						</tbody>
+						<tfoot>
+							<tr className="bg-brand-50 font-semibold">
+								<td className="p-3 text-brand-900 rounded-bl-xl">Total</td>
+								<td className="p-3 text-right text-brand-600"></td>
+								<td className="p-3 text-right text-brand-600">{totalMacros.calories.toFixed(0)}</td>
+								<td className="p-3 text-right text-brand-600">{totalMacros.protein.toFixed(1)}g</td>
+								<td className="p-3 text-right text-brand-600">{totalMacros.carbs.toFixed(1)}g</td>
+								<td className="p-3 text-right text-brand-600">{totalMacros.fat.toFixed(1)}g</td>
+								<td className="p-3 text-right text-brand-600 rounded-br-xl">{totalMacros.fiber.toFixed(1)}g</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
 			</Modal>
+
 			<form onSubmit={handleSubmit} className="space-y-6">
-				{/* Basic Information */}
-				<div className="space-y-4">
+				{/* Basic Information Card */}
+				<div className="card p-6 space-y-5">
+					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
+						<i className="ri-image-line text-brand-500" />
+						Basic Information
+					</h2>
+
+					{/* Image Upload */}
 					<div>
-						<label className="block text-sm font-medium mb-1" htmlFor="recipe_images">Recipe Images</label> 
+						<label className="label">Recipe Images</label>
 						<CldUploadWidget
-							// onQueuesEnd={(result, { widget }) => {
-							// 	// widget.close();
-							// }}
 							onSuccess={(result) => {
 								if (result?.info && result.info instanceof Object) {
-									// setImages([...images, result.info.secure_url]);
 									setImages((prevImages) => {
 										if (result?.info && result.info instanceof Object) {
 											return [...prevImages, result.info.secure_url]
@@ -237,220 +248,273 @@ export default function Page() {
 										return prevImages;
 									});
 								}
-								// widget.close();
 							}}
 							signatureEndpoint="/api/sign-cloudinary-params"
 						>
-							{({ open }) => {
-								return (
-									<div className="flex flex-row gap-2 items-center">
-										<button
-											type="button"
-											onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-												e.preventDefault();
-												e.stopPropagation();
-												open();
-											}}
-											className="bg-emerald-50 border-emerald-700 border-4 text-emerald-700 w-24 h-24 items-center rounded-md hover:bg-emerald-100 hover:border-emerald-600"
-										>
-											<i className="ri-upload-cloud-2-line ri-3x"></i>
-											<span className="sr-only">Upload Image</span>
-										</button>
-										{images.map((image, index) => {
-
-											if (typeof image !== 'string' || index >= MAX_RECIPE_IMAGES_TO_PREVIEW) {
-												return null;
-											}
-											
-											return (
-												<div key={index} className="relative w-24 h-24" draggable="false">
-													<Image draggable="false" key={index} src={image} alt="Recipe image thumbnail" fill className="w-24 h-24 object-cover rounded-md m-1" />
-													<button
-														type="button"
-														onClick={() => setImages(images.filter((_, i) => i !== index))}
-														className="absolute items-center -top-3 -right-3 text-sm w-6 h-6 bg-red-600 opacity-70 text-white hover:opacity-85 rounded-full"
-													>
-														<i className="ri-close-line"></i>
-													</button>
-												</div>
-											);
-										})}
-
-										{images.length > MAX_RECIPE_IMAGES_TO_PREVIEW && 
-											<div className="w-24 h-24 bg-gray-200 flex items-center justify-center rounded-md">
-												<p className="text-gray-500">+{images.length - MAX_RECIPE_IMAGES_TO_PREVIEW}</p>
+							{({ open }) => (
+								<div className="flex flex-wrap gap-3">
+									<button
+										type="button"
+										onClick={(e) => {
+											e.preventDefault();
+											open();
+										}}
+										className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 hover:border-brand-400 bg-slate-50 hover:bg-brand-50 flex flex-col items-center justify-center transition-colors group"
+									>
+										<i className="ri-image-add-line text-2xl text-slate-400 group-hover:text-brand-500" />
+										<span className="text-xs text-slate-400 group-hover:text-brand-500 mt-1">Add</span>
+									</button>
+									{images.map((image, index) => {
+										if (typeof image !== 'string' || index >= MAX_RECIPE_IMAGES_TO_PREVIEW) return null;
+										return (
+											<div key={index} className="relative w-24 h-24">
+												<Image src={image} alt="Recipe" fill className="rounded-2xl object-cover border-2 border-slate-200" />
+												<button
+													type="button"
+													onClick={() => setImages(images.filter((_, i) => i !== index))}
+													className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+												>
+													<i className="ri-close-line text-sm" />
+												</button>
 											</div>
-										}
-									</div>
-								);
-							}}
+										);
+									})}
+									{images.length > MAX_RECIPE_IMAGES_TO_PREVIEW && (
+										<div className="w-24 h-24 rounded-2xl bg-slate-100 flex items-center justify-center">
+											<span className="text-slate-500 font-medium">+{images.length - MAX_RECIPE_IMAGES_TO_PREVIEW}</span>
+										</div>
+									)}
+								</div>
+							)}
 						</CldUploadWidget>
 					</div>
+
+					{/* Recipe Name */}
 					<div>
-						<label className="block text-sm font-medium mb-1" htmlFor="recipe_name">Recipe Name</label>
+						<label htmlFor="recipe_name" className="label">Recipe Name</label>
 						<input
 							id="recipe_name"
-							name="recipe_name"
 							type="text"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="w-full p-2 border rounded-md"
+							className="input"
+							placeholder="e.g., Grilled Chicken Salad"
 							required
 						/>
 					</div>
+
+					{/* Description */}
 					<div>
-						<label className="block text-sm font-medium mb-1" htmlFor="description">Description</label>
+						<label htmlFor="description" className="label">Description</label>
 						<textarea
 							id="description"
-							name="description"
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
-							className="w-full p-2 border rounded-md"
+							className="input min-h-[100px] resize-none"
+							placeholder="Describe your recipe..."
 							rows={3}
 							required
 						/>
 					</div>
 				</div>
 
-				{/* Ingredients */}
-				<div>
-					<label className="block text-sm font-medium mb-2">Ingredients</label>
-					<div className="space-y-2">
+				{/* Ingredients Card */}
+				<div className="card p-6 space-y-4">
+					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
+						<i className="ri-list-check-2 text-brand-500" />
+						Ingredients
+					</h2>
+
+					<div className="space-y-3">
 						{selectedIngredients.map((ing, index) => (
-							<div key={index} className="flex gap-2 items-center">
-								<div ref={dropdownRef} className="relative w-full min-w-32">
+							<div key={index} className="flex gap-3 items-start">
+								<div ref={dropdownRef} className="relative flex-1">
 									<input
 										type="text"
-										placeholder="Ingredient name"
+										placeholder="Search ingredient..."
 										value={ing.name}
 										onChange={(e) => handleIngredientNameChange(index, e.target.value)}
-										className="flex-grow p-2 border rounded-md w-full"
+										className="input"
 									/>
-									{activeDropdownIndex === index && (	
-										ingredientSearch.length > 0 ? (
-											<ul className="absolute z-10 w-full bg-white border rounded-md shadow-md mt-1">
-												{ingredientSearch.map((ingredient) => (
-													// TODO: display ingredient details with macros
-													<li
+									{activeDropdownIndex === index && (
+										<div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+											{ingredientSearch.length > 0 ? (
+												ingredientSearch.map((ingredient) => (
+													<button
 														key={ingredient._id.toString()}
-														className="p-2 hover:bg-gray-100 cursor-pointer"
+														type="button"
 														onClick={() => handleIngredientSelect(index, ingredient)}
+														className="w-full p-3 text-left hover:bg-slate-50 flex items-center justify-between border-b border-slate-100 last:border-0"
 													>
-														{ingredient.name}
-													</li>
-												))}
-											</ul>
-										) : (
-											<ul className="absolute z-10 w-full bg-white border rounded-md shadow-md mt-1">
-												{/* TODO: a add ingredient button */}
-												<li className="p-2">No ingredients found</li>
-											</ul>
-										)
+														<span className="font-medium text-slate-900">{ingredient.name}</span>
+														<span className="text-xs text-slate-500">{ingredient.macros.calories} kcal</span>
+													</button>
+												))
+											) : (
+												<div className="p-3 text-slate-500 text-center">No ingredients found</div>
+											)}
+										</div>
 									)}
 								</div>
-
 								<input
 									type="number"
-									placeholder="Amount"
+									placeholder="Amt"
 									value={ing.amount?.toString() || ''}
 									onChange={(e) => handleIngredientAmountChange(index, parseFloat(e.target.value))}
-									className="w-fit max-w-20 md:max-w-24 p-2 border rounded-md"
+									className="input w-20"
 								/>
-								<input
-									type="text"
-									placeholder="Unit"
-									defaultValue={ing.unit}
-									disabled
-									className="w-fit max-w-10 md:max-w-24 p-2 rounded-md"
-								/>
+								<span className="px-3 py-2.5 bg-slate-100 rounded-xl text-slate-600 text-sm">g</span>
 								<button
 									type="button"
 									onClick={() => handleRemoveIngredient(index)}
-									className="p-2 text-red-500"
+									className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors"
 								>
-									<i className="ri-close-large-line"></i>
+									<i className="ri-delete-bin-line" />
 								</button>
 							</div>
 						))}
-						<button
-							type="button"
-							onClick={handleAddIngredient}
-							className="flex items-center gap-2 text-emerald-700"
-						>
-							<i className="ri-add-line"></i>
-							Add Ingredient
-						</button>
 					</div>
+
+					<button
+						type="button"
+						onClick={handleAddIngredient}
+						className="flex items-center gap-2 text-brand-600 hover:text-brand-700 font-medium transition-colors"
+					>
+						<i className="ri-add-circle-line text-lg" />
+						Add Ingredient
+					</button>
 				</div>
 
-				{/* Instructions */}
-				<div>
-					<label className="block text-sm font-medium mb-1" htmlFor="instructions">Instructions</label>
+				{/* Instructions Card */}
+				<div className="card p-6 space-y-4">
+					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
+						<i className="ri-file-list-3-line text-brand-500" />
+						Instructions
+					</h2>
 					<textarea
 						id="instructions"
-						name="instructions"
 						value={instructions}
 						onChange={(e) => setInstructions(e.target.value)}
-						className="w-full p-2 border rounded-md"
+						className="input min-h-[180px] resize-none"
 						rows={6}
-						placeholder="Enter each instruction on a new line"
+						placeholder="Enter each instruction on a new line...&#10;1. Preheat oven to 375°F&#10;2. Season the chicken&#10;3. Grill for 6-8 minutes per side"
 					/>
 				</div>
 
-				{/* Servings */}
-				<div>
-					<label className="block text-sm font-medium mb-1" htmlFor="servings">Servings</label>
-					<input
-						id="servings"
-						name="servings"
-						type="number"
-						value={servings}
-						onChange={(e) => setServings(parseInt(e.target.value))}
-						className="w-24 p-2 border rounded-md"
-						min="1"
-					/>
-				</div>
+				{/* Additional Details Card */}
+				<div className="card p-6 space-y-5">
+					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
+						<i className="ri-settings-3-line text-brand-500" />
+						Additional Details
+					</h2>
 
-				{/* Tags */}
-				<div>
-					<label className="block text-sm font-medium mb-1" htmlFor="tag">Tags</label>
-					<div className="flex flex-wrap gap-2 mb-2">
-						{/* {tags.map((tag, index) => ( */}
-						{Array.from(tags).map((tag, index) => (
-							<span
-								key={index}
-								className="bg-orange-100 text-sm px-2 py-1 rounded-md flex items-center gap-1"
+					{/* Servings */}
+					<div>
+						<label htmlFor="servings" className="label">Servings</label>
+						<div className="flex items-center gap-3">
+							<button
+								type="button"
+								onClick={() => setServings(Math.max(1, servings - 1))}
+								className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
 							>
-								{tag}
-								<button
-									type="button"
-									onClick={() => handleRemoveTag(tag)}
-									className="text-orange-500"
-								>
-									<i className="ri-close-large-line"></i>
-								</button>
-							</span>
-						))}
+								<i className="ri-subtract-line text-slate-600" />
+							</button>
+							<input
+								id="servings"
+								type="number"
+								value={servings}
+								onChange={(e) => setServings(parseInt(e.target.value) || 1)}
+								className="input w-20 text-center"
+								min="1"
+							/>
+							<button
+								type="button"
+								onClick={() => setServings(servings + 1)}
+								className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+							>
+								<i className="ri-add-line text-slate-600" />
+							</button>
+						</div>
 					</div>
-					<input
-						id="tag"
-						name="tag"
-						type="text"
-						value={currentTag}
-						onChange={(e) => setCurrentTag(e.target.value)}
-						onKeyDown={handleAddTag}
-						className="w-full p-2 border rounded-md"
-						placeholder="Type tag and press Enter"
-					/>
+
+					{/* Tags */}
+					<div>
+						<label htmlFor="tag" className="label">Tags</label>
+						{tags.size > 0 && (
+							<div className="flex flex-wrap gap-2 mb-3">
+								{Array.from(tags).map((tag, index) => (
+									<span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-100 text-brand-700 text-sm font-medium">
+										{tag}
+										<button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-brand-900">
+											<i className="ri-close-line" />
+										</button>
+									</span>
+								))}
+							</div>
+						)}
+						<input
+							id="tag"
+							type="text"
+							value={currentTag}
+							onChange={(e) => setCurrentTag(e.target.value)}
+							onKeyDown={handleAddTag}
+							className="input"
+							placeholder="Type a tag and press Enter (e.g., HIGH-PROTEIN, QUICK)"
+						/>
+					</div>
 				</div>
 
+				{/* Macro Summary */}
+				{selectedIngredients.some(ing => ing.ingredient && ing.amount) && (
+					<div className="card p-6 bg-gradient-to-br from-brand-50 to-accent-50">
+						<h2 className="font-semibold text-slate-900 mb-4">Nutrition Summary</h2>
+						<div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+							<div className="text-center p-3 bg-white rounded-xl">
+								<p className="text-2xl font-bold text-orange-600">{totalMacros.calories.toFixed(0)}</p>
+								<p className="text-xs text-slate-500">Calories</p>
+							</div>
+							<div className="text-center p-3 bg-white rounded-xl">
+								<p className="text-2xl font-bold text-red-600">{totalMacros.protein.toFixed(1)}g</p>
+								<p className="text-xs text-slate-500">Protein</p>
+							</div>
+							<div className="text-center p-3 bg-white rounded-xl">
+								<p className="text-2xl font-bold text-amber-600">{totalMacros.carbs.toFixed(1)}g</p>
+								<p className="text-xs text-slate-500">Carbs</p>
+							</div>
+							<div className="text-center p-3 bg-white rounded-xl">
+								<p className="text-2xl font-bold text-yellow-600">{totalMacros.fat.toFixed(1)}g</p>
+								<p className="text-xs text-slate-500">Fat</p>
+							</div>
+							<div className="text-center p-3 bg-white rounded-xl">
+								<p className="text-2xl font-bold text-green-600">{totalMacros.fiber.toFixed(1)}g</p>
+								<p className="text-xs text-slate-500">Fiber</p>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* Submit Button */}
 				<button
 					type="submit"
-					className="w-full bg-emerald-700 text-white py-2 px-4 rounded-md hover:bg-emerald-600"
+					disabled={isSubmitting}
+					className="btn-primary w-full py-4 text-lg"
 				>
-					Add Recipe
+					{isSubmitting ? (
+						<>
+							<svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+							</svg>
+							Creating Recipe...
+						</>
+					) : (
+						<>
+							<i className="ri-check-line text-xl" />
+							Create Recipe
+						</>
+					)}
 				</button>
 			</form>
 		</div>
-	)
+	);
 }
