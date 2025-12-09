@@ -28,6 +28,13 @@ public class ShoppingListsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet]
+    public async Task<ActionResult<GetShoppingListsResult>> GetShoppingLists([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _mediator.Send(new GetShoppingListsQuery { Page = page, PageSize = pageSize });
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateShoppingList([FromBody] CreateShoppingListRequest request)
     {

@@ -12,13 +12,13 @@ public record GetShoppingListsQuery : IRequest<GetShoppingListsResult>
 
 public record GetShoppingListsResult
 {
-    public List<ShoppingListDto> ShoppingLists { get; init; } = new();
+    public List<ShoppingListSummaryDto> ShoppingLists { get; init; } = new();
     public int TotalCount { get; init; }
     public int Page { get; init; }
     public int PageSize { get; init; }
 }
 
-public record ShoppingListDto
+public record ShoppingListSummaryDto
 {
     public Guid Id { get; init; }
     public string? Name { get; init; }
@@ -56,7 +56,7 @@ public class GetShoppingListsQueryHandler : IRequestHandler<GetShoppingListsQuer
             .OrderByDescending(sl => sl.UpdatedAt)
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(sl => new ShoppingListDto
+            .Select(sl => new ShoppingListSummaryDto
             {
                 Id = sl.Id,
                 Name = sl.Name,
