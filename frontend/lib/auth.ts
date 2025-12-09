@@ -3,8 +3,18 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt, organization } from "better-auth/plugins";
 import { db } from "@/db/client";
 
+import * as schema from "@/db/schema";
+
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "pg" }),
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      ...schema,
+      user: schema.users,
+      session: schema.sessions,
+      account: schema.accounts,
+    },
+  }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -48,6 +58,9 @@ export const auth = betterAuth({
   rateLimit: {
     window: 60,
     max: 100,
+  },
+  advanced: {
+    generateId: () => crypto.randomUUID(),
   },
   trustedOrigins: [
     process.env.BETTER_AUTH_URL || "http://localhost:3000",

@@ -136,7 +136,9 @@ builder.Services.AddCors(options =>
 });
 
 // Health checks
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("PostgreSQL")!)
+    .AddRedis(redisConnectionString ?? "localhost");
 
 var app = builder.Build();
 
