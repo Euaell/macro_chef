@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
 using Mizan.Application.Queries;
@@ -8,7 +7,6 @@ namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class ShoppingListsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -18,64 +16,61 @@ public class ShoppingListsController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<GetShoppingListsResult>> GetShoppingLists([FromQuery] GetShoppingListsQuery query)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ShoppingListDto>> GetShoppingList(Guid id)
     {
-        var result = await _mediator.Send(query);
-        return Ok(result);
-    }
-
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ShoppingListDetailDto>> GetShoppingListById(Guid id)
-    {
-        var result = await _mediator.Send(new GetShoppingListByIdQuery(id));
+        // TODO: Validate user access
+        var result = await _mediator.Send(new GetShoppingListQuery(id));
         if (result == null)
+        {
             return NotFound();
+        }
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<CreateShoppingListResult>> CreateShoppingList([FromBody] CreateShoppingListCommand command)
+    public async Task<ActionResult<Guid>> CreateShoppingList([FromBody] CreateShoppingListRequest request)
     {
-        var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetShoppingListById), new { id = result.Id }, result);
-    }
-
-    [HttpPatch("items/{itemId:guid}")]
-    public async Task<ActionResult<UpdateShoppingListItemResult>> UpdateShoppingListItem(
-        Guid itemId,
-        [FromBody] UpdateShoppingListItemRequest request)
-    {
-        var command = new UpdateShoppingListItemCommand
+        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
         {
-            ItemId = itemId,
-            IsChecked = request.IsChecked,
-            ItemName = request.ItemName,
-            Amount = request.Amount,
-            Unit = request.Unit,
-            Category = request.Category
-        };
-        var result = await _mediator.Send(command);
-        if (!result.Success)
-            return NotFound(result);
-        return Ok(result);
+            return Unauthorized("User ID not found in headers (X-User-Id)");
+        }
+
+        var command = new CreateShoppingListCommand(request.Name, userId, request.HouseholdId);
+        var listId = await _mediator.Send(command);
+
+        return CreatedAtAction(nameof(GetShoppingList), new { id = listId }, listId);
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<ActionResult<DeleteShoppingListResult>> DeleteShoppingList(Guid id)
+    [HttpPost("{id}/items")]
+    public async Task<ActionResult<Guid>> AddItem(Guid id, [FromBody] AddShoppingListItemRequest request)
     {
-        var result = await _mediator.Send(new DeleteShoppingListCommand(id));
-        if (!result.Success)
-            return NotFound(result);
-        return Ok(result);
+        var command = new AddShoppingListItemCommand(id, request.ItemName, request.Amount, request.Unit, request.Category);
+        var itemId = await _mediator.Send(command);
+
+        if (itemId == null)
+        {
+            return NotFound("Shopping list not found");
+        }
+
+        return Ok(itemId);
+    }
+
+    [HttpPatch("items/{itemId}/toggle")]
+    public async Task<IActionResult> ToggleItem(Guid itemId, [FromBody] ToggleItemRequest request)
+    {
+        var command = new ToggleShoppingListItemCommand(itemId, request.IsChecked);
+        var success = await _mediator.Send(command);
+
+        if (!success)
+        {
+            return NotFound("Item not found");
+        }
+
+        return NoContent();
     }
 }
 
-public record UpdateShoppingListItemRequest
-{
-    public bool? IsChecked { get; init; }
-    public string? ItemName { get; init; }
-    public decimal? Amount { get; init; }
-    public string? Unit { get; init; }
-    public string? Category { get; init; }
-}
+public record CreateShoppingListRequest(string Name, Guid? HouseholdId);
+public record AddShoppingListItemRequest(string ItemName, decimal? Amount, string? Unit, string? Category);
+public record ToggleItemRequest(bool IsChecked);

@@ -89,12 +89,7 @@ public class ChatHub : Hub
 
         try
         {
-            var command = new SendChatMessageCommand
-            {
-                ConversationId = message.ConversationId,
-                Content = message.Content,
-                MessageType = message.MessageType
-            };
+            var command = new SendChatMessageCommand(message.ConversationId, userId.Value, message.Content, message.MessageType);
 
             var result = await _mediator.Send(command);
 

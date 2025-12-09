@@ -26,11 +26,11 @@ public record RecipeDetailDto
 
 public record RecipeIngredientDto
 {
-    public Guid FoodId { get; init; }
+    public Guid? FoodId { get; init; }
     public string FoodName { get; init; } = string.Empty;
-    public decimal Quantity { get; init; }
+    public decimal? Amount { get; init; }
     public string Unit { get; init; } = string.Empty;
-    public string? Notes { get; init; }
+    public string IngredientText { get; init; } = string.Empty;
 }
 
 public record RecipeInstructionDto
@@ -89,9 +89,9 @@ public class GetRecipeByIdQueryHandler : IRequestHandler<GetRecipeByIdQuery, Rec
             {
                 FoodId = i.FoodId,
                 FoodName = i.Food?.Name ?? "",
-                Quantity = i.Quantity,
-                Unit = i.Unit,
-                Notes = i.Notes
+                Amount = i.Amount,
+                Unit = i.Unit ?? "",
+                IngredientText = i.IngredientText
             }).ToList(),
             Instructions = recipe.Instructions
                 .OrderBy(i => i.StepNumber)

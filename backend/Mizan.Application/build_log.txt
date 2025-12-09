@@ -1,0 +1,16 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Mizan.Domain -> G:\_Projects\macro_chef\backend\Mizan.Domain\bin\Debug\net8.0\Mizan.Domain.dll
+G:\_Projects\macro_chef\backend\Mizan.Application\Queries\GetBodyMeasurementsQuery.cs(39,17): error CS1503: Argument 2: cannot convert from 'System.DateOnly' to 'System.DateTime' [G:\_Projects\macro_chef\backend\Mizan.Application\Mizan.Application.csproj]
+G:\_Projects\macro_chef\backend\Mizan.Application\Queries\GetBodyMeasurementsQuery.cs(52,16): warning CS8619: Nullability of reference types in value of type '?' doesn't match target type 'List<BodyMeasurementDto>'. [G:\_Projects\macro_chef\backend\Mizan.Application\Mizan.Application.csproj]
+G:\_Projects\macro_chef\backend\Mizan.Application\Commands\LogBodyMeasurementCommand.cs(36,31): error CS0029: Cannot implicitly convert type 'System.DateTime' to 'System.DateOnly' [G:\_Projects\macro_chef\backend\Mizan.Application\Mizan.Application.csproj]
+
+Build FAILED.
+
+G:\_Projects\macro_chef\backend\Mizan.Application\Queries\GetBodyMeasurementsQuery.cs(52,16): warning CS8619: Nullability of reference types in value of type '?' doesn't match target type 'List<BodyMeasurementDto>'. [G:\_Projects\macro_chef\backend\Mizan.Application\Mizan.Application.csproj]
+G:\_Projects\macro_chef\backend\Mizan.Application\Queries\GetBodyMeasurementsQuery.cs(39,17): error CS1503: Argument 2: cannot convert from 'System.DateOnly' to 'System.DateTime' [G:\_Projects\macro_chef\backend\Mizan.Application\Mizan.Application.csproj]
+G:\_Projects\macro_chef\backend\Mizan.Application\Commands\LogBodyMeasurementCommand.cs(36,31): error CS0029: Cannot implicitly convert type 'System.DateTime' to 'System.DateOnly' [G:\_Projects\macro_chef\backend\Mizan.Application\Mizan.Application.csproj]
+    1 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:01.92

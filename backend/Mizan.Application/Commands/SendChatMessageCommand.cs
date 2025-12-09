@@ -6,12 +6,7 @@ using Mizan.Domain.Entities;
 
 namespace Mizan.Application.Commands;
 
-public record SendChatMessageCommand : IRequest<SendChatMessageResult>
-{
-    public Guid ConversationId { get; init; }
-    public string Content { get; init; } = string.Empty;
-    public string MessageType { get; init; } = "text";
-}
+public record SendChatMessageCommand(Guid ConversationId, Guid UserId, string Content, string MessageType = "text") : IRequest<SendChatMessageResult>;
 
 public record SendChatMessageResult
 {
@@ -32,21 +27,14 @@ public class SendChatMessageCommandValidator : AbstractValidator<SendChatMessage
 public class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageCommand, SendChatMessageResult>
 {
     private readonly IMizanDbContext _context;
-    private readonly ICurrentUserService _currentUser;
 
-    public SendChatMessageCommandHandler(IMizanDbContext context, ICurrentUserService currentUser)
+    public SendChatMessageCommandHandler(IMizanDbContext context)
     {
         _context = context;
-        _currentUser = currentUser;
     }
 
     public async Task<SendChatMessageResult> Handle(SendChatMessageCommand request, CancellationToken cancellationToken)
     {
-        if (!_currentUser.UserId.HasValue)
-        {
-            throw new UnauthorizedAccessException("User must be authenticated");
-        }
-
         var conversation = await _context.ChatConversations
             .Include(c => c.Relationship)
             .FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
@@ -58,7 +46,7 @@ public class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageComm
 
         // Verify user is part of this conversation
         var relationship = conversation.Relationship;
-        if (relationship.TrainerId != _currentUser.UserId && relationship.ClientId != _currentUser.UserId)
+        if (relationship.TrainerId != request.UserId && relationship.ClientId != request.UserId)
         {
             throw new UnauthorizedAccessException("User is not part of this conversation");
         }
@@ -69,7 +57,7 @@ public class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageComm
         }
 
         // Determine recipient
-        var recipientId = relationship.TrainerId == _currentUser.UserId
+        var recipientId = relationship.TrainerId == request.UserId
             ? relationship.ClientId
             : relationship.TrainerId;
 
@@ -77,7 +65,7 @@ public class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageComm
         {
             Id = Guid.NewGuid(),
             ConversationId = request.ConversationId,
-            SenderId = _currentUser.UserId.Value,
+            SenderId = request.UserId,
             Content = request.Content,
             MessageType = request.MessageType,
             SentAt = DateTime.UtcNow
