@@ -21,10 +21,10 @@ export default async function Page({ params }: { params: Promise<{ ingredientId:
 		);
 	}
 
-	const totalMacros = ingredient.macros.protein + ingredient.macros.carbs + ingredient.macros.fat;
-	const proteinPercentage = totalMacros > 0 ? (ingredient.macros.protein / totalMacros) * 100 : 0;
-	const carbsPercentage = totalMacros > 0 ? (ingredient.macros.carbs / totalMacros) * 100 : 0;
-	const fatPercentage = totalMacros > 0 ? (ingredient.macros.fat / totalMacros) * 100 : 0;
+	const totalMacros = ingredient.proteinPer100g + ingredient.carbsPer100g + ingredient.fatPer100g;
+	const proteinPercentage = totalMacros > 0 ? (ingredient.proteinPer100g / totalMacros) * 100 : 0;
+	const carbsPercentage = totalMacros > 0 ? (ingredient.carbsPer100g / totalMacros) * 100 : 0;
+	const fatPercentage = totalMacros > 0 ? (ingredient.fatPer100g / totalMacros) * 100 : 0;
 
 	return (
 		<div className="max-w-3xl mx-auto space-y-6">
@@ -36,7 +36,7 @@ export default async function Page({ params }: { params: Promise<{ ingredientId:
 				<div className="flex-1">
 					<div className="flex items-center gap-3">
 						<h1 className="text-2xl font-bold text-slate-900 capitalize">{ingredient.name}</h1>
-						{ingredient.verified && (
+						{ingredient.isVerified && (
 							<span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
 								<i className="ri-verified-badge-line" />
 								Verified
@@ -55,35 +55,35 @@ export default async function Page({ params }: { params: Promise<{ ingredientId:
 						<div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-2">
 							<i className="ri-fire-line text-orange-600" />
 						</div>
-						<p className="text-2xl font-bold text-slate-900">{ingredient.macros.calories}</p>
+						<p className="text-2xl font-bold text-slate-900">{ingredient.caloriesPer100g}</p>
 						<p className="text-xs text-slate-500">Calories</p>
 					</div>
 					<div className="text-center p-4 bg-white rounded-xl">
 						<div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-2">
 							<i className="ri-heart-pulse-line text-red-600" />
 						</div>
-						<p className="text-2xl font-bold text-slate-900">{ingredient.macros.protein}g</p>
+						<p className="text-2xl font-bold text-slate-900">{ingredient.proteinPer100g}g</p>
 						<p className="text-xs text-slate-500">Protein</p>
 					</div>
 					<div className="text-center p-4 bg-white rounded-xl">
 						<div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-2">
 							<i className="ri-bread-line text-amber-600" />
 						</div>
-						<p className="text-2xl font-bold text-slate-900">{ingredient.macros.carbs}g</p>
+						<p className="text-2xl font-bold text-slate-900">{ingredient.carbsPer100g}g</p>
 						<p className="text-xs text-slate-500">Carbs</p>
 					</div>
 					<div className="text-center p-4 bg-white rounded-xl">
 						<div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-2">
 							<i className="ri-drop-line text-yellow-600" />
 						</div>
-						<p className="text-2xl font-bold text-slate-900">{ingredient.macros.fat}g</p>
+						<p className="text-2xl font-bold text-slate-900">{ingredient.fatPer100g}g</p>
 						<p className="text-xs text-slate-500">Fat</p>
 					</div>
 					<div className="text-center p-4 bg-white rounded-xl">
 						<div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
 							<i className="ri-leaf-line text-green-600" />
 						</div>
-						<p className="text-2xl font-bold text-slate-900">{ingredient.macros.fiber}g</p>
+						<p className="text-2xl font-bold text-slate-900">{ingredient.fiberPer100g ?? 0}g</p>
 						<p className="text-xs text-slate-500">Fiber</p>
 					</div>
 				</div>
@@ -135,10 +135,12 @@ export default async function Page({ params }: { params: Promise<{ ingredientId:
 				</div>
 			</div>
 
-			{/* Metadata Card */}
+			{/* Actions Card */}
 			<div className="card p-6">
-				<div className="flex items-center justify-between text-sm text-slate-500">
-					<span>Last updated: {new Date(ingredient.updatedAt).toLocaleDateString()}</span>
+				<div className="flex items-center justify-between">
+					<div className="text-sm text-slate-500">
+						{ingredient.brand && <span>Brand: {ingredient.brand}</span>}
+					</div>
 					<div className="flex gap-2">
 						<button className="btn-secondary text-sm px-3 py-1.5">
 							<i className="ri-edit-line" />

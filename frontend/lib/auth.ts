@@ -35,8 +35,6 @@ export const auth = betterAuth({
       // Maps to household concept
       allowUserToCreateOrganization: true,
       organizationLimit: 5,
-      creatorRole: "owner",
-      roles: ["owner", "admin", "member"],
     }),
   ],
   session: {

@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
@@ -26,6 +27,25 @@ public record CreateFoodResult
     public string Name { get; init; } = string.Empty;
     public bool Success { get; init; }
     public string? Message { get; init; }
+}
+
+public class CreateFoodCommandValidator : AbstractValidator<CreateFoodCommand>
+{
+    public CreateFoodCommandValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
+        RuleFor(x => x.Brand).MaximumLength(255);
+        RuleFor(x => x.Barcode).MaximumLength(100);
+        RuleFor(x => x.ServingSize).GreaterThan(0);
+        RuleFor(x => x.ServingUnit).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.CaloriesPer100g).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.ProteinPer100g).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.CarbsPer100g).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.FatPer100g).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.FiberPer100g).GreaterThanOrEqualTo(0).When(x => x.FiberPer100g.HasValue);
+        RuleFor(x => x.SugarPer100g).GreaterThanOrEqualTo(0).When(x => x.SugarPer100g.HasValue);
+        RuleFor(x => x.SodiumPer100g).GreaterThanOrEqualTo(0).When(x => x.SodiumPer100g.HasValue);
+    }
 }
 
 public class CreateFoodCommandHandler : IRequestHandler<CreateFoodCommand, CreateFoodResult>

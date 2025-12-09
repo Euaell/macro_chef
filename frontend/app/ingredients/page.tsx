@@ -4,6 +4,8 @@ import Link from "next/link";
 import SearchBar from "@/components/IngredientTable/SearchInputField";
 import { getUserOptionalServer } from "@/helper/session";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Page(
 	{ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }>}
 ) {
@@ -21,7 +23,7 @@ export default async function Page(
 				</div>
 				<div className="flex items-center gap-3">
 					<SearchBar />
-					{user && user.isAdmin && (
+					{user && (
 						<Link href="/ingredients/add" className="btn-primary">
 							<i className="ri-add-line" />
 							Add
@@ -58,12 +60,12 @@ export default async function Page(
 							) : (
 								ingredients.map((ingredient) => (
 									<tr
-										key={ingredient._id.toString()}
+										key={ingredient.id}
 										className="hover:bg-slate-50 transition-colors group"
 									>
 										<td className="px-6 py-4">
 											<Link
-												href={`/ingredients/${ingredient._id}`}
+												href={`/ingredients/${ingredient.id}`}
 												className="font-medium text-slate-900 capitalize group-hover:text-brand-600 transition-colors"
 											>
 												{ingredient.name}
@@ -71,27 +73,27 @@ export default async function Page(
 										</td>
 										<td className="px-4 py-4 text-center">
 											<span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 text-sm font-medium">
-												{ingredient.macros.calories}
+												{ingredient.caloriesPer100g}
 											</span>
 										</td>
 										<td className="px-4 py-4 text-center">
 											<span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-sm font-medium">
-												{ingredient.macros.protein}g
+												{ingredient.proteinPer100g}g
 											</span>
 										</td>
 										<td className="px-4 py-4 text-center">
 											<span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-700 text-sm font-medium">
-												{ingredient.macros.fat}g
+												{ingredient.fatPer100g}g
 											</span>
 										</td>
 										<td className="px-4 py-4 text-center">
 											<span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-sm font-medium">
-												{ingredient.macros.carbs}g
+												{ingredient.carbsPer100g}g
 											</span>
 										</td>
 										<td className="px-4 py-4 text-center">
 											<span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-green-50 text-green-700 text-sm font-medium">
-												{ingredient.macros.fiber}g
+												{ingredient.fiberPer100g ?? 0}g
 											</span>
 										</td>
 									</tr>

@@ -7,8 +7,8 @@ import { format, parse } from 'date-fns';
 import RecipeType from '@/types/recipe';
 
 type SimplifiedRecipe = {
-  _id: string;
-  name: string;
+  id: string;
+  title: string;
   calories: number;
   protein: number;
 }
@@ -51,10 +51,10 @@ export default function AddMealPlanPage() {
         .then((recipes: RecipeType[]) => {
           // Simplify recipe objects to avoid circular references
           const simplifiedRecipes = recipes.map(recipe => ({
-            _id: recipe._id.toString(),
-            name: recipe.name,
-            calories: recipe.totalMacros.calories,
-            protein: recipe.totalMacros.protein
+            id: recipe.id,
+            title: recipe.title,
+            calories: recipe.calories || 0,
+            protein: recipe.protein || 0
           }));
           setRecipes(simplifiedRecipes);
           setFilteredRecipes(simplifiedRecipes);
@@ -105,19 +105,19 @@ export default function AddMealPlanPage() {
     if (searchTerm.trim() === '') {
       setFilteredRecipes(recipes);
     } else {
-      const filtered = recipes.filter(recipe => 
-        recipe.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = recipes.filter(recipe =>
+        recipe.title?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredRecipes(filtered);
     }
   }, [searchTerm, recipes]);
 
-  const addRecipeToSelection = (recipe: any) => {
+  const addRecipeToSelection = (recipe: SimplifiedRecipe) => {
     setSelectedRecipes([
       ...selectedRecipes,
       {
-        recipeId: recipe._id,
-        recipeName: recipe.name,
+        recipeId: recipe.id,
+        recipeName: recipe.title,
         servings: 1,
         mealTime: 'lunch'
       }
@@ -289,12 +289,12 @@ export default function AddMealPlanPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {filteredRecipes.map((recipe) => (
-                <div 
-                  key={recipe._id?.toString()}
+                <div
+                  key={recipe.id}
                   className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition"
                   onClick={() => addRecipeToSelection(recipe)}
                 >
-                  <h3 className="font-medium">{recipe.name}</h3>
+                  <h3 className="font-medium">{recipe.title}</h3>
                   <p className="text-sm text-gray-600">
                     {Math.round(recipe.calories)} cal | {Math.round(recipe.protein)}g protein
                   </p>

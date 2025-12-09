@@ -21,10 +21,29 @@ export interface Ingredient {
 /**
  * Get all ingredients (foods) from the backend API
  */
-export async function getAllIngredient(): Promise<Ingredient[]> {
+export async function getAllIngredient(searchTerm?: string, sortBy?: string): Promise<Ingredient[]> {
     try {
-        const result = await apiClient<{ Foods: Ingredient[] }>("/api/Foods/search?Limit=100");
-        return result.Foods || [];
+        const params = new URLSearchParams();
+        params.set("Limit", "100");
+        if (searchTerm) params.set("SearchTerm", searchTerm);
+
+        const result = await apiClient<{ Foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);
+        let foods = result.Foods || [];
+
+        // Sort if requested
+        if (sortBy) {
+            const sortField = sortBy as keyof Ingredient;
+            foods = [...foods].sort((a, b) => {
+                const aVal = a[sortField];
+                const bVal = b[sortField];
+                if (typeof aVal === "number" && typeof bVal === "number") {
+                    return bVal - aVal;
+                }
+                return String(aVal).localeCompare(String(bVal));
+            });
+        }
+
+        return foods;
     } catch (error) {
         console.error("Failed to get ingredients:", error);
         return [];

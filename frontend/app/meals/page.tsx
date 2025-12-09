@@ -1,19 +1,18 @@
-import { getMeal, getTodayMeal } from "@/data/meal";
+import { getTodayMeal } from "@/data/meal";
 import MealMacrosChart from "@/components/MealMacrosChart";
 import Link from "next/link";
-import MealCard from "@/components/MealCard";
 import { getUserServer } from "@/helper/session";
 
-export default async function Page() {
-	const user = await getUserServer();
-	const todayMeals = await getTodayMeal(user._id);
-	const mealsAggregate = await getMeal(user._id);
+export const dynamic = 'force-dynamic';
 
-	const totalCalories = todayMeals.reduce((sum, meal) => sum + meal.totalMacros.calories, 0);
-	const totalProtein = todayMeals.reduce((sum, meal) => sum + meal.totalMacros.protein, 0);
-	const totalCarbs = todayMeals.reduce((sum, meal) => sum + meal.totalMacros.carbs, 0);
-	const totalFat = todayMeals.reduce((sum, meal) => sum + meal.totalMacros.fat, 0);
-	const totalFiber = todayMeals.reduce((sum, meal) => sum + meal.totalMacros.fiber, 0);
+export default async function Page() {
+	await getUserServer(); // Verify user is authenticated
+	const todayMeals = await getTodayMeal();
+
+	const totalCalories = todayMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+	const totalProtein = todayMeals.reduce((sum, meal) => sum + (meal.proteinGrams || 0), 0);
+	const totalCarbs = todayMeals.reduce((sum, meal) => sum + (meal.carbsGrams || 0), 0);
+	const totalFat = todayMeals.reduce((sum, meal) => sum + (meal.fatGrams || 0), 0);
 
 	return (
 		<div className="space-y-6">
@@ -37,7 +36,7 @@ export default async function Page() {
 						{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
 					</span>
 				</div>
-				<div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+				<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 					<div className="text-center p-4 bg-white rounded-xl">
 						<div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-2">
 							<i className="ri-fire-line text-orange-600" />
@@ -66,13 +65,6 @@ export default async function Page() {
 						<p className="text-2xl font-bold text-slate-900">{totalFat.toFixed(1)}g</p>
 						<p className="text-xs text-slate-500">Fat</p>
 					</div>
-					<div className="text-center p-4 bg-white rounded-xl">
-						<div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-							<i className="ri-leaf-line text-green-600" />
-						</div>
-						<p className="text-2xl font-bold text-slate-900">{totalFiber.toFixed(1)}g</p>
-						<p className="text-xs text-slate-500">Fiber</p>
-					</div>
 				</div>
 			</div>
 
@@ -87,9 +79,18 @@ export default async function Page() {
 				</div>
 
 				{todayMeals.length > 0 ? (
-					<div className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2">
+					<div className="space-y-3">
 						{todayMeals.map((meal) => (
-							<MealCard meal={meal} key={meal._id.toString()} />
+							<div key={meal.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+								<div>
+									<h3 className="font-medium text-slate-900">{meal.name || meal.mealType}</h3>
+									<p className="text-sm text-slate-500">{meal.mealType}</p>
+								</div>
+								<div className="text-right">
+									<p className="font-semibold text-orange-600">{meal.calories || 0} kcal</p>
+									<p className="text-xs text-slate-500">{meal.servings} serving(s)</p>
+								</div>
+							</div>
 						))}
 					</div>
 				) : (
@@ -105,15 +106,6 @@ export default async function Page() {
 						</Link>
 					</div>
 				)}
-			</div>
-
-			{/* Macros Chart */}
-			<div className="card p-6">
-				<h2 className="font-semibold text-slate-900 flex items-center gap-2 mb-4">
-					<i className="ri-line-chart-line text-brand-500" />
-					Nutrition Trends
-				</h2>
-				<MealMacrosChart perDayMeals={mealsAggregate} />
 			</div>
 		</div>
 	);

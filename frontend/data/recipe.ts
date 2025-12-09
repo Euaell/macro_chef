@@ -27,8 +27,18 @@ export interface Recipe {
     protein?: number;
     carbs?: number;
     fat?: number;
+    fiber?: number;
     tags?: string[];
+    ingredients?: RecipeIngredient[];
+    instructions?: string[];
     createdAt: Date;
+}
+
+export interface RecipeIngredient {
+    ingredientText: string;
+    foodName?: string;
+    amount?: number;
+    unit?: string;
 }
 
 /**

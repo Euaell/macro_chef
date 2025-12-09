@@ -1,24 +1,10 @@
-
-import Goal from "./goal";
-import { ID } from "./id";
-
+// User type compatible with BetterAuth
 export default interface User {
-	_id: ID;
+	id: string;
 	email: string;
-	image?: string;
-	password: string;
-
-	isVerified: Boolean;
-	isAdmin: Boolean;
-
-	forgotPasswordToken: String | null;
-	forgotPasswordTokenExpiry: Date | null;
-	verifyToken: String | null;
-	verifyTokenExpiry: Date | null;
-
-    goal: Goal;
-
-	// timestamps
+	name: string;
+	emailVerified: boolean;
+	image?: string | null;
 	createdAt: Date;
 	updatedAt: Date;
 }

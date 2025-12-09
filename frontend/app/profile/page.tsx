@@ -2,6 +2,8 @@ import { getUserServer } from "@/helper/session";
 import Image from "next/image";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
 	const user = await getUserServer();
 
@@ -39,12 +41,6 @@ export default async function Page() {
 					<div className="text-center sm:text-left flex-1">
 						<h2 className="text-xl font-bold text-slate-900">{user.name || user.email.split('@')[0]}</h2>
 						<p className="text-slate-500">{user.email}</p>
-						{user.isAdmin && (
-							<span className="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-medium">
-								<i className="ri-shield-star-line" />
-								Admin
-							</span>
-						)}
 					</div>
 					<button className="btn-secondary">
 						<i className="ri-edit-line" />

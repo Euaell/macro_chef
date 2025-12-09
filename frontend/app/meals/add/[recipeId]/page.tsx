@@ -22,6 +22,14 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 		);
 	}
 
+	const macros = {
+		calories: recipe.calories || 0,
+		protein: recipe.protein || 0,
+		carbs: recipe.carbs || 0,
+		fat: recipe.fat || 0,
+		fiber: recipe.fiber || 0,
+	};
+
 	return (
 		<div className="max-w-3xl mx-auto space-y-6">
 			{/* Header */}
@@ -31,7 +39,7 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 				</Link>
 				<div>
 					<h1 className="text-2xl font-bold text-slate-900">Log from Recipe</h1>
-					<p className="text-slate-500">Add &quot;{recipe.name}&quot; to your food diary</p>
+					<p className="text-slate-500">Add &quot;{recipe.title}&quot; to your food diary</p>
 				</div>
 			</div>
 
@@ -42,36 +50,36 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 						<i className="ri-restaurant-2-line text-xl text-brand-600" />
 					</div>
 					<div>
-						<h2 className="font-semibold text-slate-900">{recipe.name}</h2>
+						<h2 className="font-semibold text-slate-900">{recipe.title}</h2>
 						<p className="text-sm text-slate-600">{recipe.servings} servings</p>
 					</div>
 				</div>
 				<div className="grid grid-cols-5 gap-2">
 					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-orange-600">{recipe.totalMacros.calories.toFixed(0)}</p>
+						<p className="text-lg font-bold text-orange-600">{macros.calories}</p>
 						<p className="text-xs text-slate-500">cal</p>
 					</div>
 					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-red-600">{recipe.totalMacros.protein.toFixed(1)}g</p>
+						<p className="text-lg font-bold text-red-600">{macros.protein}g</p>
 						<p className="text-xs text-slate-500">protein</p>
 					</div>
 					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-amber-600">{recipe.totalMacros.carbs.toFixed(1)}g</p>
+						<p className="text-lg font-bold text-amber-600">{macros.carbs}g</p>
 						<p className="text-xs text-slate-500">carbs</p>
 					</div>
 					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-yellow-600">{recipe.totalMacros.fat.toFixed(1)}g</p>
+						<p className="text-lg font-bold text-yellow-600">{macros.fat}g</p>
 						<p className="text-xs text-slate-500">fat</p>
 					</div>
 					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-green-600">{recipe.totalMacros.fiber.toFixed(1)}g</p>
+						<p className="text-lg font-bold text-green-600">{macros.fiber}g</p>
 						<p className="text-xs text-slate-500">fiber</p>
 					</div>
 				</div>
 			</div>
 
 			{/* Form Component */}
-			<AddMealFromRecipe name={recipe.name} macros={recipe.totalMacros} />
+			<AddMealFromRecipe name={recipe.title} macros={macros} />
 		</div>
 	);
 }

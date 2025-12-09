@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
@@ -22,6 +23,21 @@ public record CreateFoodDiaryEntryResult
     public Guid Id { get; init; }
     public bool Success { get; init; }
     public string? Message { get; init; }
+}
+
+public class CreateFoodDiaryEntryCommandValidator : AbstractValidator<CreateFoodDiaryEntryCommand>
+{
+    public CreateFoodDiaryEntryCommandValidator()
+    {
+        RuleFor(x => x.MealType).NotEmpty()
+            .Must(m => new[] { "breakfast", "lunch", "dinner", "snack" }.Contains(m.ToLower()))
+            .WithMessage("Meal type must be breakfast, lunch, dinner, or snack");
+        RuleFor(x => x.Servings).GreaterThan(0);
+        RuleFor(x => x.Calories).GreaterThanOrEqualTo(0).When(x => x.Calories.HasValue);
+        RuleFor(x => x.ProteinGrams).GreaterThanOrEqualTo(0).When(x => x.ProteinGrams.HasValue);
+        RuleFor(x => x.CarbsGrams).GreaterThanOrEqualTo(0).When(x => x.CarbsGrams.HasValue);
+        RuleFor(x => x.FatGrams).GreaterThanOrEqualTo(0).When(x => x.FatGrams.HasValue);
+    }
 }
 
 public class CreateFoodDiaryEntryCommandHandler : IRequestHandler<CreateFoodDiaryEntryCommand, CreateFoodDiaryEntryResult>

@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Mizan.Application.Interfaces;
@@ -22,6 +23,26 @@ public record CreateUserGoalResult
     public Guid Id { get; init; }
     public bool Success { get; init; }
     public string? Message { get; init; }
+}
+
+public class CreateUserGoalCommandValidator : AbstractValidator<CreateUserGoalCommand>
+{
+    public CreateUserGoalCommandValidator()
+    {
+        RuleFor(x => x.GoalType).MaximumLength(100)
+            .Must(g => g == null || new[] { "weight_loss", "muscle_gain", "maintenance", "general" }.Contains(g.ToLower()))
+            .When(x => x.GoalType != null)
+            .WithMessage("Goal type must be weight_loss, muscle_gain, maintenance, or general");
+        RuleFor(x => x.TargetCalories).GreaterThan(0).When(x => x.TargetCalories.HasValue);
+        RuleFor(x => x.TargetProteinGrams).GreaterThan(0).When(x => x.TargetProteinGrams.HasValue);
+        RuleFor(x => x.TargetCarbsGrams).GreaterThan(0).When(x => x.TargetCarbsGrams.HasValue);
+        RuleFor(x => x.TargetFatGrams).GreaterThan(0).When(x => x.TargetFatGrams.HasValue);
+        RuleFor(x => x.TargetWeight).GreaterThan(0).When(x => x.TargetWeight.HasValue);
+        RuleFor(x => x.WeightUnit).MaximumLength(10)
+            .Must(u => u == null || new[] { "kg", "lb" }.Contains(u.ToLower()))
+            .When(x => x.WeightUnit != null)
+            .WithMessage("Weight unit must be kg or lb");
+    }
 }
 
 public class CreateUserGoalCommandHandler : IRequestHandler<CreateUserGoalCommand, CreateUserGoalResult>

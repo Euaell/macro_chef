@@ -1,13 +1,15 @@
-import RecipeOptions from "@/components/RecipeOptions";
 import { getRecipeById } from "@/data/recipe";
 import { getUserOptionalServer } from "@/helper/session";
 import Image from "next/image";
 import Link from "next/link";
+import placeHolderImage from "@/public/placeholder-recipe.jpg";
+
+export const dynamic = 'force-dynamic';
 
 export default async function Page({ params }: { params: Promise<{ recipeId: string }> }) {
 	const { recipeId } = await params;
 
-	const user = await getUserOptionalServer();
+	await getUserOptionalServer();
 	const recipe = await getRecipeById(recipeId);
 
 	if (!recipe) {
@@ -26,13 +28,12 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 		);
 	}
 
-	const isCreator = user !== null && recipe.creator && recipe.creator._id.toString() === user._id.toString();
 	const macrosPerServing = {
-		calories: Math.round((recipe.totalMacros.calories / recipe.servings) * 10) / 10,
-		protein: Math.round((recipe.totalMacros.protein / recipe.servings) * 10) / 10,
-		carbs: Math.round((recipe.totalMacros.carbs / recipe.servings) * 10) / 10,
-		fat: Math.round((recipe.totalMacros.fat / recipe.servings) * 10) / 10,
-		fiber: Math.round((recipe.totalMacros.fiber / recipe.servings) * 10) / 10,
+		calories: recipe.servings > 0 ? Math.round((recipe.calories || 0) / recipe.servings) : 0,
+		protein: recipe.servings > 0 ? Math.round(((recipe.protein || 0) / recipe.servings) * 10) / 10 : 0,
+		carbs: recipe.servings > 0 ? Math.round(((recipe.carbs || 0) / recipe.servings) * 10) / 10 : 0,
+		fat: recipe.servings > 0 ? Math.round(((recipe.fat || 0) / recipe.servings) * 10) / 10 : 0,
+		fiber: recipe.servings > 0 ? Math.round(((recipe.fiber || 0) / recipe.servings) * 10) / 10 : 0,
 	};
 
 	return (
@@ -43,49 +44,26 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 					<i className="ri-arrow-left-line text-xl text-slate-600" />
 				</Link>
 				<div className="flex-1">
-					<h1 className="text-2xl font-bold text-slate-900">{recipe.name}</h1>
-					{recipe.creator ? (
-						<p className="text-slate-500 text-sm">by {recipe.creator.email}</p>
-					) : (
-						<p className="text-slate-500 text-sm">by Anonymous</p>
-					)}
+					<h1 className="text-2xl font-bold text-slate-900">{recipe.title}</h1>
+					<p className="text-slate-500 text-sm">
+						{recipe.prepTimeMinutes && `${recipe.prepTimeMinutes} min prep`}
+						{recipe.prepTimeMinutes && recipe.cookTimeMinutes && ' • '}
+						{recipe.cookTimeMinutes && `${recipe.cookTimeMinutes} min cook`}
+					</p>
 				</div>
-				<RecipeOptions recipeId={recipe._id.toString()} isCreator={isCreator} />
 			</div>
 
-			{/* Images */}
-			{recipe.images && recipe.images.length > 0 && (
-				<div className="card overflow-hidden">
-					{recipe.images.length === 1 ? (
-						<div className="relative h-72 sm:h-96">
-							<Image
-								src={recipe.images[0]}
-								alt={recipe.name}
-								fill
-								className="object-cover"
-							/>
-						</div>
-					) : (
-						<div className="grid grid-cols-2 gap-1">
-							{recipe.images.slice(0, 4).map((image, index) => (
-								<div key={index} className="relative h-48">
-									<Image
-										src={image}
-										alt={`${recipe.name} ${index + 1}`}
-										fill
-										className="object-cover"
-									/>
-									{index === 3 && recipe.images.length > 4 && (
-										<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-											<span className="text-white text-xl font-semibold">+{recipe.images.length - 4}</span>
-										</div>
-									)}
-								</div>
-							))}
-						</div>
-					)}
+			{/* Image */}
+			<div className="card overflow-hidden">
+				<div className="relative h-72 sm:h-96">
+					<Image
+						src={recipe.imageUrl || placeHolderImage}
+						alt={recipe.title}
+						fill
+						className="object-cover"
+					/>
 				</div>
-			)}
+			</div>
 
 			{/* Description */}
 			{recipe.description && (
@@ -147,19 +125,25 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 						<i className="ri-list-check-2 text-brand-500" />
 						Ingredients
 					</h2>
-					<ul className="space-y-3">
-						{recipe.ingredients.map((item, index) => (
-							<li key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-								<div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-medium">
-									{index + 1}
-								</div>
-								<div className="flex-1">
-									<span className="font-medium text-slate-900">{item.ingredient.name}</span>
-								</div>
-								<span className="text-slate-500 text-sm">{item.amount} {item.unit}</span>
-							</li>
-						))}
-					</ul>
+					{recipe.ingredients && recipe.ingredients.length > 0 ? (
+						<ul className="space-y-3">
+							{recipe.ingredients.map((item, index) => (
+								<li key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+									<div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-medium">
+										{index + 1}
+									</div>
+									<div className="flex-1">
+										<span className="font-medium text-slate-900">{item.foodName || item.ingredientText}</span>
+									</div>
+									{item.amount && (
+										<span className="text-slate-500 text-sm">{item.amount} {item.unit}</span>
+									)}
+								</li>
+							))}
+						</ul>
+					) : (
+						<p className="text-slate-500 text-center py-4">No ingredients listed</p>
+					)}
 				</div>
 
 				{/* Instructions */}
@@ -168,16 +152,20 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 						<i className="ri-file-list-3-line text-brand-500" />
 						Instructions
 					</h2>
-					<ol className="space-y-4">
-						{recipe.instructions.map((instruction, index) => (
-							<li key={index} className="flex gap-3">
-								<div className="w-8 h-8 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-									{index + 1}
-								</div>
-								<p className="text-slate-700 pt-1">{instruction}</p>
-							</li>
-						))}
-					</ol>
+					{recipe.instructions && recipe.instructions.length > 0 ? (
+						<ol className="space-y-4">
+							{recipe.instructions.map((instruction, index) => (
+								<li key={index} className="flex gap-3">
+									<div className="w-8 h-8 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+										{index + 1}
+									</div>
+									<p className="text-slate-700 pt-1">{instruction}</p>
+								</li>
+							))}
+						</ol>
+					) : (
+						<p className="text-slate-500 text-center py-4">No instructions listed</p>
+					)}
 				</div>
 			</div>
 

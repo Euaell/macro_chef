@@ -3,6 +3,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import 'remixicon/fonts/remixicon.css';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
 	title: "Mizan - Balanced Nutrition & Fitness",
 	description: "Your personal nutrition and fitness companion. Track meals, plan diets, and achieve your health goals with AI-powered coaching.",

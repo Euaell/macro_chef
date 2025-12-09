@@ -38,16 +38,16 @@ export default function Page() {
 	const router = useRouter();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	// Calculate total macros
+	// Calculate total macros (macros are per 100g)
 	const totalMacros = selectedIngredients.reduce(
 		(acc, ing) => {
 			if (ing.ingredient && ing.amount) {
-				const ratio = ing.amount / (ing.ingredient.servingSize || 1);
-				acc.calories += (ing.ingredient.macros.calories || 0) * ratio;
-				acc.protein += (ing.ingredient.macros.protein || 0) * ratio;
-				acc.carbs += (ing.ingredient.macros.carbs || 0) * ratio;
-				acc.fat += (ing.ingredient.macros.fat || 0) * ratio;
-				acc.fiber += (ing.ingredient.macros.fiber || 0) * ratio;
+				const ratio = ing.amount / 100;
+				acc.calories += (ing.ingredient.caloriesPer100g || 0) * ratio;
+				acc.protein += (ing.ingredient.proteinPer100g || 0) * ratio;
+				acc.carbs += (ing.ingredient.carbsPer100g || 0) * ratio;
+				acc.fat += (ing.ingredient.fatPer100g || 0) * ratio;
+				acc.fiber += (ing.ingredient.fiberPer100g || 0) * ratio;
 			}
 			return acc;
 		},
@@ -131,8 +131,9 @@ export default function Page() {
 		e.preventDefault();
 		setIsSubmitting(true);
 		const recipeData: RecipeInput = {
-			name,
+			title: name,
 			description,
+			imageUrl: images[0], // Use first image as main image
 			ingredients: selectedIngredients.map(ing => ({
 				ingredient: ing.ingredient!,
 				amount: ing.amount!,
@@ -141,7 +142,6 @@ export default function Page() {
 			instructions: instructions.split('\n').filter(line => line.trim()),
 			servings,
 			tags: Array.from(tags),
-			images: images,
 		}
 
 		fetch('/api/recipes/add', {
@@ -198,16 +198,16 @@ export default function Page() {
 						<tbody className="divide-y divide-slate-100">
 							{selectedIngredients.map((ing, idx) => {
 								if (!ing.ingredient || !ing.amount) return null;
-								const ratio = ing.amount / (ing.ingredient.servingSize || 1);
+								const ratio = ing.amount / 100;
 								return (
 									<tr key={idx} className="hover:bg-slate-50">
 										<td className="p-3 text-slate-900">{ing.ingredient.name}</td>
 										<td className="p-3 text-right text-slate-600">{ing.amount}g</td>
-										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.calories || 0) * ratio).toFixed(0)}</td>
-										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.protein || 0) * ratio).toFixed(1)}g</td>
-										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.carbs || 0) * ratio).toFixed(1)}g</td>
-										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.fat || 0) * ratio).toFixed(1)}g</td>
-										<td className="p-3 text-right text-slate-600">{((ing.ingredient.macros.fiber || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.caloriesPer100g || 0) * ratio).toFixed(0)}</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.proteinPer100g || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.carbsPer100g || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.fatPer100g || 0) * ratio).toFixed(1)}g</td>
+										<td className="p-3 text-right text-slate-600">{((ing.ingredient.fiberPer100g || 0) * ratio).toFixed(1)}g</td>
 									</tr>
 								);
 							})}
@@ -341,13 +341,13 @@ export default function Page() {
 											{ingredientSearch.length > 0 ? (
 												ingredientSearch.map((ingredient) => (
 													<button
-														key={ingredient._id.toString()}
+														key={ingredient.id}
 														type="button"
 														onClick={() => handleIngredientSelect(index, ingredient)}
 														className="w-full p-3 text-left hover:bg-slate-50 flex items-center justify-between border-b border-slate-100 last:border-0"
 													>
 														<span className="font-medium text-slate-900">{ingredient.name}</span>
-														<span className="text-xs text-slate-500">{ingredient.macros.calories} kcal</span>
+														<span className="text-xs text-slate-500">{ingredient.caloriesPer100g} kcal/100g</span>
 													</button>
 												))
 											) : (

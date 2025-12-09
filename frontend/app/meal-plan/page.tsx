@@ -1,33 +1,24 @@
 import { getUserServer } from "@/helper/session";
 import Link from "next/link";
 import { getWeeklyMealPlans } from "@/data/mealPlan";
-import { getMeal } from "@/data/meal";
-import MealPlanningCalendarWrapper from "@/components/MealPlanningCalendarWrapper";
+
+export const dynamic = 'force-dynamic';
 
 export default async function MealPlanPage() {
-	const user = await getUserServer();
-	const mealsAggregate = await getMeal(user._id);
+	await getUserServer(); // Verify user is authenticated
+
+	// Get this week's date range
+	const today = new Date();
+	const startOfWeek = new Date(today);
+	startOfWeek.setDate(today.getDate() - today.getDay());
+	const endOfWeek = new Date(startOfWeek);
+	endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+	const startDate = startOfWeek.toISOString().split('T')[0];
+	const endDate = endOfWeek.toISOString().split('T')[0];
 
 	try {
-		const mealPlans = await getWeeklyMealPlans(user._id);
-
-		const plannedMeals = mealPlans.map(mealPlan => {
-			const sanitizedRecipes = mealPlan.recipes.map(item => ({
-				recipe: {
-					_id: item.recipe._id.toString(),
-					name: item.recipe.name
-				},
-				servings: item.servings,
-				mealTime: item.mealTime
-			}));
-
-			return {
-				_id: mealPlan._id.toString(),
-				date: mealPlan.date,
-				recipes: sanitizedRecipes,
-				totalCalories: mealPlan.totalMacros?.calories || 0
-			};
-		});
+		const mealPlans = await getWeeklyMealPlans(startDate, endDate);
 
 		return (
 			<div className="space-y-6">
@@ -42,9 +33,9 @@ export default async function MealPlanPage() {
 							<i className="ri-shopping-cart-line" />
 							Shopping List
 						</Link>
-						<Link href="/meal-plan/add" className="btn-primary">
+						<Link href="/recipes" className="btn-primary">
 							<i className="ri-add-line" />
-							Add Meal
+							Browse Recipes
 						</Link>
 					</div>
 				</div>
@@ -52,10 +43,10 @@ export default async function MealPlanPage() {
 				{/* Quick Stats */}
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					{[
-						{ label: "Meals Planned", value: plannedMeals.length, icon: "ri-calendar-check-line", color: "from-brand-400 to-brand-600" },
-						{ label: "This Week", value: plannedMeals.filter(m => new Date(m.date) >= new Date()).length, icon: "ri-calendar-line", color: "from-accent-400 to-accent-600" },
-						{ label: "Recipes Used", value: new Set(plannedMeals.flatMap(m => m.recipes.map(r => r.recipe._id))).size, icon: "ri-restaurant-line", color: "from-violet-400 to-violet-600" },
-						{ label: "Avg. Calories", value: Math.round(plannedMeals.reduce((a, b) => a + b.totalCalories, 0) / (plannedMeals.length || 1)), icon: "ri-fire-line", color: "from-orange-400 to-orange-600" },
+						{ label: "Meal Plans", value: mealPlans.length, icon: "ri-calendar-check-line", color: "from-brand-400 to-brand-600" },
+						{ label: "This Week", value: mealPlans.filter(p => p.meals?.length > 0).length, icon: "ri-calendar-line", color: "from-accent-400 to-accent-600" },
+						{ label: "Total Meals", value: mealPlans.reduce((acc, p) => acc + (p.meals?.length || 0), 0), icon: "ri-restaurant-line", color: "from-violet-400 to-violet-600" },
+						{ label: "Recipes", value: new Set(mealPlans.flatMap(p => p.meals?.map(m => m.recipeId) || [])).size, icon: "ri-book-3-line", color: "from-orange-400 to-orange-600" },
 					].map((stat) => (
 						<div key={stat.label} className="card p-4">
 							<div className="flex items-center gap-3">
@@ -71,12 +62,43 @@ export default async function MealPlanPage() {
 					))}
 				</div>
 
-				{/* Calendar */}
+				{/* Meal Plans */}
 				<div className="card p-6">
-					<MealPlanningCalendarWrapper
-						initialMeals={mealsAggregate}
-						initialPlannedMeals={plannedMeals}
-					/>
+					<h2 className="font-semibold text-slate-900 flex items-center gap-2 mb-4">
+						<i className="ri-calendar-2-line text-brand-500" />
+						Your Meal Plans
+					</h2>
+					{mealPlans.length > 0 ? (
+						<div className="space-y-4">
+							{mealPlans.map((plan) => (
+								<div key={plan.id} className="p-4 bg-slate-50 rounded-xl">
+									<div className="flex justify-between items-center">
+										<div>
+											<h3 className="font-medium text-slate-900">{plan.name || 'Weekly Plan'}</h3>
+											<p className="text-sm text-slate-500">
+												{plan.startDate} to {plan.endDate}
+											</p>
+										</div>
+										<span className="text-sm text-slate-600">
+											{plan.meals?.length || 0} meals
+										</span>
+									</div>
+								</div>
+							))}
+						</div>
+					) : (
+						<div className="text-center py-12">
+							<div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+								<i className="ri-calendar-line text-3xl text-slate-400" />
+							</div>
+							<h3 className="text-lg font-semibold text-slate-900 mb-2">No meal plans yet</h3>
+							<p className="text-slate-500 mb-4">Start planning your meals by browsing recipes</p>
+							<Link href="/recipes" className="btn-primary">
+								<i className="ri-book-open-line" />
+								Browse Recipes
+							</Link>
+						</div>
+					)}
 				</div>
 			</div>
 		);
@@ -90,9 +112,9 @@ export default async function MealPlanPage() {
 						<h1 className="text-2xl font-bold text-slate-900">Meal Planning</h1>
 						<p className="text-slate-500 mt-1">Plan your meals for the week ahead</p>
 					</div>
-					<Link href="/meal-plan/add" className="btn-primary">
-						<i className="ri-add-line" />
-						Add Meal
+					<Link href="/recipes" className="btn-primary">
+						<i className="ri-book-open-line" />
+						Browse Recipes
 					</Link>
 				</div>
 

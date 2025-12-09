@@ -1,13 +1,17 @@
+"use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
 import placeHolderImage from '@/public/placeholder-recipe.jpg';
-import type Recipe from '@/types/recipe';
-import type User from '@/types/user';
+import type { SuggestedRecipe } from '@/data/suggestion';
 
 interface SuggestedRecipesProps {
-  user?: User;
-  suggestions?: Recipe[];
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  suggestions?: SuggestedRecipe[];
   serverError?: string;
 }
 
@@ -22,88 +26,82 @@ export default function SuggestedRecipes({ user, suggestions, serverError }: Sug
 	}
 
 	return (
-		<div className="max-w-7xl mx-auto px-4 py-8">
-			<div className="flex justify-between items-center mb-8">
-				<h1 className="text-3xl font-bold text-gray-800">Today&apos;s Suggested Recipes For You</h1>
-				
-				{/* Regenerate button for admins */}
-				{user?.isAdmin && (
-					<Link
-						href="/suggestions/regenerate"
-						className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-					>
-						<span className="mr-2">
-							<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-							</svg>
-						</span>
-						Regenerate Suggestions
+		<div className="space-y-6">
+			{/* Page Header */}
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+				<div>
+					<h1 className="text-2xl font-bold text-slate-900">Recipe Suggestions</h1>
+					<p className="text-slate-500 mt-1">Personalized recipes based on your remaining macros</p>
+				</div>
+				{user && (
+					<Link href="/suggestions/regenerate" className="btn-secondary">
+						<i className="ri-refresh-line" />
+						Regenerate
 					</Link>
 				)}
 			</div>
-			
-			{suggestions?.length === 0 ? (
-					<div className="bg-gray-50 rounded-lg p-8 text-center">
-						<h3 className="text-xl font-semibold mb-4">No Suggestions Available</h3>
-						<p className="text-gray-600">
-							Add more meals or update your preferences to get personalized recipe suggestions.
-						</p>
+
+			{!suggestions || suggestions.length === 0 ? (
+				<div className="card p-8 text-center">
+					<div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+						<i className="ri-lightbulb-line text-3xl text-slate-400" />
 					</div>
-				) : (
-					<div className="space-y-6">
-						{suggestions?.map((recipe) => (
-							<Link
-								key={recipe._id.toString()}
-								href={`/recipes/${recipe._id}`}
-								className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
-							>
-								<div className="flex">
-									<div className="w-48 h-48 bg-gray-200 rounded-l-lg relative">
-										<Image
-											src={recipe.images[0] || placeHolderImage}
-											alt={recipe.name}
-											fill
-											className="object-cover rounded-l-lg"
-										/>
-									</div>
-									<div className="flex-1 p-6">
-										<div>
-											<h3 className="text-xl font-semibold mb-2">{recipe.name}</h3>
-											<p className="text-gray-600 mb-4">
-												{recipe.description || `A delicious recipe with ${recipe.ingredients.length} ingredients`}
-											</p>
-										</div>
-										<div className="flex flex-wrap gap-6">
-											<div>
-												<span className="text-gray-500 text-sm">Calories</span>
-												<p className="font-semibold">
-													{recipe.totalMacros.calories.toFixed(0)} kcal
-												</p>
-											</div>
-											<div>
-												<span className="text-gray-500 text-sm">Protein</span>
-												<p className="font-semibold">
-													{recipe.totalMacros.protein.toFixed(1)}g
-												</p>
-											</div>
-											<div>
-												<span className="text-gray-500 text-sm">Carbs</span>
-												<p className="font-semibold">
-													{recipe.totalMacros.carbs.toFixed(1)}g
-												</p>
-											</div>
-											<div>
-												<span className="text-gray-500 text-sm">Fat</span>
-												<p className="font-semibold">
-													{recipe.totalMacros.fat.toFixed(1)}g
-												</p>
-											</div>
-										</div>
-									</div>
+					<h3 className="text-lg font-semibold text-slate-900 mb-2">No Suggestions Available</h3>
+					<p className="text-slate-500 mb-4">
+						Add more meals or update your preferences to get personalized recipe suggestions.
+					</p>
+					<Link href="/meals" className="btn-primary">
+						<i className="ri-add-line" />
+						Log a Meal
+					</Link>
+				</div>
+			) : (
+				<div className="space-y-4">
+					{suggestions.map((recipe) => (
+						<Link
+							key={recipe.id}
+							href={`/recipes/${recipe.id}`}
+							className="card-hover flex flex-col sm:flex-row overflow-hidden group"
+						>
+							<div className="sm:w-48 h-48 sm:h-auto bg-slate-200 relative">
+								<Image
+									src={recipe.imageUrl || placeHolderImage}
+									alt={recipe.title}
+									fill
+									className="object-cover group-hover:scale-105 transition-transform duration-300"
+								/>
+							</div>
+							<div className="flex-1 p-6">
+								<div className="mb-4">
+									<h3 className="text-lg font-semibold text-slate-900 group-hover:text-brand-600 transition-colors mb-2">
+										{recipe.title}
+									</h3>
+									<p className="text-slate-600 text-sm line-clamp-2">
+										{recipe.description || recipe.reason}
+									</p>
 								</div>
-							</Link>
-						))}
-					</div>
+								<div className="flex flex-wrap gap-2">
+									<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-medium">
+										<i className="ri-fire-line" />
+										{recipe.calories} kcal
+									</span>
+									<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-sm font-medium">
+										<i className="ri-heart-pulse-line" />
+										{recipe.protein}g protein
+									</span>
+									<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 text-sm font-medium">
+										<i className="ri-bread-line" />
+										{recipe.carbs}g carbs
+									</span>
+									<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700 text-sm font-medium">
+										<i className="ri-drop-line" />
+										{recipe.fat}g fat
+									</span>
+								</div>
+							</div>
+						</Link>
+					))}
+				</div>
 			)}
 		</div>
 	);

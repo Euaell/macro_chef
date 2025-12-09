@@ -1,43 +1,43 @@
 import Ingredient from "./ingredient";
-import Macros from "./macro";
-import { ID } from "./id";
-import User from "./user";
 
-// Define a union type for recipe ingredients
-export type RecipeIngredientItem = Ingredient | Recipe;
-
+// Recipe type matching the .NET API response
 export default interface Recipe {
-	_id: ID;
-	name: string;
-	images: string[];
+	id: string;
+	title: string;
 	description?: string;
-	ingredients: {
-		ingredient: RecipeIngredientItem;
-		amount: number;
-		unit: string;
-		isRecipe?: boolean; // To distinguish between ingredients and recipes
-	}[];
-	totalMacros: Macros; // calculated from ingredients
+	imageUrl?: string;
 	servings: number;
-	instructions: string[];
-	tags: string[];
+	prepTimeMinutes?: number;
+	cookTimeMinutes?: number;
+	calories?: number;
+	protein?: number;
+	carbs?: number;
+	fat?: number;
+	fiber?: number;
+	ingredients?: RecipeIngredient[];
+	instructions?: string[];
+	tags?: string[];
+	creatorId?: string;
+	isPublic: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
 
-	creator: User;
-
-	// timestamps
-	createdAt: Date;
-	updatedAt: Date;
+export interface RecipeIngredient {
+	ingredientText: string;
+	foodName?: string;
+	amount?: number;
+	unit?: string;
 }
 
 export interface RecipeInput {
-	name: string;
-	images: string[];
+	title: string;
 	description?: string;
+	imageUrl?: string;
 	ingredients: {
-		ingredient: RecipeIngredientItem;
+		ingredient: Ingredient;
 		amount: number;
 		unit: string;
-		isRecipe?: boolean;
 	}[];
 	servings: number;
 	instructions: string[];

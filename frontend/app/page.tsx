@@ -5,6 +5,8 @@ import DailyOverviewChart from "@/components/DailyOverviewChart";
 import { getUserOptionalServer } from "@/helper/session";
 import { getPopularRecipes } from "@/data/recipe";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
 	const user = await getUserOptionalServer();
 	const popularRecipes = await getPopularRecipes();
