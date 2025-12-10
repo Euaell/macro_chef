@@ -1,19 +1,24 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ChatController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUser;
 
-    public ChatController(IMediator mediator)
+    public ChatController(IMediator mediator, ICurrentUserService currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpGet("{relationshipId}")]
@@ -30,12 +35,12 @@ public class ChatController : ControllerBase
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
     {
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var command = new SendChatMessageCommand(request.ConversationId, userId, request.Content);
+        var command = new SendChatMessageCommand(request.ConversationId, _currentUser.UserId.Value, request.Content);
         var result = await _mediator.Send(command);
 
         return Ok(new { MessageId = result.Id });

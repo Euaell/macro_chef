@@ -1,33 +1,35 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUser;
 
-    public UsersController(IMediator mediator)
+    public UsersController(IMediator mediator, ICurrentUserService currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpGet("me")]
     public async Task<ActionResult<UserDto>> GetMe()
     {
-        // TODO: Get UserId from claims. For now, we'll assume a header or query param for testing until Auth is fully integrated
-        // In a real scenario: var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var result = await _mediator.Send(new GetUserQuery(userId));
+        var result = await _mediator.Send(new GetUserQuery(_currentUser.UserId.Value));
         if (result == null)
         {
             return NotFound();
@@ -39,12 +41,12 @@ public class UsersController : ControllerBase
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMe([FromBody] UpdateUserRequest request)
     {
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var command = new UpdateUserCommand(userId, request.Name, request.Image);
+        var command = new UpdateUserCommand(_currentUser.UserId.Value, request.Name, request.Image);
         var success = await _mediator.Send(command);
 
         if (!success)

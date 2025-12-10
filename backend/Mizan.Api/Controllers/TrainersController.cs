@@ -1,29 +1,34 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 
 namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TrainersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUser;
 
-    public TrainersController(IMediator mediator)
+    public TrainersController(IMediator mediator, ICurrentUserService currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpPost("request")]
     public async Task<IActionResult> SendRequest([FromBody] SendTrainerRequestRequest request)
     {
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var command = new SendTrainerRequestCommand(userId, request.TrainerId);
+        var command = new SendTrainerRequestCommand(_currentUser.UserId.Value, request.TrainerId);
         var id = await _mediator.Send(command);
 
         return Ok(new { RelationshipId = id });

@@ -1,19 +1,24 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ShoppingListsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUser;
 
-    public ShoppingListsController(IMediator mediator)
+    public ShoppingListsController(IMediator mediator, ICurrentUserService currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpGet("{id}")]
@@ -38,12 +43,12 @@ public class ShoppingListsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateShoppingList([FromBody] CreateShoppingListRequest request)
     {
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var command = new CreateShoppingListCommand(request.Name, userId, request.HouseholdId);
+        var command = new CreateShoppingListCommand(request.Name, _currentUser.UserId.Value, request.HouseholdId);
         var listId = await _mediator.Send(command);
 
         return CreatedAtAction(nameof(GetShoppingList), new { id = listId }, listId);

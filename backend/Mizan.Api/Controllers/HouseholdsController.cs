@@ -1,19 +1,24 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class HouseholdsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUser;
 
-    public HouseholdsController(IMediator mediator)
+    public HouseholdsController(IMediator mediator, ICurrentUserService currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpGet("{id}")]
@@ -30,13 +35,12 @@ public class HouseholdsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateHousehold([FromBody] CreateHouseholdRequest request)
     {
-        // Mock User ID retrieval
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var command = new CreateHouseholdCommand(request.Name, userId);
+        var command = new CreateHouseholdCommand(request.Name, _currentUser.UserId.Value);
         var householdId = await _mediator.Send(command);
 
         return CreatedAtAction(nameof(GetHousehold), new { id = householdId }, householdId);
@@ -45,12 +49,12 @@ public class HouseholdsController : ControllerBase
     [HttpPost("{id}/members")]
     public async Task<IActionResult> AddMember(Guid id, [FromBody] AddMemberRequest request)
     {
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var command = new AddHouseholdMemberCommand(id, request.Email, userId);
+        var command = new AddHouseholdMemberCommand(id, request.Email, _currentUser.UserId.Value);
         var success = await _mediator.Send(command);
 
         if (!success)

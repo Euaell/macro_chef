@@ -1,44 +1,48 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BodyMeasurementsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUserService _currentUser;
 
-    public BodyMeasurementsController(IMediator mediator)
+    public BodyMeasurementsController(IMediator mediator, ICurrentUserService currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<BodyMeasurementDto>>> GetMyMeasurements()
     {
-        // Mock User ID
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
-        var result = await _mediator.Send(new GetBodyMeasurementsQuery(userId));
+        var result = await _mediator.Send(new GetBodyMeasurementsQuery(_currentUser.UserId.Value));
         return Ok(result);
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> LogMeasurement([FromBody] LogMeasurementRequest request)
     {
-        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!_currentUser.UserId.HasValue)
         {
-            return Unauthorized("User ID not found in headers (X-User-Id)");
+            return Unauthorized("User not authenticated");
         }
 
         var command = new LogBodyMeasurementCommand(
-            userId,
+            _currentUser.UserId.Value,
             request.Date ?? DateTime.UtcNow,
             request.WeightKg,
             request.BodyFatPercentage,
