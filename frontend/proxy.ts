@@ -16,7 +16,7 @@ const publicPaths = [
 // Paths that are always public (recipes can be viewed but not created without auth)
 const publicReadPaths = ["/recipes"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
 	const path = request.nextUrl.pathname;
 
 	// Check if the path is public
@@ -55,7 +55,7 @@ export function middleware(request: NextRequest) {
 	return NextResponse.next();
 }
 
-// Configure which paths the middleware runs on
+// Configure which paths the proxy runs on
 export const config = {
 	matcher: [
 		/*
