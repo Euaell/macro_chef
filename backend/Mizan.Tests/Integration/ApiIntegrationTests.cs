@@ -19,47 +19,37 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 
     public ApiIntegrationTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove the existing DbContext registrations
-                // ConfigureTestServices runs after all other service registrations
-                // This is required for EF Core 10+ which doesn't allow multiple database providers
-                var dbContextDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<MizanDbContext>));
-
-                if (dbContextDescriptor != null)
-                {
-                    services.Remove(dbContextDescriptor);
-                }
-
-                var imizanDbContextDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(IMizanDbContext));
-
-                if (imizanDbContextDescriptor != null)
-                {
-                    services.Remove(imizanDbContextDescriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<MizanDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("TestDb");
-                });
-
-                // Re-register IMizanDbContext interface
-                services.AddScoped<IMizanDbContext>(provider => provider.GetRequiredService<MizanDbContext>());
-            });
-        });
+        // Use real PostgreSQL database from connection string or environment variable
+        // This works in both docker-compose and GitHub Actions environments
+        _factory = factory;
 
         _client = _factory.CreateClient();
 
-        // Seed test data after client creation
+        // Ensure database is created and migrations are applied
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
-        db.Database.EnsureCreated();
+
+        // Apply migrations (or use EnsureCreated if no migrations exist)
+        try
+        {
+            db.Database.Migrate();
+        }
+        catch
+        {
+            // Fallback to EnsureCreated if migrations don't exist
+            db.Database.EnsureCreated();
+        }
+
+        // Clean and seed test data
+        CleanDatabase(db);
         SeedTestData(db);
+    }
+
+    private static void CleanDatabase(MizanDbContext db)
+    {
+        // Clean existing test data to ensure test isolation
+        db.Foods.RemoveRange(db.Foods);
+        db.SaveChanges();
     }
 
     private static void SeedTestData(MizanDbContext db)

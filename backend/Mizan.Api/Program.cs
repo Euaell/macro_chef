@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Mizan.Api.Hubs;
 using Mizan.Application;
@@ -160,19 +161,19 @@ app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHealthChecks("/health");
 
-// Apply migrations in development
+// Apply migrations automatically in development
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<Mizan.Infrastructure.Data.MizanDbContext>();
     try
     {
-        dbContext.Database.EnsureCreated();
-        Log.Information("Database ready");
+        dbContext.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Failed to initialize database");
+        Log.Error(ex, "Failed to apply database migrations");
     }
 }
 
