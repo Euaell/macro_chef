@@ -66,42 +66,90 @@ MacroChef is a comprehensive web application for meal planning, recipe managemen
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18.x or higher
-- Yarn package manager
-- MongoDB instance (local or cloud)
+- Docker and Docker Compose
+- .NET 10.0 SDK (for local development outside Docker)
+- Node.js 20.x or higher (for local development outside Docker)
 
-### Installation
+### Installation with Docker Compose (Recommended)
 
 1. Clone the repository
-   ```
+   ```bash
    git clone https://github.com/yourusername/macro_chef.git
    cd macro_chef
    ```
 
-2. Install dependencies
-   ```
-   yarn
-   ```
-
-3. Create a `.env.local` file with the following variables:
-   ```
-   MONGODB_URI=your_mongodb_connection_string
-   NEXT_PUBLIC_BASE_URL=http://localhost:3000
-   TOKEN_SECRET=your_jwt_secret_key
+2. Create a `.env` file in the root directory (optional - uses defaults if not provided):
+   ```bash
+   DB_PASSWORD=your_secure_password
+   BETTER_AUTH_SECRET=your_secret_key
+   OPENAI_API_KEY=your_openai_key
    ```
 
-4. Run the development server
+3. Start all services
+   ```bash
+   docker-compose up -d
    ```
-   yarn dev
+
+4. The application will be available at:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+   - PostgreSQL: localhost:5432
+   - Redis: localhost:6379
+
+### Running Tests
+
+#### Using Docker Compose (Recommended)
+Run tests inside Docker where the test service has access to the PostgreSQL and Redis containers:
+
+```bash
+# Run tests once
+docker-compose --profile test up test
+
+# Run tests with live output
+docker-compose --profile test up --attach test
+
+# Run tests interactively (to pass additional arguments)
+docker-compose run --rm test dotnet test --filter "Category=Integration"
+```
+
+The test service uses a separate test database (`mizan_test`) to avoid conflicts with the development database.
+
+#### Running Tests Locally
+If you want to run tests on your host machine (outside Docker), make sure docker-compose services are running first, then use:
+
+```bash
+cd backend
+ConnectionStrings__PostgreSQL="Host=localhost;Database=mizan_test;Username=mizan;Password=mizan_dev_password" dotnet test
+```
+
+Note: When running locally, use `localhost` instead of `postgres` for the database host.
+
+### Local Development without Docker
+
+If you prefer to run services locally:
+
+1. Install PostgreSQL 16 and Redis 7
+2. Create database: `createdb mizan`
+3. Update connection strings in `backend/Mizan.Api/appsettings.json`
+4. Run backend:
+   ```bash
+   cd backend
+   dotnet run --project Mizan.Api
+   ```
+5. Run frontend:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
    ```
 
-5. Open your browser and navigate to `http://localhost:3000`
+## Architecture
 
-## Development Resources
-
-### Authentication
-- [Medium article](https://medium.com/@Rushabh_/next-js-demystified-user-authentication-with-nextjs-mongodb-2a0e1e697526)
-- [Youtube video](https://www.youtube.com/watch?v=N_sUsq_y10U)
+- **Frontend**: Next.js 15 with TypeScript, Tailwind CSS, and BetterAuth for authentication
+- **Backend**: .NET 10 Web API with Clean Architecture (Domain, Application, Infrastructure, API layers)
+- **Database**: PostgreSQL 16 with Entity Framework Core 10
+- **Cache**: Redis 7 for SignalR backplane
+- **Authentication**: JWT tokens with JWKS validation from BetterAuth
 
 ## License
 

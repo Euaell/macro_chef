@@ -106,6 +106,32 @@ services:
     networks:
       - mizan-network
 
+  # Test runner service
+  test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mizan-test
+    volumes:
+      - ./backend:/src
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=mizan_test;Username=mizan;Password=${DB_PASSWORD:-mizan_dev_password}
+      - ConnectionStrings__Redis=redis:6379
+      - BetterAuth__JwksUrl=http://frontend:3000/api/auth/jwks
+      - BetterAuth__Issuer=http://localhost:3000
+      - BetterAuth__Audience=mizan-api
+    command: dotnet test --logger "console;verbosity=normal"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mizan-network
+    profiles:
+      - test
+
 networks:
   mizan-network:
     driver: bridge
