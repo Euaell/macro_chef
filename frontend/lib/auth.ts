@@ -23,6 +23,16 @@ export const auth = betterAuth({
       console.log(`Password reset link for ${user.email}: ${url}`);
     },
   },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url, token }) => {
+      // TODO: Replace with actual email service (Nodemailer, Resend, etc.)
+      console.log(`\n📧 Email Verification for ${user.email}`);
+      console.log(`🔗 Verification URL: ${url}`);
+      console.log(`🎫 Token: ${token}\n`);
+    },
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -60,7 +70,9 @@ export const auth = betterAuth({
     max: 100,
   },
   advanced: {
-    generateId: () => crypto.randomUUID(),
+    database: {
+      generateId: () => crypto.randomUUID(),
+    },
   },
   trustedOrigins: [
     process.env.BETTER_AUTH_URL || "http://localhost:3000",

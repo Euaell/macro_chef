@@ -26,25 +26,40 @@ export default function Page() {
 		e.preventDefault();
 		setLoading(true);
 		const callbackUrl = searchParam.get("callbackUrl") || "/";
-		fetch("/api/auth/login?callbackUrl=" + callbackUrl, {
+		fetch("/api/auth/sign-in/email", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify(user),
+			body: JSON.stringify({
+				email: user.email,
+				password: user.password,
+				callbackURL: callbackUrl,
+			}),
 		})
-		.then((res) => {
+		.then(async (res) => {
+			if (!res.ok) {
+				const text = await res.text();
+				try {
+					const json = JSON.parse(text);
+					throw new Error(json.message || json.error || "Sign in failed");
+				} catch {
+					throw new Error(text || "Sign in failed");
+				}
+			}
 			return res.json();
 		})
 		.then((data) => {
-			if (data.success) {
-				router.push(data.callbackUrl);
+			if (data.user || data.session) {
+				router.push(callbackUrl);
 				router.refresh();
+			} else {
+				setError("Sign in failed. Please try again.");
 			}
-			setError(data.error);
 		})
 		.catch((error) => {
 			console.error(error);
+			setError(error.message || "An error occurred during sign in");
 		})
 		.finally(() => {
 			setLoading(false);

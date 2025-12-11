@@ -130,6 +130,73 @@ docker-compose up -d backend
 Get-NetTCPConnection -LocalPort 3000,3001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
+### Issue 4: Better Auth UUID Generation Error
+
+**Error**: `PostgresError: invalid input syntax for type uuid: "mwKYvEMX65G05lyplyJ3ZfFh35siPXm8"`
+
+**Root Cause**: Better Auth `generateId` configuration was at wrong nesting level (`advanced.generateId` instead of `advanced.database.generateId`), causing it to generate non-UUID format IDs.
+
+**Solution**: Updated [frontend/lib/auth.ts:63](frontend/lib/auth.ts#L63):
+```typescript
+// WRONG (before)
+advanced: {
+  generateId: () => crypto.randomUUID(),
+}
+
+// CORRECT (after)
+advanced: {
+  database: {
+    generateId: () => crypto.randomUUID(),
+  },
+}
+```
+
+**Verification**: After server restart, user registration should work correctly with proper UUIDs.
+
+### Issue 5: Better Auth Schema Mismatch - Missing `accountId` Field
+
+**Error**: `The field "accountId" does not exist in the "account" Drizzle schema`
+
+**Root Cause**: The Drizzle schema didn't match Better Auth's expected schema structure. Better Auth expects:
+- `accountId` (not `providerAccountId`)
+- `providerId` (not `provider`)
+- Additional fields: `idToken`, `scope`, `password`, `createdAt`, `updatedAt`, `accessTokenExpiresAt`, `refreshTokenExpiresAt`
+
+**Solution**: Updated [frontend/db/schema.ts:29-51](frontend/db/schema.ts#L29-L51) to match Better Auth schema:
+```typescript
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdIdx: index("accounts_userId_idx").on(t.userId),
+  })
+);
+```
+
+**Migration Steps**:
+1. Generate migration: `npx drizzle-kit generate` ✅ (completed)
+2. Apply migration: `npx drizzle-kit push`
+   - When prompted about `account_id`, select: **`~ provider_account_id › account_id rename column`** (preserves existing data)
+   - When prompted about `provider_id`, select: **`~ provider › provider_id rename column`** (preserves existing data)
+   - When prompted about other new columns (`id_token`, `scope`, etc.), select: **`+ create column`**
+3. Restart dev server to pick up schema changes
+
 ---
 
 ## Next.js 16 MCP Integration
