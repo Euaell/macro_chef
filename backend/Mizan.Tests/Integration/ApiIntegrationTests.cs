@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
 using Mizan.Infrastructure.Data;
 using Xunit;
@@ -19,14 +21,25 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {
-            builder.ConfigureServices(services =>
+            builder.ConfigureTestServices(services =>
             {
-                // Remove the existing DbContext registration
-                var descriptor = services.SingleOrDefault(
+                // Remove the existing DbContext registrations
+                // ConfigureTestServices runs after all other service registrations
+                // This is required for EF Core 10+ which doesn't allow multiple database providers
+                var dbContextDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<MizanDbContext>));
-                if (descriptor != null)
+
+                if (dbContextDescriptor != null)
                 {
-                    services.Remove(descriptor);
+                    services.Remove(dbContextDescriptor);
+                }
+
+                var imizanDbContextDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IMizanDbContext));
+
+                if (imizanDbContextDescriptor != null)
+                {
+                    services.Remove(imizanDbContextDescriptor);
                 }
 
                 // Add in-memory database for testing
@@ -35,16 +48,18 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
                     options.UseInMemoryDatabase("TestDb");
                 });
 
-                // Build service provider and seed test data
-                var sp = services.BuildServiceProvider();
-                using var scope = sp.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
-                db.Database.EnsureCreated();
-                SeedTestData(db);
+                // Re-register IMizanDbContext interface
+                services.AddScoped<IMizanDbContext>(provider => provider.GetRequiredService<MizanDbContext>());
             });
         });
 
         _client = _factory.CreateClient();
+
+        // Seed test data after client creation
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        db.Database.EnsureCreated();
+        SeedTestData(db);
     }
 
     private static void SeedTestData(MizanDbContext db)
