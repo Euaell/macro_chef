@@ -1,13 +1,61 @@
 "use client";
 
-import { FieldError } from "@/components/FieldError";
 import { addIngredient } from "@/data/ingredient";
-import { EMPTY_FORM_STATE } from "@/helper/FormErrorHandler";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-	const [formState, action, isPending] = useActionState(addIngredient, EMPTY_FORM_STATE);
+	const router = useRouter();
+	const [isPending, setIsPending] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState(false);
+
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		setIsPending(true);
+		setError(null);
+		setSuccess(false);
+
+		const formData = new FormData(e.currentTarget);
+		const name = formData.get("name") as string;
+		const brand = formData.get("brand") as string;
+		const barcode = formData.get("barcode") as string;
+		const servingSize = parseFloat(formData.get("servingSize") as string) || 100;
+		const calories = parseInt(formData.get("calories") as string) || 0;
+		const protein = parseFloat(formData.get("protein") as string) || 0;
+		const carbs = parseFloat(formData.get("carbs") as string) || 0;
+		const fat = parseFloat(formData.get("fat") as string) || 0;
+		const fiber = parseFloat(formData.get("fiber") as string) || 0;
+
+		if (!name || isNaN(calories)) {
+			setError("Name and calories are required");
+			setIsPending(false);
+			return;
+		}
+
+		try {
+			await addIngredient({
+				name,
+				brand,
+				barcode,
+				servingSize,
+				calories,
+				protein,
+				carbs,
+				fat,
+				fiber,
+			});
+
+			setSuccess(true);
+			setTimeout(() => router.push("/ingredients"), 1500);
+		} catch (err: any) {
+			console.error("Failed to add ingredient:", err);
+			setError(err.message || "Failed to add ingredient");
+		} finally {
+			setIsPending(false);
+		}
+	};
 
 	return (
 		<div className="max-w-3xl mx-auto space-y-6">
@@ -22,7 +70,7 @@ export default function Page() {
 				</div>
 			</div>
 
-			<form action={action} className="space-y-6">
+			<form onSubmit={handleSubmit} className="space-y-6">
 				{/* Basic Info Card */}
 				<div className="card p-6 space-y-5">
 					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
@@ -39,7 +87,28 @@ export default function Page() {
 							placeholder="e.g., Chicken Breast, Brown Rice"
 							required
 						/>
-						<FieldError formState={formState} name="name" />
+					</div>
+					<div className="grid grid-cols-2 gap-4">
+						<div>
+							<label htmlFor="brand" className="label">Brand (optional)</label>
+							<input
+								type="text"
+								id="brand"
+								name="brand"
+								className="input"
+								placeholder="e.g., Organic Valley"
+							/>
+						</div>
+						<div>
+							<label htmlFor="barcode" className="label">Barcode (optional)</label>
+							<input
+								type="text"
+								id="barcode"
+								name="barcode"
+								className="input"
+								placeholder="e.g., 123456789"
+							/>
+						</div>
 					</div>
 				</div>
 
@@ -66,7 +135,6 @@ export default function Page() {
 								defaultValue={0}
 								className="input"
 							/>
-							<FieldError formState={formState} name="calories" />
 						</div>
 						<div>
 							<label htmlFor="protein" className="label">
@@ -84,7 +152,6 @@ export default function Page() {
 								defaultValue={0}
 								className="input"
 							/>
-							<FieldError formState={formState} name="protein" />
 						</div>
 						<div>
 							<label htmlFor="carbs" className="label">
@@ -102,7 +169,6 @@ export default function Page() {
 								defaultValue={0}
 								className="input"
 							/>
-							<FieldError formState={formState} name="carbs" />
 						</div>
 						<div>
 							<label htmlFor="fat" className="label">
@@ -120,7 +186,6 @@ export default function Page() {
 								defaultValue={0}
 								className="input"
 							/>
-							<FieldError formState={formState} name="fat" />
 						</div>
 						<div>
 							<label htmlFor="fiber" className="label">
@@ -138,7 +203,6 @@ export default function Page() {
 								defaultValue={0}
 								className="input"
 							/>
-							<FieldError formState={formState} name="fiber" />
 						</div>
 						<div>
 							<label htmlFor="servingSize" className="label">
@@ -155,23 +219,22 @@ export default function Page() {
 								defaultValue={100}
 								className="input"
 							/>
-							<FieldError formState={formState} name="servingSize" />
 						</div>
 					</div>
 				</div>
 
 				{/* Status Messages */}
-				{formState.status === "success" && (
+				{success && (
 					<div className="flex items-center gap-2 p-4 rounded-xl bg-green-50 text-green-600">
 						<i className="ri-checkbox-circle-line text-xl" />
-						<span>Ingredient added successfully!</span>
+						<span>Ingredient added successfully! Redirecting...</span>
 					</div>
 				)}
 
-				{formState.status === "error" && formState.message && (
+				{error && (
 					<div className="flex items-center gap-2 p-4 rounded-xl bg-red-50 text-red-600">
 						<i className="ri-error-warning-line text-xl" />
-						<span>{formState.message}</span>
+						<span>{error}</span>
 					</div>
 				)}
 

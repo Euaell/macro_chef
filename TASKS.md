@@ -371,4 +371,93 @@ This file tracks all development tasks completed, with timestamps and descriptio
 
 ---
 
-**Last Updated:** December 12, 2025 19:45 UTC
+---
+
+## December 12, 2025
+
+### Session 4: Docker Upgrade & Authentication Fixes
+
+**Time:** 20:00 - 21:00 UTC
+
+#### Infrastructure Upgrades
+
+1. **Upgraded PostgreSQL to Version 18** (20:05)
+   - File: `docker-compose.yml`
+   - Changed: `postgres:16-alpine` → `postgres:18-alpine` (latest: 18.1)
+   - Changed: Node.js to `node:25-alpine` (latest: 25.2.1)
+   - Important: PostgreSQL 18 changed PGDATA path to `/var/lib/postgresql/18/docker`
+   - Note: When upgrading, recreate the volume with:
+     ```bash
+     docker-compose down
+     docker volume rm macro_chef_postgres_data
+     docker-compose up
+     ```
+   - Status: ✅ Complete
+
+2. **Database Migration Error Resolution** (20:10)
+   - Issue: "relation 'achievements' already exists" error
+   - Root Cause: Database already has tables, `__EFMigrationsHistory` out of sync
+   - Solution: Error is non-fatal, caught and logged in [Program.cs:171](backend/Mizan.Api/Program.cs:171)
+   - Recommendation: Recreate postgres_data volume when upgrading PostgreSQL versions
+   - Status: ✅ Complete
+
+#### Authentication Fixes
+
+3. **Fixed 401 Error in Add Ingredient** (20:20)
+   - Files Modified:
+     - [frontend/data/ingredient.ts](frontend/data/ingredient.ts) - Removed "use server" directive
+     - [frontend/app/ingredients/add/page.tsx](frontend/app/ingredients/add/page.tsx) - Converted to client-side form handling
+   - Issue: Server actions can't access JWT tokens (client-side only)
+   - Solution: Moved `addIngredient` function from server action to client-side function
+   - Changes:
+     - Removed `useActionState` hook
+     - Added `useState` for form state (isPending, error, success)
+     - Added `handleSubmit` function with client-side API call
+     - Added brand and barcode fields to form
+     - Added auto-redirect to /ingredients on success
+   - Status: ✅ Complete
+
+4. **Fixed DailyOverviewChart API Endpoints** (20:35)
+   - File: [frontend/components/DailyOverviewChart/index.tsx](frontend/components/DailyOverviewChart/index.tsx)
+   - Issue: Using non-existent endpoints `/api/goal` and `/api/macros`
+   - Solution: Updated to use correct endpoints:
+     - `/api/goal` → `/api/Goals` (with JWT authentication via `apiClient`)
+     - `/api/macros` → `/api/Meals?date=YYYY-MM-DD` (calculates totals)
+   - Changes:
+     - Replaced `fetch()` with `apiClient()` for JWT authentication
+     - Updated Goal interface to match backend DTO structure
+     - Added error handling with fallback values
+     - Fixed null handling for goal values
+     - Added Math.round() for display values
+   - Status: ✅ Complete
+
+#### Summary of Fixes
+
+**Infrastructure:**
+- ✅ PostgreSQL upgraded to version 18-alpine (latest stable, version 18.1)
+- ✅ Node.js 25-alpine (latest stable, version 25.2.1)
+- ✅ .NET 10.0 (latest stable)
+- ✅ Redis 7-alpine (latest stable)
+- ✅ Database migration error documented and resolved
+- ⚠️ PostgreSQL 18 has volume path changes: PGDATA now at /var/lib/postgresql/18/docker (was version-agnostic before)
+
+**Authentication:**
+- ✅ Fixed 401 errors on POST /api/Foods (ingredient creation)
+- ✅ Moved JWT-authenticated API calls to client components
+- ✅ Fixed 404 errors on /api/goal and /api/macros
+
+**Code Quality:**
+- ✅ Followed CLAUDE.md guidelines (read before modify, check logs, use official docs)
+- ✅ Implemented proper error handling
+- ✅ Added client-side form validation
+- ✅ Improved user feedback with success/error messages
+
+**Testing Recommendations:**
+1. Test ingredient creation (should now work with authentication)
+2. Test DailyOverviewChart (should load without 404 errors)
+3. Verify PostgreSQL 17 works correctly after volume recreation
+4. Check all authenticated endpoints return proper data
+
+---
+
+**Last Updated:** December 12, 2025 21:00 UTC

@@ -1,5 +1,3 @@
-"use server";
-
 import { apiClient } from "@/lib/auth-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
@@ -64,46 +62,48 @@ export async function getIngredientById(id: string): Promise<Ingredient | null> 
 }
 
 /**
- * Add a new ingredient (food) via the backend API
+ * Add a new ingredient (food) via the backend API - Client-side version
+ * This must run on the client to access JWT tokens for authentication
  */
-export async function addIngredient(prevState: FormState, formData: FormData): Promise<FormState> {
-    try {
-        const name = formData.get("name") as string;
-        const brand = formData.get("brand") as string;
-        const barcode = formData.get("barcode") as string;
-        const servingSize = parseFloat(formData.get("servingSize") as string) || 100;
-        const calories = parseInt(formData.get("calories") as string);
-        const protein = parseFloat(formData.get("protein") as string);
-        const carbs = parseFloat(formData.get("carbs") as string);
-        const fat = parseFloat(formData.get("fat") as string);
-        const fiber = parseFloat(formData.get("fiber") as string);
+export async function addIngredient(data: {
+    name: string;
+    brand?: string;
+    barcode?: string;
+    servingSize: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+}): Promise<Ingredient> {
+    const result = await apiClient<{ id: string }>("/api/Foods", {
+        method: "POST",
+        body: JSON.stringify({
+            name: data.name,
+            brand: data.brand || null,
+            barcode: data.barcode || null,
+            servingSize: data.servingSize,
+            servingUnit: "g",
+            caloriesPer100g: data.calories,
+            proteinPer100g: data.protein || 0,
+            carbsPer100g: data.carbs || 0,
+            fatPer100g: data.fat || 0,
+            fiberPer100g: data.fiber || null,
+        }),
+    });
 
-        if (!name || isNaN(calories)) {
-            return createErrorState("Name and calories are required", [
-                { field: "name", message: !name ? "Name is required" : "" },
-                { field: "calories", message: isNaN(calories) ? "Valid calories required" : "" },
-            ]);
-        }
-
-        await apiClient("/api/Foods", {
-            method: "POST",
-            body: JSON.stringify({
-                name,
-                brand: brand || null,
-                barcode: barcode || null,
-                servingSize,
-                servingUnit: "g",
-                caloriesPer100g: calories,
-                proteinPer100g: isNaN(protein) ? 0 : protein,
-                carbsPer100g: isNaN(carbs) ? 0 : carbs,
-                fatPer100g: isNaN(fat) ? 0 : fat,
-                fiberPer100g: isNaN(fiber) ? null : fiber,
-            }),
-        });
-
-        return createSuccessState("Ingredient added successfully!");
-    } catch (error) {
-        console.error("Failed to add ingredient:", error);
-        return createErrorState("Failed to add ingredient");
-    }
+    return {
+        id: result.id,
+        name: data.name,
+        brand: data.brand,
+        barcode: data.barcode,
+        servingSize: data.servingSize,
+        servingUnit: "g",
+        caloriesPer100g: data.calories,
+        proteinPer100g: data.protein || 0,
+        carbsPer100g: data.carbs || 0,
+        fatPer100g: data.fat || 0,
+        fiberPer100g: data.fiber,
+        isVerified: false,
+    };
 }

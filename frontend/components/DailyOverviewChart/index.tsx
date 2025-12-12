@@ -2,45 +2,64 @@
 
 import OverviewPieChart from "./PieChart";
 import { useEffect, useState } from "react";
-import { GoalVersion } from "@/types/goal";
-import Macros from "@/types/macro";
+import { apiClient } from "@/lib/auth-client";
 import Loading from "../Loading";
 
+interface Goal {
+	targetCalories: number | null;
+	targetProteinGrams: number | null;
+	targetCarbsGrams: number | null;
+	targetFatGrams: number | null;
+}
+
+interface Macros {
+	calories: number;
+	protein: number;
+	carbs: number;
+	fat: number;
+}
 
 export default function DailyOverviewChart() {
-	const [goal, setGoal] = useState<GoalVersion | null>(null);
+	const [goal, setGoal] = useState<Goal | null>(null);
 	const [macros, setMacros] = useState<Macros>({
 		calories: 0,
 		protein: 0,
 		carbs: 0,
 		fat: 0,
-		fiber: 0
 	});
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		fetch("/api/goal")
-			.then((res) => res.json())
-			.then((data) => setGoal(data.goal))
-			.catch((error) => console.error(error))
-		
-		fetch("/api/macros")
-			.then((res) => res.json())
-			.then((data) => setMacros(data.macros))
-			.catch((error) => console.error(error))
-			.finally(() => {
+		async function fetchData() {
+			try {
+				const today = new Date().toISOString().split('T')[0];
+
+				// Fetch goal and daily meals in parallel
+				const [goalResponse, mealsResponse] = await Promise.all([
+					apiClient<Goal>('/api/Goals').catch(() => null),
+					apiClient<{ totals: Macros }>('/api/Meals?date=' + today).catch(() => ({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } }))
+				]);
+
+				setGoal(goalResponse);
+				setMacros(mealsResponse.totals);
+			} catch (error) {
+				console.error('Failed to fetch chart data:', error);
+			} finally {
 				setLoading(false);
-			})
+			}
+		}
+
+		fetchData();
 	}, []);
 
 	if (!goal) return null;
 
 	const {
-		calories: targetCalories,
-		protein: targetProtein,
-		carbs: targetCarbs,
-		fat: targetFat
-	} = goal.targetMacro;
+		targetCalories,
+		targetProteinGrams: targetProtein,
+		targetCarbsGrams: targetCarbs,
+		targetFatGrams: targetFat
+	} = goal;
 	
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -57,25 +76,25 @@ export default function DailyOverviewChart() {
 					<div className="flex justify-between items-center">
 						<span>Calories</span>
 						<span className="font-medium">
-							{macros.calories} / {targetCalories}
+							{Math.round(macros.calories)} / {targetCalories || 0}
 						</span>
 					</div>
 					<div className="flex justify-between items-center">
 						<span>Protein</span>
 						<span className="font-medium">
-							{macros.protein}g / {targetProtein}g
+							{Math.round(macros.protein)}g / {Math.round(targetProtein || 0)}g
 						</span>
 					</div>
 					<div className="flex justify-between items-center">
 						<span>Carbs</span>
 						<span className="font-medium">
-							{macros.carbs}g / {targetCarbs}g
+							{Math.round(macros.carbs)}g / {Math.round(targetCarbs || 0)}g
 						</span>
 					</div>
 					<div className="flex justify-between items-center">
 						<span>Fat</span>
 						<span className="font-medium">
-							{macros.fat}g / {targetFat}g
+							{Math.round(macros.fat)}g / {Math.round(targetFat || 0)}g
 						</span>
 					</div>
 				</div>
