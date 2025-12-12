@@ -10,6 +10,8 @@ const publicPaths = [
 	"/verify-email",
 	"/forgot-password",
 	"/reset-password",
+	"/privacy",
+	"/terms",
 	"/api/auth",
 ];
 

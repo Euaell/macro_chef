@@ -12,10 +12,10 @@ interface DailyTotals {
 }
 
 interface Goal {
-	targetCalories: number;
-	targetProtein: number;
-	targetCarbs: number;
-	targetFat: number;
+	targetCalories: number | null;
+	targetProteinGrams: number | null;
+	targetCarbsGrams: number | null;
+	targetFatGrams: number | null;
 }
 
 export default function DashboardStats() {
@@ -30,13 +30,17 @@ export default function DashboardStats() {
 				setLoading(true);
 				setError(null);
 
-				// Fetch daily totals and goal in parallel
-				const [totalsResponse, goalResponse] = await Promise.all([
-					apiClient<DailyTotals>('/api/Meals/totals?date=' + new Date().toISOString().split('T')[0])
-						.catch(() => ({ calories: 0, protein: 0, carbs: 0, fat: 0 })),
-					apiClient<Goal>('/api/Goals/current')
+				// Fetch daily meals and goal in parallel
+				const today = new Date().toISOString().split('T')[0];
+				const [mealsResponse, goalResponse] = await Promise.all([
+					apiClient<{ date: string; entries: any[]; totals: DailyTotals }>('/api/Meals?date=' + today)
+						.catch(() => ({ date: today, entries: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } })),
+					apiClient<Goal>('/api/Goals')
 						.catch(() => null),
 				]);
+
+				// Backend already calculates totals for us
+				const totalsResponse = mealsResponse.totals;
 
 				setDailyTotals(totalsResponse);
 				setGoal(goalResponse);
@@ -124,14 +128,14 @@ export default function DashboardStats() {
 					<span className="text-2xl font-bold text-slate-900">
 						{protein}g
 					</span>
-					{goal?.targetProtein && (
-						<span className="text-sm text-slate-400">/ {goal.targetProtein}g</span>
+					{goal?.targetProteinGrams && (
+						<span className="text-sm text-slate-400">/ {Math.round(goal.targetProteinGrams)}g</span>
 					)}
 				</div>
 				<div className="mt-2 text-xs text-slate-400">
-					{goal?.targetProtein ? (
+					{goal?.targetProteinGrams ? (
 						<>
-							{Math.round((protein / goal.targetProtein) * 100)}% of goal
+							{Math.round((protein / goal.targetProteinGrams) * 100)}% of goal
 						</>
 					) : (
 						'No goal set'
