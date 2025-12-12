@@ -2,20 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import placeHolderImage from "@/public/placeholder-recipe.jpg";
 import DailyOverviewChart from "@/components/DailyOverviewChart";
+import DashboardStats from "@/components/Dashboard/DashboardStats";
 import { getUserOptionalServer } from "@/helper/session";
 import { getPopularRecipes } from "@/data/recipe";
-import { getDailyTotals } from "@/data/meal";
-import { getCurrentGoal } from "@/data/goal";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
 	const user = await getUserOptionalServer();
 	const popularRecipes = await getPopularRecipes();
-
-	// Fetch real user data for authenticated users
-	const dailyTotals = user ? await getDailyTotals() : null;
-	const userGoal = user ? await getCurrentGoal() : null;
 
 	return (
 		<div className="space-y-8">
@@ -57,72 +52,7 @@ export default async function Home() {
 			)}
 
 			{/* Quick Stats for authenticated users */}
-			{user && (
-				<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-					{/* Calories */}
-					<div className="card p-4">
-						<div className="flex items-center gap-3 mb-2">
-							<div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-								<i className="ri-fire-line text-xl text-orange-500" />
-							</div>
-							<span className="text-sm text-slate-500">Calories Today</span>
-						</div>
-						<div className="flex items-baseline gap-2">
-							<span className="text-2xl font-bold text-slate-900">
-								{dailyTotals ? Math.round(dailyTotals.calories).toLocaleString() : '0'}
-							</span>
-							{userGoal?.targetCalories && (
-								<span className="text-sm text-slate-400">/ {userGoal.targetCalories.toLocaleString()}</span>
-							)}
-						</div>
-					</div>
-
-					{/* Protein */}
-					<div className="card p-4">
-						<div className="flex items-center gap-3 mb-2">
-							<div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-								<i className="ri-heart-pulse-line text-xl text-red-500" />
-							</div>
-							<span className="text-sm text-slate-500">Protein</span>
-						</div>
-						<div className="flex items-baseline gap-2">
-							<span className="text-2xl font-bold text-slate-900">
-								{dailyTotals ? Math.round(dailyTotals.protein) : '0'}g
-							</span>
-							{userGoal?.targetProteinGrams && (
-								<span className="text-sm text-slate-400">/ {Math.round(userGoal.targetProteinGrams)}g</span>
-							)}
-						</div>
-					</div>
-
-					{/* Water - Placeholder for now */}
-					<div className="card p-4">
-						<div className="flex items-center gap-3 mb-2">
-							<div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-								<i className="ri-drop-line text-xl text-blue-500" />
-							</div>
-							<span className="text-sm text-slate-500">Water</span>
-						</div>
-						<div className="flex items-baseline gap-2">
-							<span className="text-2xl font-bold text-slate-900">0 cups</span>
-							<span className="text-sm text-slate-400">/ 8 cups</span>
-						</div>
-					</div>
-
-					{/* Streak - Placeholder for now */}
-					<div className="card p-4">
-						<div className="flex items-center gap-3 mb-2">
-							<div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-								<i className="ri-medal-line text-xl text-amber-500" />
-							</div>
-							<span className="text-sm text-slate-500">Streak</span>
-						</div>
-						<div className="flex items-baseline gap-2">
-							<span className="text-2xl font-bold text-slate-900">0 days</span>
-						</div>
-					</div>
-				</div>
-			)}
+			{user && <DashboardStats />}
 
 			{/* Quick Actions */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
