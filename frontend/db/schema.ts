@@ -70,6 +70,15 @@ export const jwks = pgTable("jwks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const verification = pgTable("verification", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // ==================== Household (Organization) Tables ====================
 
 export const households = pgTable("households", {

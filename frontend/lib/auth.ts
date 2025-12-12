@@ -14,22 +14,42 @@ export const auth = betterAuth({
       session: schema.sessions,
       account: schema.accounts,
       jwks: schema.jwks,
+      verification: schema.verification,
     },
   }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      // Implement email sending for password reset
-      console.log(`Password reset link for ${user.email}: ${url}`);
+      // TODO: Replace with actual email service for production
+      // Options: Resend, SendGrid, Nodemailer, AWS SES, etc.
+      // Example with Resend:
+      // await resend.emails.send({
+      //   from: 'Mizan <noreply@mizan.app>',
+      //   to: user.email,
+      //   subject: 'Reset your password',
+      //   html: `Click here to reset your password: <a href="${url}">${url}</a>`
+      // });
+      console.log(`\n🔐 Password Reset for ${user.email}`);
+      console.log(`🔗 Reset URL: ${url}`);
+      console.log(`\nDEV MODE: Click the link above to reset your password\n`);
     },
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url, token }) => {
-      // TODO: Replace with actual email service (Nodemailer, Resend, etc.)
+      // TODO: Replace with actual email service for production
+      // Options: Resend, SendGrid, Nodemailer, AWS SES, etc.
+      // Example with Resend:
+      // await resend.emails.send({
+      //   from: 'Mizan <noreply@mizan.app>',
+      //   to: user.email,
+      //   subject: 'Verify your email address',
+      //   html: `Click here to verify your email: <a href="${url}">${url}</a>`
+      // });
       console.log(`\n📧 Email Verification for ${user.email}`);
       console.log(`🔗 Verification URL: ${url}`);
-      console.log(`🎫 Token: ${token}\n`);
+      console.log(`🎫 Token: ${token}`);
+      console.log(`\nDEV MODE: Click the link above to verify your email\n`);
     },
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
