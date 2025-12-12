@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt, organization } from "better-auth/plugins";
 import { db } from "@/db/client";
+import { sendEmail, getVerificationEmailTemplate, getPasswordResetEmailTemplate } from "@/lib/email";
 
 import * as schema from "@/db/schema";
 
@@ -21,35 +22,41 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      // TODO: Replace with actual email service for production
-      // Options: Resend, SendGrid, Nodemailer, AWS SES, etc.
-      // Example with Resend:
-      // await resend.emails.send({
-      //   from: 'Mizan <noreply@mizan.app>',
-      //   to: user.email,
-      //   subject: 'Reset your password',
-      //   html: `Click here to reset your password: <a href="${url}">${url}</a>`
-      // });
-      console.log(`\n🔐 Password Reset for ${user.email}`);
-      console.log(`🔗 Reset URL: ${url}`);
-      console.log(`\nDEV MODE: Click the link above to reset your password\n`);
+      // Log URL in development for easy testing
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`\n🔐 Password Reset for ${user.email}`);
+        console.log(`🔗 Reset URL: ${url}`);
+        console.log(`\nDEV MODE: Click the link above to reset your password\n`);
+      }
+
+      // Send email
+      const emailTemplate = getPasswordResetEmailTemplate(url, user.name);
+      await sendEmail({
+        to: user.email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text,
+      });
     },
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url, token }) => {
-      // TODO: Replace with actual email service for production
-      // Options: Resend, SendGrid, Nodemailer, AWS SES, etc.
-      // Example with Resend:
-      // await resend.emails.send({
-      //   from: 'Mizan <noreply@mizan.app>',
-      //   to: user.email,
-      //   subject: 'Verify your email address',
-      //   html: `Click here to verify your email: <a href="${url}">${url}</a>`
-      // });
-      console.log(`\n📧 Email Verification for ${user.email}`);
-      console.log(`🔗 Verification URL: ${url}`);
-      console.log(`🎫 Token: ${token}`);
-      console.log(`\nDEV MODE: Click the link above to verify your email\n`);
+      // Log URL in development for easy testing
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`\n📧 Email Verification for ${user.email}`);
+        console.log(`🔗 Verification URL: ${url}`);
+        console.log(`🎫 Token: ${token}`);
+        console.log(`\nDEV MODE: Click the link above to verify your email\n`);
+      }
+
+      // Send email
+      const emailTemplate = getVerificationEmailTemplate(url, user.name);
+      await sendEmail({
+        to: user.email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text,
+      });
     },
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
