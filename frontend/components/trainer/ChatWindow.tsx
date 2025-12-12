@@ -30,7 +30,7 @@ export function ChatWindow({
 	const [isTyping, setIsTyping] = useState(false);
 	const [otherUserTyping, setOtherUserTyping] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
-	const typingTimeoutRef = useRef<NodeJS.Timeout>();
+	const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

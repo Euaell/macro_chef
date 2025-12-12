@@ -34,9 +34,15 @@ export default function DashboardStats() {
 				const today = new Date().toISOString().split('T')[0];
 				const [mealsResponse, goalResponse] = await Promise.all([
 					apiClient<{ date: string; entries: any[]; totals: DailyTotals }>('/api/Meals?date=' + today)
-						.catch(() => ({ date: today, entries: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } })),
+						.catch((err) => {
+							console.error('[Dashboard] Meals API error:', err);
+							return { date: today, entries: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } };
+						}),
 					apiClient<Goal>('/api/Goals')
-						.catch(() => null),
+						.catch((err) => {
+							console.error('[Dashboard] Goals API error:', err);
+							return null;
+						}),
 				]);
 
 				// Backend already calculates totals for us
