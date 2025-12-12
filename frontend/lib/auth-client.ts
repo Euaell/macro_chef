@@ -35,10 +35,12 @@ export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = await getApiToken();
-
   const baseUrl = (typeof window === 'undefined' ? process.env.API_URL : process.env.NEXT_PUBLIC_API_URL) || "http://localhost:5000";
   const apiUrl = baseUrl;
+
+  // Only try to get token on client-side
+  // Server-side API calls will need to be handled differently or moved to client-side
+  const token = typeof window !== 'undefined' ? await getApiToken() : null;
 
   const response = await fetch(`${apiUrl}${endpoint}`, {
     ...options,

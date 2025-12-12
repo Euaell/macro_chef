@@ -4,6 +4,7 @@ import User from "@/types/user";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { signOut } from "@/lib/auth-client";
 
 interface NavbarContentProps {
 	user: User | null;
@@ -53,15 +54,19 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 		};
 	}, [menuOpen]);
 
-	function handleLogout() {
-		fetch("/api/auth/logout?callbackUrl=/")
-			.then((res) => res.ok ? res.json() : null)
-			.then((data) => {
-				if (data) {
-					router.push(data.callbackUrl);
-					router.refresh();
-				}
+	async function handleLogout() {
+		try {
+			await signOut({
+				fetchOptions: {
+					onSuccess: () => {
+						router.push("/");
+						router.refresh();
+					},
+				},
 			});
+		} catch (error) {
+			console.error("Logout failed:", error);
+		}
 	}
 
 	const closeMenu = () => setMenuOpen(false);

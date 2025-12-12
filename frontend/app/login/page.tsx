@@ -42,9 +42,24 @@ export default function Page() {
 				const text = await res.text();
 				try {
 					const json = JSON.parse(text);
-					throw new Error(json.message || json.error || "Sign in failed");
-				} catch {
-					throw new Error(text || "Sign in failed");
+					// Map Better Auth error codes to user-friendly messages
+					const errorCode = json.code;
+					let errorMessage = "Sign in failed. Please try again.";
+
+					if (errorCode === "INVALID_EMAIL_OR_PASSWORD") {
+						errorMessage = "Invalid email or password";
+					} else if (errorCode === "USER_NOT_VERIFIED") {
+						errorMessage = "Please verify your email address before signing in";
+					} else if (json.message) {
+						errorMessage = json.message;
+					}
+
+					throw new Error(errorMessage);
+				} catch (e) {
+					if (e instanceof Error && e.message !== text) {
+						throw e;
+					}
+					throw new Error("Sign in failed. Please try again.");
 				}
 			}
 			return res.json();

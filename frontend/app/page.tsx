@@ -4,12 +4,18 @@ import placeHolderImage from "@/public/placeholder-recipe.jpg";
 import DailyOverviewChart from "@/components/DailyOverviewChart";
 import { getUserOptionalServer } from "@/helper/session";
 import { getPopularRecipes } from "@/data/recipe";
+import { getDailyTotals } from "@/data/meal";
+import { getCurrentGoal } from "@/data/goal";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
 	const user = await getUserOptionalServer();
 	const popularRecipes = await getPopularRecipes();
+
+	// Fetch real user data for authenticated users
+	const dailyTotals = user ? await getDailyTotals() : null;
+	const userGoal = user ? await getCurrentGoal() : null;
 
 	return (
 		<div className="space-y-8">
@@ -53,25 +59,68 @@ export default async function Home() {
 			{/* Quick Stats for authenticated users */}
 			{user && (
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-					{[
-						{ label: 'Calories Today', value: '1,850', target: '2,200', icon: 'ri-fire-line', color: 'text-orange-500', bg: 'bg-orange-50' },
-						{ label: 'Protein', value: '95g', target: '120g', icon: 'ri-heart-pulse-line', color: 'text-red-500', bg: 'bg-red-50' },
-						{ label: 'Water', value: '6 cups', target: '8 cups', icon: 'ri-drop-line', color: 'text-blue-500', bg: 'bg-blue-50' },
-						{ label: 'Streak', value: '7 days', target: '', icon: 'ri-medal-line', color: 'text-amber-500', bg: 'bg-amber-50' },
-					].map((stat) => (
-						<div key={stat.label} className="card p-4">
-							<div className="flex items-center gap-3 mb-2">
-								<div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
-									<i className={`${stat.icon} text-xl ${stat.color}`} />
-								</div>
-								<span className="text-sm text-slate-500">{stat.label}</span>
+					{/* Calories */}
+					<div className="card p-4">
+						<div className="flex items-center gap-3 mb-2">
+							<div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+								<i className="ri-fire-line text-xl text-orange-500" />
 							</div>
-							<div className="flex items-baseline gap-2">
-								<span className="text-2xl font-bold text-slate-900">{stat.value}</span>
-								{stat.target && <span className="text-sm text-slate-400">/ {stat.target}</span>}
-							</div>
+							<span className="text-sm text-slate-500">Calories Today</span>
 						</div>
-					))}
+						<div className="flex items-baseline gap-2">
+							<span className="text-2xl font-bold text-slate-900">
+								{dailyTotals ? Math.round(dailyTotals.calories).toLocaleString() : '0'}
+							</span>
+							{userGoal?.targetCalories && (
+								<span className="text-sm text-slate-400">/ {userGoal.targetCalories.toLocaleString()}</span>
+							)}
+						</div>
+					</div>
+
+					{/* Protein */}
+					<div className="card p-4">
+						<div className="flex items-center gap-3 mb-2">
+							<div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+								<i className="ri-heart-pulse-line text-xl text-red-500" />
+							</div>
+							<span className="text-sm text-slate-500">Protein</span>
+						</div>
+						<div className="flex items-baseline gap-2">
+							<span className="text-2xl font-bold text-slate-900">
+								{dailyTotals ? Math.round(dailyTotals.protein) : '0'}g
+							</span>
+							{userGoal?.targetProteinGrams && (
+								<span className="text-sm text-slate-400">/ {Math.round(userGoal.targetProteinGrams)}g</span>
+							)}
+						</div>
+					</div>
+
+					{/* Water - Placeholder for now */}
+					<div className="card p-4">
+						<div className="flex items-center gap-3 mb-2">
+							<div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+								<i className="ri-drop-line text-xl text-blue-500" />
+							</div>
+							<span className="text-sm text-slate-500">Water</span>
+						</div>
+						<div className="flex items-baseline gap-2">
+							<span className="text-2xl font-bold text-slate-900">0 cups</span>
+							<span className="text-sm text-slate-400">/ 8 cups</span>
+						</div>
+					</div>
+
+					{/* Streak - Placeholder for now */}
+					<div className="card p-4">
+						<div className="flex items-center gap-3 mb-2">
+							<div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+								<i className="ri-medal-line text-xl text-amber-500" />
+							</div>
+							<span className="text-sm text-slate-500">Streak</span>
+						</div>
+						<div className="flex items-baseline gap-2">
+							<span className="text-2xl font-bold text-slate-900">0 days</span>
+						</div>
+					</div>
 				</div>
 			)}
 
