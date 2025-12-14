@@ -460,4 +460,84 @@ This file tracks all development tasks completed, with timestamps and descriptio
 
 ---
 
-**Last Updated:** December 12, 2025 21:00 UTC
+## December 14, 2025
+
+### Session 1: Database Schema Timezone Fixes
+
+**Time:** 19:45 - 20:10 UTC
+
+#### Issue Discovery
+
+User reported inconsistent timezone handling across database timestamps. Investigation revealed:
+
+1. **Entity Framework Migrations** (backend) - Used `TIMESTAMPTZ` ✓
+2. **Manual Better Auth Migrations** - Used `TIMESTAMP` (no timezone) ✗
+3. **Drizzle ORM Schema** - Default `timestamp()` without timezone specification ✗
+
+This inconsistency could lead to:
+- Incorrect time calculations across timezones
+- Session expiration bugs
+- Data integrity issues when users are in different timezones
+
+#### Fixes Applied
+
+1. **Updated Drizzle Schema** (20:00)
+   - File: [frontend/db/schema.ts](frontend/db/schema.ts)
+   - Changed all `timestamp()` calls to `timestamp("column_name", { withTimezone: true })`
+   - Tables affected:
+     - `accounts`: `created_at`, `updated_at`, `access_token_expires_at`, `refresh_token_expires_at`
+     - `sessions`: `expires_at`, `created_at`, `updated_at`
+     - `verification`: `expires_at`, `created_at`, `updated_at`
+     - `jwks`: `created_at`
+   - Status: ✅ Complete
+
+2. **Updated Better Auth Migration SQL** (20:03)
+   - File: [frontend/db/migrations/0005_better_auth_schema.sql](frontend/db/migrations/0005_better_auth_schema.sql)
+   - Changed all `TIMESTAMP` to `TIMESTAMPTZ`
+   - Added conversion statements for existing columns:
+     ```sql
+     ALTER TABLE accounts
+       ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';
+     ```
+   - Tables updated: `accounts`, `sessions`, `verification`, `jwks`
+   - Status: ✅ Complete
+
+3. **Updated Migration Bash Script** (20:05)
+   - File: [scripts/migrate-better-auth.sh](scripts/migrate-better-auth.sh)
+   - Changed all `TIMESTAMP` to `TIMESTAMPTZ`
+   - Added conversion statements to match SQL migration
+   - Ensures reproducibility across all environments
+   - Status: ✅ Complete
+
+#### Technical Details
+
+**Timezone Conversion Strategy:**
+```sql
+-- Convert existing TIMESTAMP columns to TIMESTAMPTZ
+ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC'
+```
+
+This assumes existing timestamps are in UTC and properly converts them to timezone-aware format.
+
+**Docker Environment Variables:**
+- Frontend: Uses `NEXT_PUBLIC_API_URL=http://localhost:3000` (browser access via proxy)
+- Server-side: Uses `API_URL=http://mizan-backend:8080` (Docker network)
+- Database: All timestamps now stored as `TIMESTAMPTZ`
+
+#### Migration Status
+
+**Files Ready:**
+- ✅ Drizzle schema updated with timezone-aware types
+- ✅ SQL migration file contains TIMESTAMPTZ conversions
+- ✅ Bash script synchronized with SQL migration
+- ⏳ Awaiting user to apply migrations to database
+
+**Next Steps:**
+1. User should run `npx drizzle-kit push` to sync schema
+2. Or run `scripts/migrate-better-auth.sh` to apply SQL migration
+3. Test recipe creation with updated environment variables
+4. Verify all authenticated endpoints work correctly
+
+---
+
+**Last Updated:** December 14, 2025 20:10 UTC

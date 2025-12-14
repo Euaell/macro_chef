@@ -22,8 +22,8 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").default(false),
   name: varchar("name", { length: 255 }),
   image: text("image"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const accounts = pgTable(
@@ -38,12 +38,12 @@ export const accounts = pgTable(
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
     scope: text("scope"),
     password: text("password"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     userIdIdx: index("accounts_userId_idx").on(t.userId),
@@ -56,27 +56,27 @@ export const sessions = pgTable("sessions", {
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   token: varchar("token", { length: 255 }).notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const jwks = pgTable("jwks", {
   id: text("id").primaryKey(),
   publicKey: text("public_key").notNull(),
   privateKey: text("private_key").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const verification = pgTable("verification", {
   id: uuid("id").defaultRandom().primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // ==================== Household (Organization) Tables ====================
@@ -85,7 +85,7 @@ export const households = pgTable("households", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   createdBy: uuid("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const householdMembers = pgTable(
@@ -101,7 +101,7 @@ export const householdMembers = pgTable(
     canEditRecipes: boolean("can_edit_recipes").default(true),
     canEditShoppingList: boolean("can_edit_shopping_list").default(true),
     canViewNutrition: boolean("can_view_nutrition").default(false),
-    joinedAt: timestamp("joined_at").defaultNow(),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow(),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.householdId, t.userId] }),
@@ -127,8 +127,8 @@ export const foods = pgTable(
     sugarPer100g: decimal("sugar_per_100g", { precision: 8, scale: 2 }),
     sodiumPer100g: decimal("sodium_per_100g", { precision: 8, scale: 2 }),
     isVerified: boolean("is_verified").default(false),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (t) => ({
     barcodeIdx: index("idx_foods_barcode").on(t.barcode),
@@ -149,8 +149,8 @@ export const recipes = pgTable("recipes", {
   sourceUrl: text("source_url"),
   imageUrl: text("image_url"),
   isPublic: boolean("is_public").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const recipeIngredients = pgTable("recipe_ingredients", {
@@ -215,7 +215,7 @@ export const foodDiaryEntries = pgTable(
     proteinGrams: decimal("protein_grams", { precision: 8, scale: 2 }),
     carbsGrams: decimal("carbs_grams", { precision: 8, scale: 2 }),
     fatGrams: decimal("fat_grams", { precision: 8, scale: 2 }),
-    loggedAt: timestamp("logged_at").defaultNow(),
+    loggedAt: timestamp("logged_at", { withTimezone: true }).defaultNow(),
   },
   (t) => ({
     userDateIdx: index("idx_food_diary_user_date").on(t.userId, t.entryDate),
@@ -235,8 +235,8 @@ export const mealPlans = pgTable("meal_plans", {
   name: varchar("name", { length: 255 }),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const mealPlanRecipes = pgTable("meal_plan_recipes", {
@@ -263,8 +263,8 @@ export const shoppingLists = pgTable("shopping_lists", {
     onDelete: "set null",
   }),
   name: varchar("name", { length: 255 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const shoppingListItems = pgTable("shopping_list_items", {
@@ -296,8 +296,8 @@ export const userGoals = pgTable("user_goals", {
   weightUnit: varchar("weight_unit", { length: 10 }).default("kg"),
   targetDate: date("target_date"),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // ==================== Fitness/Workout Tables ====================
@@ -315,7 +315,7 @@ export const exercises = pgTable("exercises", {
   createdByUserId: uuid("created_by_user_id").references(() => users.id, {
     onDelete: "set null",
   }),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const workouts = pgTable("workouts", {
@@ -328,7 +328,7 @@ export const workouts = pgTable("workouts", {
   durationMinutes: integer("duration_minutes"),
   caloriesBurned: integer("calories_burned"),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const workoutExercises = pgTable("workout_exercises", {
@@ -372,7 +372,7 @@ export const bodyMeasurements = pgTable("body_measurements", {
   armsCm: decimal("arms_cm", { precision: 6, scale: 2 }),
   thighsCm: decimal("thighs_cm", { precision: 6, scale: 2 }),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 // ==================== Trainer/Client Tables ====================
@@ -392,9 +392,9 @@ export const trainerClientRelationships = pgTable(
     canViewWorkouts: boolean("can_view_workouts").default(true),
     canViewMeasurements: boolean("can_view_measurements").default(false),
     canMessage: boolean("can_message").default(true),
-    startedAt: timestamp("started_at"),
-    endedAt: timestamp("ended_at"),
-    createdAt: timestamp("created_at").defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
   (t) => ({
     uniqueRelationship: unique().on(t.trainerId, t.clientId),
@@ -406,8 +406,8 @@ export const chatConversations = pgTable("chat_conversations", {
   trainerClientRelationshipId: uuid("trainer_client_relationship_id")
     .references(() => trainerClientRelationships.id, { onDelete: "cascade" })
     .notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export const chatMessages = pgTable("chat_messages", {
@@ -420,8 +420,8 @@ export const chatMessages = pgTable("chat_messages", {
     .notNull(),
   content: text("content").notNull(),
   messageType: varchar("message_type", { length: 20 }).default("text"), // text, image, workout_share, recipe_share
-  sentAt: timestamp("sent_at").defaultNow(),
-  readAt: timestamp("read_at"),
+  sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow(),
+  readAt: timestamp("read_at", { withTimezone: true }),
 });
 
 // ==================== Gamification Tables ====================
@@ -444,7 +444,7 @@ export const userAchievements = pgTable(
     achievementId: uuid("achievement_id")
       .references(() => achievements.id, { onDelete: "cascade" })
       .notNull(),
-    earnedAt: timestamp("earned_at").defaultNow(),
+    earnedAt: timestamp("earned_at", { withTimezone: true }).defaultNow(),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.userId, t.achievementId] }),
@@ -471,6 +471,6 @@ export const aiChatThreads = pgTable("ai_chat_threads", {
     .notNull(),
   threadType: varchar("thread_type", { length: 50 }).default("nutrition"), // nutrition, workout, general
   threadData: jsonb("thread_data").default("{}"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

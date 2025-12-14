@@ -12,6 +12,10 @@ export async function GET() {
                 status: "Unknown",
                 latencyMs: 0,
             },
+            backend: {
+                status: "Unknown",
+                latencyMs: 0,
+            },
         },
         system: {
             memoryUsage: process.memoryUsage(),
@@ -20,20 +24,44 @@ export async function GET() {
         },
     };
 
-    const start = performance.now();
+    // Check database
+    const dbStart = performance.now();
     try {
-        // Simple query to check DB connection
         await db.select({ id: users.id }).from(users).limit(1);
-        const end = performance.now();
+        const dbEnd = performance.now();
 
         healthStatus.services.database.status = "Healthy";
-        healthStatus.services.database.latencyMs = Math.round(end - start);
+        healthStatus.services.database.latencyMs = Math.round(dbEnd - dbStart);
     } catch (error) {
-        console.error("Health check failed:", error);
+        console.error("Database health check failed:", error);
         healthStatus.status = "Unhealthy";
         healthStatus.services.database.status = "Unhealthy";
-        return NextResponse.json(healthStatus, { status: 503 });
     }
 
-    return NextResponse.json(healthStatus);
+    // Check backend API
+    const backendStart = performance.now();
+    try {
+        const backendUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const response = await fetch(`${backendUrl}/health`, {
+            signal: AbortSignal.timeout(5000), // 5 second timeout
+        });
+        const backendEnd = performance.now();
+
+        if (response.ok) {
+            healthStatus.services.backend.status = "Healthy";
+            healthStatus.services.backend.latencyMs = Math.round(backendEnd - backendStart);
+        } else {
+            healthStatus.services.backend.status = "Unhealthy";
+            healthStatus.status = "Unhealthy";
+        }
+    } catch (error) {
+        console.error("Backend health check failed:", error);
+        healthStatus.services.backend.status = "Unhealthy";
+        healthStatus.status = "Unhealthy";
+    }
+
+    return NextResponse.json(
+        healthStatus,
+        { status: healthStatus.status === "Healthy" ? 200 : 503 }
+    );
 }

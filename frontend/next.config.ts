@@ -55,6 +55,42 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
+
+	// Proxy backend API requests (explicitly list backend endpoints)
+	async rewrites() {
+		const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+		return {
+			afterFiles: [
+				// Proxy specific backend API endpoints
+				// /api/auth/* and /api/health are handled by Next.js routes
+				{
+					source: "/api/Foods/:path*",
+					destination: `${backendUrl}/api/Foods/:path*`,
+				},
+				{
+					source: "/api/Goals/:path*",
+					destination: `${backendUrl}/api/Goals/:path*`,
+				},
+				{
+					source: "/api/Meals/:path*",
+					destination: `${backendUrl}/api/Meals/:path*`,
+				},
+				{
+					source: "/api/Recipes/:path*",
+					destination: `${backendUrl}/api/Recipes/:path*`,
+				},
+				{
+					source: "/api/Workouts/:path*",
+					destination: `${backendUrl}/api/Workouts/:path*`,
+				},
+				{
+					source: "/api/Exercises/:path*",
+					destination: `${backendUrl}/api/Exercises/:path*`,
+				},
+			],
+		};
+	},
 };
 
 export default nextConfig;
