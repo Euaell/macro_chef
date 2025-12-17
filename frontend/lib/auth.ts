@@ -78,6 +78,11 @@ export const auth = betterAuth({
         audience: "mizan-api",
         expirationTime: "15m",
       },
+      jwks: {
+        keyPairConfig: {
+          alg: "ES256", // Using ES256 (ECDSA P-256, natively supported by .NET)
+        },
+      },
     }),
     organization({
       // Maps to household concept

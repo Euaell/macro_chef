@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Mizan.Api.Hubs;
+using Mizan.Api.Services;
 using Mizan.Application;
 using Mizan.Infrastructure;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,69 +50,38 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// HttpClient factory for JWKS fetching
+builder.Services.AddHttpClient("JwksClient", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+// Register JWKS cache service (uses Redis or in-memory fallback)
+builder.Services.AddSingleton<IJwksCache, JwksCache>();
+
+// Configure JWT Bearer options using dependency injection
+builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
+
 // JWT Authentication - validates tokens from BetterAuth JWKS endpoint
-var betterAuthUrl = builder.Configuration["BetterAuth:JwksUrl"]
-    ?? builder.Configuration["BETTERAUTH_JWKS_URL"]
-    ?? "http://localhost:3000/api/auth/jwks";
-
-var httpClientHandler = new HttpClientHandler();
-var httpClient = new HttpClient(httpClientHandler);
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["BetterAuth:Issuer"] ?? "http://localhost:3000",
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["BetterAuth:Audience"] ?? "mizan-api",
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(5),
-            IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
-            {
-                try
-                {
-                    var jwksJson = httpClient.GetStringAsync(betterAuthUrl).GetAwaiter().GetResult();
-                    var jwks = new JsonWebKeySet(jwksJson);
-                    return jwks.GetSigningKeys();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Failed to fetch JWKS from {Url}", betterAuthUrl);
-                    return Array.Empty<SecurityKey>();
-                }
-            }
-        };
-
-        // Handle SignalR token from query string
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                {
-                    context.Token = accessToken;
-                }
-
-                return Task.CompletedTask;
-            },
-            OnAuthenticationFailed = context =>
-            {
-                Log.Warning("Authentication failed: {Error}", context.Exception.Message);
-                return Task.CompletedTask;
-            }
-        };
-    });
+    .AddJwtBearer();
 
 builder.Services.AddAuthorization();
 
-// SignalR with Redis backplane for scaling
+// Redis connection for caching and SignalR
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    // Register Redis connection multiplexer as singleton for JWKS caching
+    builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    {
+        var configuration = ConfigurationOptions.Parse(redisConnectionString);
+        return ConnectionMultiplexer.Connect(configuration);
+    });
+}
+
+// SignalR with Redis backplane for scaling
 var signalRBuilder = builder.Services.AddSignalR();
 
 if (!string.IsNullOrEmpty(redisConnectionString))
