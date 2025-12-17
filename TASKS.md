@@ -93,6 +93,20 @@ This file tracks all development tasks completed, with timestamps and descriptio
 - Reason: Force Better Auth to regenerate keys with correct ES256 configuration
 - Status: ✅ Complete
 
+**5. Fixed Microsoft.IdentityModel.Tokens Version Mismatch** (14:30)
+- File: [backend/Mizan.Api/Mizan.Api.csproj:18](backend/Mizan.Api/Mizan.Api.csproj:18)
+- Issue: `MissingMethodException: Method not found: 'Void Microsoft.IdentityModel.Tokens.TokenValidationResult..ctor(...)'`
+- Root Cause: Explicit `Microsoft.IdentityModel.Tokens` v8.2.1 had incompatible constructor signature with .NET 10 JwtBearer
+- Solution: **Removed explicit package reference** - let JwtBearer 10.0.0 bring correct version transitively
+- **Before**:
+  ```xml
+  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
+  ```
+- **After**: Removed (transitive dependency from JwtBearer)
+- JwtBearer 10.0.0 requires: `Microsoft.IdentityModel.Protocols.OpenIdConnect >= 8.0.1`
+- Status: ✅ Complete
+- **Next**: Restart backend container to apply new dependencies
+
 #### Expected Results
 
 **After Frontend Hot Reload:**
