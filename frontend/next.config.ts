@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
 
 	// Proxy backend API requests (explicitly list backend endpoints)
 	async rewrites() {
-		const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+		const backendUrl = process.env.API_URL || "http://localhost:5000";
 
 		return {
 			afterFiles: [
@@ -87,6 +87,10 @@ const nextConfig: NextConfig = {
 				{
 					source: "/api/Exercises/:path*",
 					destination: `${backendUrl}/api/Exercises/:path*`,
+				},
+				{
+					source: "/hubs/:path*",
+					destination: `${backendUrl}/hubs/:path*`,
 				},
 			],
 		};

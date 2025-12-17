@@ -4,6 +4,64 @@ This file tracks all development tasks completed, with timestamps and descriptio
 
 ---
 
+## December 17, 2025
+
+### Session 1: Fixed Frontend-Backend API Proxy Configuration
+
+**Time:** 10:00 - 10:30 UTC
+
+#### Issue Analysis
+
+**Problem:** Frontend API calls were not reaching the backend in Docker environment
+
+**Root Causes Identified:**
+1. Next.js rewrites using wrong environment variable (`NEXT_PUBLIC_API_URL` instead of `API_URL`)
+2. Missing SignalR hub proxy configuration
+
+**Investigation Details:**
+- Environment variables in Docker:
+  - `NEXT_PUBLIC_API_URL=http://localhost:3000` (for browser-side calls)
+  - `API_URL=http://mizan-backend:8080` (for server-side proxy)
+- Rewrites run on Next.js server, not browser
+- Using `NEXT_PUBLIC_API_URL` caused proxy to loop back to itself
+- SignalR configured in `lib/signalr.ts` but no rewrite rule existed
+
+#### Fixes Applied
+
+1. **Fixed Rewrite Environment Variable** (10:15)
+   - File: `frontend/next.config.ts:61`
+   - Changed: `process.env.NEXT_PUBLIC_API_URL` → `process.env.API_URL`
+   - Impact: All API rewrites now correctly proxy to backend container
+   - Status: ✅ Complete
+
+2. **Added SignalR Hub Rewrite** (10:20)
+   - File: `frontend/next.config.ts:91-94`
+   - Added rewrite rule for `/hubs/:path*` → `${backendUrl}/hubs/:path*`
+   - Impact: SignalR chat connections now reach backend
+   - Status: ✅ Complete
+
+#### Results
+
+**Now Working:**
+- ✅ `/api/Foods/*` proxies to backend
+- ✅ `/api/Goals/*` proxies to backend
+- ✅ `/api/Meals/*` proxies to backend
+- ✅ `/api/Recipes/*` proxies to backend
+- ✅ `/api/Workouts/*` proxies to backend
+- ✅ `/api/Exercises/*` proxies to backend
+- ✅ `/hubs/*` proxies to backend (SignalR)
+
+**Request Flow:**
+```
+Browser → http://localhost:3000/api/Meals
+  ↓
+Next.js Server (rewrites with API_URL)
+  ↓
+http://mizan-backend:8080/api/Meals (✅ Backend receives request)
+```
+
+---
+
 ## December 12, 2025
 
 ### Session 3: Nodemailer Email Integration

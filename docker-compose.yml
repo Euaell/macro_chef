@@ -59,8 +59,10 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev_secret_change_in_production}
       - BETTER_AUTH_URL=http://localhost:3000
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
-      - API_URL=${API_URL:-http://mizan-backend:8080}
+      # Client-side API URL - browser connects via localhost (which uses Next.js rewrites to proxy to backend)
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+      # Server-side API URL - Next.js server connects to backend via Docker network
+      - API_URL=http://mizan-backend:8080
       - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
       - NEXT_PUBLIC_CLOUDINARY_API_KEY=${NEXT_PUBLIC_CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
