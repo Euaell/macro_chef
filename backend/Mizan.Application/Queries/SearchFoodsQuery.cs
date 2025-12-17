@@ -28,6 +28,7 @@ public record FoodDto
     public decimal ProteinPer100g { get; init; }
     public decimal CarbsPer100g { get; init; }
     public decimal FatPer100g { get; init; }
+    public decimal? FiberPer100g { get; init; }
     public bool IsVerified { get; init; }
 }
 
@@ -73,6 +74,7 @@ public class SearchFoodsQueryHandler : IRequestHandler<SearchFoodsQuery, SearchF
                 ProteinPer100g = f.ProteinPer100g,
                 CarbsPer100g = f.CarbsPer100g,
                 FatPer100g = f.FatPer100g,
+                FiberPer100g = f.FiberPer100g,
                 IsVerified = f.IsVerified
             })
             .ToListAsync(cancellationToken);

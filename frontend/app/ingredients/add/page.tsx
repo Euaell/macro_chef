@@ -48,7 +48,11 @@ export default function Page() {
 			});
 
 			setSuccess(true);
-			setTimeout(() => router.push("/ingredients"), 1500);
+			// Invalidate Router Cache and navigate to ingredients page
+			setTimeout(() => {
+				router.refresh(); // Force fresh data from server first
+				router.push("/ingredients"); // Then navigate
+			}, 1500);
 		} catch (err: any) {
 			console.error("Failed to add ingredient:", err);
 			setError(err.message || "Failed to add ingredient");

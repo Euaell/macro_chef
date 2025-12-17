@@ -6,6 +6,67 @@ This file tracks all development tasks completed, with timestamps and descriptio
 
 ## December 17, 2025
 
+### Session 6: Fixed Empty Ingredients Table After Creation
+
+**Time:** 15:00 - 15:30 UTC
+
+#### Issue
+After creating a new ingredient via the add form, the ingredients list page showed an empty table instead of displaying the newly created ingredient.
+
+#### Root Cause Analysis
+
+**Primary Issue: Missing FiberPer100g in Backend Response**
+- The database `Food` entity has `FiberPer100g` field (Mizan.Domain/Entities/Food.cs:15)
+- The `FoodDto` in SearchFoodsQuery was missing the `FiberPer100g` property
+- The query projection was not mapping the `FiberPer100g` field from entity to DTO
+- Frontend expects `fiberPer100g` in the Ingredient interface but backend wasn't returning it
+- This caused data integrity issues between frontend and backend
+
+**Secondary Issue: Router Cache Refresh Timing**
+- In ingredients/add/page.tsx, `router.push()` was called BEFORE `router.refresh()`
+- This created a race condition where navigation started before cache invalidation
+- The correct order is: refresh cache first, then navigate
+- According to Next.js best practices, `router.refresh()` should be called before navigation to ensure cache is cleared
+
+#### Implementation
+
+**1. Added FiberPer100g to Backend DTO** (15:15)
+- File: [backend/Mizan.Application/Queries/SearchFoodsQuery.cs:31](backend/Mizan.Application/Queries/SearchFoodsQuery.cs:31)
+- Added `public decimal? FiberPer100g { get; init; }` to FoodDto record
+- Status: ✅ Complete
+
+**2. Added FiberPer100g to Query Projection** (15:18)
+- File: [backend/Mizan.Application/Queries/SearchFoodsQuery.cs:77](backend/Mizan.Application/Queries/SearchFoodsQuery.cs:77)
+- Added `FiberPer100g = f.FiberPer100g` to Select projection
+- Status: ✅ Complete
+
+**3. Fixed Router Refresh Timing** (15:22)
+- File: [frontend/app/ingredients/add/page.tsx:53-54](frontend/app/ingredients/add/page.tsx:53-54)
+- **Before**:
+  ```typescript
+  router.push("/ingredients");
+  router.refresh(); // Called after navigation
+  ```
+- **After**:
+  ```typescript
+  router.refresh(); // Force fresh data from server first
+  router.push("/ingredients"); // Then navigate
+  ```
+- Status: ✅ Complete
+
+#### Verification
+- Backend hot reload detected changes and applied successfully
+- Both fixes are now active in the running development environment
+- No restart required due to .NET hot reload
+
+#### Impact
+- ✅ Fiber values now correctly displayed in ingredients table
+- ✅ Router cache properly invalidated before navigation
+- ✅ Newly created ingredients appear immediately in the list
+- ✅ Data consistency between frontend and backend
+
+---
+
 ### Session 5: Changed JWT Algorithm from EdDSA to ES256
 
 **Time:** 14:00 - 14:15 UTC

@@ -1,4 +1,3 @@
-version: '3.8'
 
 # Development Docker Compose for Mizan Platform
 # Usage: docker-compose up
