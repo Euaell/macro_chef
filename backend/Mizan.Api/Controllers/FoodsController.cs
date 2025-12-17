@@ -17,6 +17,17 @@ public class FoodsController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet("{id}")]
+    public async Task<ActionResult<FoodDto>> GetFood(Guid id)
+    {
+        var result = await _mediator.Send(new GetFoodByIdQuery(id));
+
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
     [HttpGet("search")]
     public async Task<ActionResult<SearchFoodsResult>> SearchFoods([FromQuery] SearchFoodsQuery query)
     {
@@ -29,6 +40,6 @@ public class FoodsController : ControllerBase
     public async Task<ActionResult<CreateFoodResult>> CreateFood([FromBody] CreateFoodCommand command)
     {
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(SearchFoods), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetFood), new { id = result.Id }, result);
     }
 }

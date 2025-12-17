@@ -25,8 +25,8 @@ export async function getAllIngredient(searchTerm?: string, sortBy?: string): Pr
         params.set("Limit", "100");
         if (searchTerm) params.set("SearchTerm", searchTerm);
 
-        const result = await apiClient<{ Foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);
-        let foods = result.Foods || [];
+        const result = await apiClient<{ foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);
+        let foods = result.foods || [];
 
         // Sort if requested
         if (sortBy) {
@@ -53,8 +53,8 @@ export async function getAllIngredient(searchTerm?: string, sortBy?: string): Pr
  */
 export async function getIngredientById(id: string): Promise<Ingredient | null> {
     try {
-        const result = await apiClient<{ Foods: Ingredient[] }>(`/api/Foods/search?SearchTerm=&Limit=100`);
-        return result.Foods?.find(f => f.id === id) || null;
+        const result = await apiClient<Ingredient>(`/api/Foods/${id}`);
+        return result;
     } catch (error) {
         console.error("Failed to get ingredient:", error);
         return null;

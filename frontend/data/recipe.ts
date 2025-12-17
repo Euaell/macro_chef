@@ -46,9 +46,9 @@ export interface RecipeIngredient {
  */
 export async function getPopularRecipes(): Promise<PopularRecipe[]> {
     try {
-        const result = await apiClient<{ Recipes: Recipe[] }>("/api/Recipes?IncludePublic=true&PageSize=6");
+        const result = await apiClient<{ recipes: Recipe[] }>("/api/Recipes?IncludePublic=true&PageSize=6");
 
-        return (result.Recipes || []).map((r) => ({
+        return (result.recipes || []).map((r) => ({
             _id: r.id,
             name: r.title,
             totalMacros: {
@@ -73,8 +73,8 @@ export async function getAllRecipes(searchTerm?: string): Promise<Recipe[]> {
         if (searchTerm) params.append("SearchTerm", searchTerm);
         params.append("IncludePublic", "true");
 
-        const result = await apiClient<{ Recipes: Recipe[] }>(`/api/Recipes?${params.toString()}`);
-        return result.Recipes || [];
+        const result = await apiClient<{ recipes: Recipe[] }>(`/api/Recipes?${params.toString()}`);
+        return result.recipes || [];
     } catch (error) {
         console.error("Failed to get all recipes:", error);
         return [];
