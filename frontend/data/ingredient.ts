@@ -19,10 +19,10 @@ export interface Ingredient {
 /**
  * Get all ingredients (foods) from the backend API
  */
-export async function getAllIngredient(searchTerm?: string, sortBy?: string): Promise<Ingredient[]> {
+export async function getAllIngredient(searchTerm?: string, sortBy?: string, limit?: number): Promise<Ingredient[]> {
     try {
         const params = new URLSearchParams();
-        params.set("Limit", "100");
+        params.set("Limit", String(limit || 100));
         if (searchTerm) params.set("SearchTerm", searchTerm);
 
         const result = await apiClient<{ foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);

@@ -3,6 +3,7 @@
 import Ingredient from "@/types/ingredient";
 import { RecipeInput } from "@/types/recipe";
 import { useEffect, useRef, useState } from "react";
+import { getAllIngredient } from "@/data/ingredient";
 
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
@@ -76,7 +77,7 @@ export default function Page() {
 		setSelectedIngredients(newIngredients);
 	}
 
-	function handleIngredientNameChange(index: number, value: string) {
+	async function handleIngredientNameChange(index: number, value: string) {
 		const newIngredients = [...selectedIngredients];
 		newIngredients[index] = { ...newIngredients[index], name: value };
 		setSelectedIngredients(newIngredients);
@@ -87,12 +88,8 @@ export default function Page() {
 			return;
 		}
 
-		fetch(`/api/ingredients/${value}`)
-		.then(res => res.json())
-		.then(data => {
-			const ingredients = data.ingredients;
-			setIngredientSearch(ingredients);
-		})
+		const ingredients = await getAllIngredient(value, undefined, 4);
+		setIngredientSearch(ingredients);
 	}
 
 	function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -337,7 +334,7 @@ export default function Page() {
 										className="input"
 									/>
 									{activeDropdownIndex === index && (
-										<div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+										<div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
 											{ingredientSearch.length > 0 ? (
 												ingredientSearch.map((ingredient) => (
 													<button
