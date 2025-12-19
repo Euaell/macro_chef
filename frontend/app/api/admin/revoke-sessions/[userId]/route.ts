@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 export async function POST(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const session = await auth.api.getSession({ headers: request.headers });
 
@@ -18,7 +18,7 @@ export async function POST(
   }
 
   try {
-    const { userId } = params;
+    const { userId } = await params;
 
     await db.delete(sessions).where(eq(sessions.userId, userId));
 

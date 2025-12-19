@@ -29,8 +29,18 @@ export default function ProfileSessionsPage() {
 
   async function fetchSessions() {
     try {
-      const result = await authClient.session.list();
-      setSessions(result.data || []);
+      // TODO: Implement proper session listing API
+      // For now, just show current session
+      if (currentSession?.session) {
+        setSessions([{
+          id: currentSession.session.id,
+          token: currentSession.session.token,
+          ipAddress: currentSession.session.ipAddress || undefined,
+          userAgent: currentSession.session.userAgent || undefined,
+          createdAt: currentSession.session.createdAt.toISOString(),
+          expiresAt: currentSession.session.expiresAt.toISOString(),
+        }]);
+      }
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
     } finally {
@@ -43,9 +53,8 @@ export default function ProfileSessionsPage() {
 
     setRevoking(sessionId);
     try {
-      await authClient.session.revoke({ sessionId });
-      setSessions(sessions.filter((s) => s.id !== sessionId));
-      alert("Session revoked successfully");
+      // TODO: Implement proper session revoke API
+      alert("Session revocation not yet implemented");
     } catch (error) {
       console.error("Failed to revoke session:", error);
       alert("Failed to revoke session");
@@ -59,9 +68,8 @@ export default function ProfileSessionsPage() {
 
     setRevoking("all");
     try {
-      await authClient.session.revokeOther();
-      await fetchSessions();
-      alert("All other sessions revoked successfully");
+      // TODO: Implement proper session revoke API
+      alert("Session revocation not yet implemented");
     } catch (error) {
       console.error("Failed to revoke other sessions:", error);
       alert("Failed to revoke other sessions");

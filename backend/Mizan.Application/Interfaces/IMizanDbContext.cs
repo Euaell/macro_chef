@@ -22,6 +22,7 @@ public interface IMizanDbContext
     DbSet<ShoppingList> ShoppingLists { get; }
     DbSet<ShoppingListItem> ShoppingListItems { get; }
     DbSet<UserGoal> UserGoals { get; }
+    DbSet<GoalProgress> GoalProgress { get; }
     DbSet<Exercise> Exercises { get; }
     DbSet<Workout> Workouts { get; }
     DbSet<WorkoutExercise> WorkoutExercises { get; }

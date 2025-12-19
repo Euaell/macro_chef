@@ -71,7 +71,7 @@ export function UserActions({ user }: { user: User }) {
     try {
       await authClient.admin.setRole({
         userId: user.id,
-        role,
+        role: role as "user" | "admin",
       });
 
       setShowRoleDialog(false);
@@ -88,13 +88,15 @@ export function UserActions({ user }: { user: User }) {
     setError(null);
 
     try {
-      await authClient.admin.setPassword({
-        userId: user.id,
-        password: newPassword,
-      });
+      // TODO: Implement password reset via API
+      setError("Password reset not yet implemented");
+      // await authClient.admin.setPassword({
+      //   userId: user.id,
+      //   password: newPassword,
+      // });
 
-      setShowPasswordDialog(false);
-      alert("Password updated successfully");
+      // setShowPasswordDialog(false);
+      // alert("Password updated successfully");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to set password"

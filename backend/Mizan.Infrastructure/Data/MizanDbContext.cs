@@ -36,6 +36,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
 
     // Goals
     public DbSet<UserGoal> UserGoals => Set<UserGoal>();
+    public DbSet<GoalProgress> GoalProgress => Set<GoalProgress>();
 
     // Fitness
     public DbSet<Exercise> Exercises => Set<Exercise>();

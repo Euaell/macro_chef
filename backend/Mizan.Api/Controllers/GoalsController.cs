@@ -35,4 +35,21 @@ public class GoalsController : ControllerBase
             return BadRequest(result.Message);
         return CreatedAtAction(nameof(GetCurrentGoal), new { id = result.Id }, result);
     }
+
+    [HttpPost("progress")]
+    public async Task<ActionResult<RecordGoalProgressResult>> RecordProgress([FromBody] RecordGoalProgressCommand command)
+    {
+        var result = await _mediator.Send(command);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result);
+    }
+
+    [HttpGet("progress")]
+    public async Task<ActionResult<GoalProgressHistoryDto>> GetProgressHistory([FromQuery] int days = 30)
+    {
+        var result = await _mediator.Send(new GetGoalProgressHistoryQuery { Days = days });
+        return Ok(result);
+    }
 }
+

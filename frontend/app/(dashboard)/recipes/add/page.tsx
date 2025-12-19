@@ -2,7 +2,8 @@
 
 import { RecipeInput } from "@/types/recipe";
 import { useEffect, useRef, useState } from "react";
-import { getAllIngredient, type Ingredient } from "@/data/ingredient";
+import { getAllIngredient } from "@/data/ingredient";
+import type { Ingredient } from "@/data/ingredient";
 
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
@@ -126,12 +127,12 @@ export default function Page() {
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		setIsSubmitting(true);
-		const recipeData: RecipeInput = {
+		const recipeData = {
 			title: name,
 			description,
 			imageUrl: images[0], // Use first image as main image
 			ingredients: selectedIngredients.map(ing => ({
-				ingredient: ing.ingredient!,
+				ingredientId: ing.ingredient!.id,
 				amount: ing.amount!,
 				unit: ing.unit,
 			})),
