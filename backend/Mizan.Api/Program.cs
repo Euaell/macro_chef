@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Mizan.Api.Hubs;
 using Mizan.Api.Services;
 using Mizan.Application;
@@ -45,6 +46,9 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// Add FluentValidation rules to Swagger/OpenAPI schema
+builder.Services.AddFluentValidationRulesToSwagger();
 
 // Application & Infrastructure
 builder.Services.AddApplication();
