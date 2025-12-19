@@ -35,14 +35,27 @@ public record FoodDto
 public class SearchFoodsQueryHandler : IRequestHandler<SearchFoodsQuery, SearchFoodsResult>
 {
     private readonly IMizanDbContext _context;
+    private readonly IRedisCacheService _cache;
 
-    public SearchFoodsQueryHandler(IMizanDbContext context)
+    public SearchFoodsQueryHandler(IMizanDbContext context, IRedisCacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task<SearchFoodsResult> Handle(SearchFoodsQuery request, CancellationToken cancellationToken)
     {
+        // Generate cache key based on query parameters
+        var cacheKey = $"foods:search:{request.SearchTerm?.ToLower() ?? ""}:{request.Barcode ?? ""}:{request.Limit}";
+
+        // Try to get from cache first
+        var cachedResult = await _cache.GetAsync<SearchFoodsResult>(cacheKey, cancellationToken);
+        if (cachedResult != null)
+        {
+            return cachedResult;
+        }
+
+        // Query database
         IQueryable<Domain.Entities.Food> query = _context.Foods;
 
         // Search by barcode if provided
@@ -79,6 +92,11 @@ public class SearchFoodsQueryHandler : IRequestHandler<SearchFoodsQuery, SearchF
             })
             .ToListAsync(cancellationToken);
 
-        return new SearchFoodsResult { Foods = foods };
+        var result = new SearchFoodsResult { Foods = foods };
+
+        // Cache result for 1 hour
+        await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(1), cancellationToken);
+
+        return result;
     }
 }

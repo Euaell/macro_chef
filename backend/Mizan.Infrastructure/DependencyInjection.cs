@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<INutritionAiService, NutritionAiService>();
+        services.AddSingleton<IRedisCacheService, RedisCacheService>();
 
         return services;
     }

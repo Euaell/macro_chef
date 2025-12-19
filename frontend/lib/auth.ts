@@ -106,6 +106,17 @@ export const auth = betterAuth({
     database: {
       generateId: () => crypto.randomUUID(),
     },
+    cookies: {
+      sessionToken: {
+        name: "better-auth.session_token",
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+        },
+      },
+    },
   },
   trustedOrigins: [
     process.env.BETTER_AUTH_URL || "http://localhost:3000",

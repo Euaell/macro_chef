@@ -30,7 +30,7 @@ export async function getApiToken(): Promise<string | null> {
   }
 }
 
-// API client with automatic token injection
+// API client with automatic token injection and case conversion
 export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -56,5 +56,33 @@ export async function apiClient<T>(
     throw new Error(error || `API error: ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+
+  // Convert PascalCase keys from backend to camelCase for frontend
+  // This ensures compatibility between C# DTOs and TypeScript types
+  return convertKeysToCamelCase<T>(data);
+}
+
+// Helper function to convert PascalCase to camelCase recursively
+function convertKeysToCamelCase<T>(obj: any): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToCamelCase(item)) as T;
+  }
+
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const converted: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+        converted[camelKey] = convertKeysToCamelCase(obj[key]);
+      }
+    }
+    return converted as T;
+  }
+
+  return obj;
 }
