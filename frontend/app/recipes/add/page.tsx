@@ -1,9 +1,8 @@
 'use client';
 
-import Ingredient from "@/types/ingredient";
 import { RecipeInput } from "@/types/recipe";
 import { useEffect, useRef, useState } from "react";
-import { getAllIngredient } from "@/data/ingredient";
+import { getAllIngredient, type Ingredient } from "@/data/ingredient";
 
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
@@ -89,7 +88,7 @@ export default function Page() {
 		}
 
 		const ingredients = await getAllIngredient(value, undefined, 4);
-		setIngredientSearch(ingredients as unknown as Ingredient[]);
+		setIngredientSearch(ingredients);
 	}
 
 	function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>) {

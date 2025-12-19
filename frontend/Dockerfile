@@ -1,20 +1,15 @@
 # Frontend Development Dockerfile
-FROM node:25-alpine
+FROM oven/bun:1-alpine
 
 WORKDIR /app
 
 # Install dependencies
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn; \
-  elif [ -f package-lock.json ]; then npm install; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install; \
-  else npm install; \
-  fi
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["npm", "run", "dev"]
+CMD ["bun", "run", "dev"]

@@ -40,7 +40,7 @@ services:
     networks:
       - mizan-network
 
-  # Next.js Frontend (Development with hot reload)
+  # Next.js Frontend with Bun (Development with hot reload)
   frontend:
     build:
       context: ./frontend
