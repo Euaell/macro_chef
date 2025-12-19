@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { jwt, organization } from "better-auth/plugins";
+import { jwt, organization, admin } from "better-auth/plugins";
 import { db } from "@/db/client";
 import { sendEmail, getVerificationEmailTemplate, getPasswordResetEmailTemplate } from "@/lib/email";
 
@@ -88,6 +88,12 @@ export const auth = betterAuth({
       // Maps to household concept
       allowUserToCreateOrganization: true,
       organizationLimit: 5,
+    }),
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin"], // Only system admins, NOT trainers
+      impersonationSessionDuration: 60 * 60 * 24, // 24 hours
+      allowImpersonatingAdmins: false,
     }),
   ],
   session: {
