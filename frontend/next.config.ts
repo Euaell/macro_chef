@@ -24,15 +24,6 @@ const nextConfig: NextConfig = {
 		NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 		NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
 	},
-
-	// Experimental features
-	experimental: {
-		// Enable server actions (default in Next.js 15)
-		serverActions: {
-			bodySizeLimit: "2mb",
-		},
-	},
-
 	// Headers for security
 	async headers() {
 		return [

@@ -45,9 +45,11 @@ export function useFormValidation<T extends z.ZodRawShape>(
 			} catch (error) {
 				if (error instanceof ZodError) {
 					const fieldErrors: ValidationErrors = {};
-					error.errors.forEach((err) => {
-						const path = err.path.join(".");
-						fieldErrors[path] = err.message;
+					error.issues.forEach((err) => {
+						const fieldName = err.path[0];
+						if (fieldName) {
+							fieldErrors[fieldName as string] = err.message;
+						}
 					});
 					setErrors(fieldErrors);
 				}
@@ -76,7 +78,7 @@ export function useFormValidation<T extends z.ZodRawShape>(
 				if (error instanceof ZodError) {
 					setErrors((prev) => ({
 						...prev,
-						[fieldName as string]: error.errors[0]?.message || "Invalid value",
+						[fieldName as string]: error.issues[0]?.message || "Invalid value",
 					}));
 				}
 				return false;

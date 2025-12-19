@@ -17,6 +17,7 @@ interface Macros {
 	protein: number;
 	carbs: number;
 	fat: number;
+	fiber: number;
 }
 
 export default function DailyOverviewChart() {
@@ -26,6 +27,7 @@ export default function DailyOverviewChart() {
 		protein: 0,
 		carbs: 0,
 		fat: 0,
+		fiber: 0
 	});
 	const [loading, setLoading] = useState(true);
 
@@ -37,7 +39,7 @@ export default function DailyOverviewChart() {
 				// Fetch goal and daily meals in parallel
 				const [goalResponse, mealsResponse] = await Promise.all([
 					apiClient<Goal>('/api/Goals').catch(() => null),
-					apiClient<{ totals: Macros }>('/api/Meals?date=' + today).catch(() => ({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } }))
+					apiClient<{ totals: Macros }>('/api/Meals?date=' + today).catch(() => ({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } }))
 				]);
 
 				setGoal(goalResponse);

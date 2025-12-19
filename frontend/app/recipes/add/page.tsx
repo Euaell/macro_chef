@@ -89,7 +89,7 @@ export default function Page() {
 		}
 
 		const ingredients = await getAllIngredient(value, undefined, 4);
-		setIngredientSearch(ingredients);
+		setIngredientSearch(ingredients as unknown as Ingredient[]);
 	}
 
 	function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>) {
