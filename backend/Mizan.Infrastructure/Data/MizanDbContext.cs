@@ -343,6 +343,29 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.HasOne(e => e.User).WithOne(u => u.CurrentGoal).HasForeignKey<UserGoal>(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
+        // GoalProgress configuration
+        modelBuilder.Entity<GoalProgress>(entity =>
+        {
+            entity.ToTable("goal_progress");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.UserGoalId).HasColumnName("user_goal_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.ActualCalories).HasColumnName("actual_calories");
+            entity.Property(e => e.ActualProteinGrams).HasColumnName("actual_protein_grams").HasPrecision(6, 2);
+            entity.Property(e => e.ActualCarbsGrams).HasColumnName("actual_carbs_grams").HasPrecision(6, 2);
+            entity.Property(e => e.ActualFatGrams).HasColumnName("actual_fat_grams").HasPrecision(6, 2);
+            entity.Property(e => e.ActualWeight).HasColumnName("actual_weight").HasPrecision(6, 2);
+            entity.Property(e => e.Date).HasColumnName("date");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
+            entity.HasIndex(e => e.UserGoalId);
+            entity.HasIndex(e => e.Date);
+            entity.HasOne(e => e.UserGoal).WithMany().HasForeignKey(e => e.UserGoalId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Exercise configuration
         modelBuilder.Entity<Exercise>(entity =>
         {
