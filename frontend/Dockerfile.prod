@@ -1,35 +1,34 @@
-# Frontend Production Dockerfile
-FROM node:25-alpine AS base
+# Frontend Production Dockerfile with Bun
+# Multi-stage build for optimized image size
 
-# Dependencies stage
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# Stage 1: Dependencies
+FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else npm install; \
-  fi
+COPY package.json bun.lockb* ./
+RUN bun install --frozen-lockfile --production
 
-# Builder stage
-FROM base AS builder
+# Stage 2: Build
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+COPY package.json bun.lockb* ./
+RUN bun install --frozen-lockfile
+
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN bun run build
 
-# Production runner stage
-FROM base AS runner
+# Stage 3: Runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -42,7 +41,4 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+CMD ["bun", "server.js"]
