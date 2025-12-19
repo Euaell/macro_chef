@@ -42,6 +42,10 @@ export async function apiClient<T>(
   // Server-side API calls will need to be handled differently or moved to client-side
   const token = typeof window !== 'undefined' ? await getApiToken() : null;
 
+  if (typeof window === 'undefined' && !token) {
+    console.warn(`[apiClient] Server-side request to ${endpoint} without authentication token`);
+  }
+
   const response = await fetch(`${apiUrl}${endpoint}`, {
     ...options,
     headers: {
@@ -53,6 +57,7 @@ export async function apiClient<T>(
 
   if (!response.ok) {
     const error = await response.text();
+    console.error(`[apiClient] Request failed: ${endpoint} - Status: ${response.status} - Error: ${error}`);
     throw new Error(error || `API error: ${response.status}`);
   }
 

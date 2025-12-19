@@ -3,7 +3,7 @@
 import SubmitButton from "../AddIngredient/button";
 import { FieldError } from "../FieldError";
 import { useActionState, useEffect } from "react";
-import { addMeal } from "@/data/meal";
+import { addMeal } from "@/actions/meal";
 import { EMPTY_FORM_STATE } from "@/helper/FormErrorHandler";
 import Macros from "@/types/macro";
 
