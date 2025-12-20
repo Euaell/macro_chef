@@ -87,13 +87,19 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.ToTable("accounts");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.AccountId).HasColumnName("account_id").IsRequired();
+            entity.Property(e => e.ProviderId).HasColumnName("provider_id").IsRequired();
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.Provider).HasColumnName("provider").HasMaxLength(50).IsRequired();
-            entity.Property(e => e.ProviderAccountId).HasColumnName("provider_account_id").HasMaxLength(255).IsRequired();
             entity.Property(e => e.AccessToken).HasColumnName("access_token");
             entity.Property(e => e.RefreshToken).HasColumnName("refresh_token");
-            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-            entity.HasIndex(e => new { e.Provider, e.ProviderAccountId }).IsUnique();
+            entity.Property(e => e.IdToken).HasColumnName("id_token");
+            entity.Property(e => e.AccessTokenExpiresAt).HasColumnName("access_token_expires_at");
+            entity.Property(e => e.RefreshTokenExpiresAt).HasColumnName("refresh_token_expires_at");
+            entity.Property(e => e.Scope).HasColumnName("scope");
+            entity.Property(e => e.Password).HasColumnName("password");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+            entity.HasIndex(e => e.UserId);
             entity.HasOne(e => e.User).WithMany(u => u.Accounts).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
