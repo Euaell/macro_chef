@@ -1,5 +1,10 @@
 namespace Mizan.Domain.Entities;
 
+/// <summary>
+/// User entity - MUST match frontend schema: frontend/db/schema.ts (users table)
+/// ⚠️ When updating this entity, ensure frontend schema is updated first (source of truth)
+/// After changes, create migration: dotnet ef migrations add <Name> --project ../Mizan.Infrastructure --startup-project ../Mizan.Api
+/// </summary>
 public class User
 {
     public Guid Id { get; set; }
@@ -7,6 +12,10 @@ public class User
     public bool EmailVerified { get; set; }
     public string? Name { get; set; }
     public string? Image { get; set; }
+    public string Role { get; set; } = "user";
+    public bool Banned { get; set; } = false;
+    public string? BanReason { get; set; }
+    public DateTime? BanExpires { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

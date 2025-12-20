@@ -1,3 +1,19 @@
+/**
+ * DATABASE SCHEMA - FRONTEND (DRIZZLE/BETTER-AUTH)
+ *
+ * ⚠️ CRITICAL: This is the SOURCE OF TRUTH for user related database schema.
+ *
+ * When modifying tables, you MUST update the corresponding backend entities:
+ * - Users table → backend/Mizan.Domain/Entities/User.cs
+ * - Sessions table → backend/Mizan.Domain/Entities/Session.cs
+ * - Accounts table → backend/Mizan.Domain/Entities/Account.cs
+ * - All other tables → backend/Mizan.Domain/Entities/
+ *
+ * After updating backend entities, create EF Core migration:
+ * cd backend/Mizan.Api
+ * dotnet ef migrations add <MigrationName> --project ../Mizan.Infrastructure --startup-project .
+ */
+
 import {
   pgTable,
   uuid,

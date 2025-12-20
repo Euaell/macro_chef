@@ -72,6 +72,10 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.EmailVerified).HasColumnName("email_verified").HasDefaultValue(false);
             entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(255);
             entity.Property(e => e.Image).HasColumnName("image");
+            entity.Property(e => e.Role).HasColumnName("role").HasMaxLength(50).HasDefaultValue("user");
+            entity.Property(e => e.Banned).HasColumnName("banned").HasDefaultValue(false);
+            entity.Property(e => e.BanReason).HasColumnName("ban_reason");
+            entity.Property(e => e.BanExpires).HasColumnName("ban_expires");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
             entity.HasIndex(e => e.Email).IsUnique();
@@ -102,7 +106,11 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.Token).HasColumnName("token").HasMaxLength(255).IsRequired();
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at").IsRequired();
+            entity.Property(e => e.IpAddress).HasColumnName("ip_address");
+            entity.Property(e => e.UserAgent).HasColumnName("user_agent");
+            entity.Property(e => e.ImpersonatedBy).HasColumnName("impersonated_by");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
             entity.HasIndex(e => e.Token).IsUnique();
             entity.HasOne(e => e.User).WithMany(u => u.Sessions).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         });
