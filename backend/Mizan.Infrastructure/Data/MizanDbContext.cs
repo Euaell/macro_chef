@@ -14,6 +14,8 @@ public class MizanDbContext : DbContext, IMizanDbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<Jwk> Jwks => Set<Jwk>();
+    public DbSet<Verification> Verifications => Set<Verification>();
 
     // Household/Organization
     public DbSet<Household> Households => Set<Household>();
@@ -119,6 +121,30 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
             entity.HasIndex(e => e.Token).IsUnique();
             entity.HasOne(e => e.User).WithMany(u => u.Sessions).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Jwk configuration
+        modelBuilder.Entity<Jwk>(entity =>
+        {
+            entity.ToTable("jwks");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.PublicKey).HasColumnName("public_key").IsRequired();
+            entity.Property(e => e.PrivateKey).HasColumnName("private_key").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+        });
+
+        // Verification configuration
+        modelBuilder.Entity<Verification>(entity =>
+        {
+            entity.ToTable("verification");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.Identifier).HasColumnName("identifier").IsRequired();
+            entity.Property(e => e.Value).HasColumnName("value").IsRequired();
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
         });
 
         // Household configuration
