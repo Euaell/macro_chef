@@ -4,7 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin/**;obj/**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Watch Remove="bin/**/*" />
+    <Watch Remove="obj/**/*" />
+    <Watch Remove="../**/bin/**/*" />
+    <Watch Remove="../**/obj/**/*" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />

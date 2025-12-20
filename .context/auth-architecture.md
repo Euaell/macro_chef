@@ -217,6 +217,23 @@ ERROR: column "some_field" does not exist
 | Wrong data type | Type mismatch | Match types exactly (Guid ↔ uuid, string ↔ text/varchar) |
 | Constraint violation | Missing required field | Add field with proper default value |
 
+## Docker Configuration Notes
+
+### Backend Container
+
+The backend runs in development mode without hot reload to prevent memory exhaustion in containerized environments.
+
+**Issue**: `dotnet watch` with polling file watcher causes `System.IO.IOException: Cannot allocate memory` when scanning build output directories with many localization folders.
+
+**Solution**: Use `dotnet run` instead of `dotnet watch run` in Dockerfile CMD. Hot reload is disabled in containers - code changes require container rebuild.
+
+See: [backend/Dockerfile](../backend/Dockerfile:22)
+
+```dockerfile
+# Uses dotnet run instead of dotnet watch to avoid memory issues
+CMD ["dotnet", "run", "--project", "Mizan.Api/Mizan.Api.csproj", "--urls", "http://0.0.0.0:8080"]
+```
+
 ## Future Improvements
 
 1. **Automated Schema Sync**: Script to generate backend entities from Drizzle schema
