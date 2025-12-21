@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { jwtClient, organizationClient, adminClient } from "better-auth/client/plugins";
+import { cookies } from "next/headers";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
@@ -39,21 +40,38 @@ export async function apiClient<T>(
   const baseUrl = (typeof window === 'undefined' ? process.env.API_URL : process.env.NEXT_PUBLIC_API_URL) || "http://localhost:5000";
   const apiUrl = baseUrl;
 
-  // Only try to get token on client-side
-  // Server-side API calls will need to be handled differently or moved to client-side
-  const token = typeof window !== 'undefined' ? await getApiToken() : null;
+  let headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
 
-  if (typeof window === 'undefined' && !token) {
-    console.warn(`[apiClient] Server-side request to ${endpoint} without authentication token`);
+  // Client-side: get token from BetterAuth
+  if (typeof window !== 'undefined') {
+    const token = await getApiToken();
+    if (token) {
+      headers = {
+        ...headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
+  } else {
+    // Server-side: forward all cookies (including JWT cookie)
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll()
+      .map(cookie => `${cookie.name}=${cookie.value}`)
+      .join('; ');
+
+    if (cookieHeader) {
+      headers = {
+        ...headers,
+        Cookie: cookieHeader,
+      };
+    }
   }
 
   const response = await fetch(`${apiUrl}${endpoint}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
