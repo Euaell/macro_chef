@@ -1,0 +1,134 @@
+import { NextRequest, NextResponse } from "next/server";
+import { callBackendApi, BackendApiError } from "@/lib/backend-api-client";
+
+/**
+ * BFF Proxy Route - Forwards authenticated requests to backend
+ *
+ * Example:
+ * - Frontend: GET /api/bff/recipes
+ * - Proxies to: GET http://backend:8080/api/recipes
+ * - With: X-BFF-Secret, X-User-Id headers
+ */
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  try {
+    const path = `/api/${params.path.join("/")}`;
+    const searchParams = request.nextUrl.searchParams.toString();
+    const fullPath = searchParams ? `${path}?${searchParams}` : path;
+
+    const data = await callBackendApi(fullPath);
+    return NextResponse.json(data);
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(error.body, { status: error.status });
+    }
+    console.error("BFF proxy error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  try {
+    const path = `/api/${params.path.join("/")}`;
+    const body = await request.json();
+
+    const data = await callBackendApi(path, {
+      method: "POST",
+      body,
+    });
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(error.body, { status: error.status });
+    }
+    console.error("BFF proxy error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  try {
+    const path = `/api/${params.path.join("/")}`;
+    const body = await request.json();
+
+    const data = await callBackendApi(path, {
+      method: "PUT",
+      body,
+    });
+
+    return NextResponse.json(data);
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(error.body, { status: error.status });
+    }
+    console.error("BFF proxy error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  try {
+    const path = `/api/${params.path.join("/")}`;
+
+    await callBackendApi(path, { method: "DELETE" });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(error.body, { status: error.status });
+    }
+    console.error("BFF proxy error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  try {
+    const path = `/api/${params.path.join("/")}`;
+    const body = await request.json();
+
+    const data = await callBackendApi(path, {
+      method: "PATCH",
+      body,
+    });
+
+    return NextResponse.json(data);
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(error.body, { status: error.status });
+    }
+    console.error("BFF proxy error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
