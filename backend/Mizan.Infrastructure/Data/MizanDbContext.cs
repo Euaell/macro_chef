@@ -81,10 +81,6 @@ public class MizanDbContext : DbContext, IMizanDbContext
 
             // CRITICAL: Exclude from migrations - table managed by frontend
             entity.Metadata.SetIsTableExcludedFromMigrations(true);
-
-            // Ignore navigation properties that reference auth tables (managed by frontend)
-            entity.Ignore(e => e.Accounts);
-            entity.Ignore(e => e.Sessions);
         });
 
         // AUTH TABLES (Account, Session, Jwk, Verification) - REMOVED

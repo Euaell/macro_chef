@@ -86,6 +86,6 @@ public class BffAuthenticationHandler : AuthenticationHandler<BffAuthenticationS
 
         _logger.LogInformation("Authenticated user {UserId} via BFF", userId);
 
-        return await Task.FromResult(AuthenticateResult.Success(ticket));
+        return AuthenticateResult.Success(ticket);
     }
 }
