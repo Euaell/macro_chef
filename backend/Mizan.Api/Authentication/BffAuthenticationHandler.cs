@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
@@ -32,8 +34,19 @@ public class BffAuthenticationHandler : AuthenticationHandler<BffAuthenticationS
             return AuthenticateResult.Fail("Missing trusted secret header");
         }
 
-        // Validate secret
-        if (secretValue != Options.TrustedSecret)
+        // Validate secret using constant-time comparison
+        // SECURITY: Use FixedTimeEquals to prevent timing attacks.
+        // Regular string comparison (==, !=) can leak information about the secret through
+        // response timing variations. An attacker could measure how long comparisons take
+        // and iteratively guess the secret byte-by-byte (timing side-channel attack).
+        // FixedTimeEquals executes in constant time regardless of where strings differ,
+        // preventing attackers from extracting secret information via timing analysis.
+        var providedSecretBytes = Encoding.UTF8.GetBytes(secretValue.ToString());
+        var trustedSecretBytes = Encoding.UTF8.GetBytes(Options.TrustedSecret);
+
+        // Secrets must be same length for valid comparison
+        if (providedSecretBytes.Length != trustedSecretBytes.Length ||
+            !CryptographicOperations.FixedTimeEquals(providedSecretBytes, trustedSecretBytes))
         {
             _logger.LogError("Invalid X-BFF-Secret from {RemoteIp}", Request.HttpContext.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("Invalid trusted secret");
