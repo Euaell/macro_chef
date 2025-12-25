@@ -1,6 +1,7 @@
+"use client";
+
 import { createAuthClient } from "better-auth/react";
 import { jwtClient, organizationClient, adminClient } from "better-auth/client/plugins";
-import { cookies } from "next/headers";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
@@ -45,28 +46,13 @@ export async function apiClient<T>(
     ...options.headers,
   };
 
-  // Client-side: get token from BetterAuth
-  if (typeof window !== 'undefined') {
-    const token = await getApiToken();
-    if (token) {
-      headers = {
-        ...headers,
-        Authorization: `Bearer ${token}`,
-      };
-    }
-  } else {
-    // Server-side: forward all cookies (including JWT cookie)
-    const cookieStore = await cookies();
-    const cookieHeader = cookieStore.getAll()
-      .map(cookie => `${cookie.name}=${cookie.value}`)
-      .join('; ');
-
-    if (cookieHeader) {
-      headers = {
-        ...headers,
-        Cookie: cookieHeader,
-      };
-    }
+  // Get token from BetterAuth
+  const token = await getApiToken();
+  if (token) {
+    headers = {
+      ...headers,
+      Authorization: `Bearer ${token}`,
+    };
   }
 
   const response = await fetch(`${apiUrl}${endpoint}`, {
