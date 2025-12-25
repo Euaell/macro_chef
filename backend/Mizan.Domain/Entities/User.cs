@@ -1,9 +1,10 @@
 namespace Mizan.Domain.Entities;
 
 /// <summary>
-/// User entity - MUST match frontend schema: frontend/db/schema.ts (users table)
-/// ⚠️ When updating this entity, ensure frontend schema is updated first (source of truth)
-/// After changes, create migration: dotnet ef migrations add <Name> --project ../Mizan.Infrastructure --startup-project ../Mizan.Api
+/// User entity - READ-ONLY for backend (managed by frontend Drizzle ORM)
+/// ⚠️ Frontend schema (frontend/db/schema.ts users table) is source of truth
+/// ⚠️ Backend CANNOT modify users table - it is excluded from EF Core migrations
+/// ⚠️ Backend can only READ user data for authorization and business logic
 /// </summary>
 public class User
 {
@@ -19,9 +20,7 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    // Navigation properties
-    public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
-    public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
+    // Business navigation properties (backend-owned tables)
     public virtual ICollection<HouseholdMember> HouseholdMemberships { get; set; } = new List<HouseholdMember>();
     public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
     public virtual ICollection<FoodDiaryEntry> FoodDiaryEntries { get; set; } = new List<FoodDiaryEntry>();
@@ -31,4 +30,8 @@ public class User
     public virtual ICollection<Streak> Streaks { get; set; } = new List<Streak>();
     public virtual ICollection<TrainerClientRelationship> TrainerRelationships { get; set; } = new List<TrainerClientRelationship>();
     public virtual ICollection<TrainerClientRelationship> ClientRelationships { get; set; } = new List<TrainerClientRelationship>();
+
+    // Auth navigation properties REMOVED (managed by frontend)
+    // public virtual ICollection<Account> Accounts { get; set; }
+    // public virtual ICollection<Session> Sessions { get; set; }
 }

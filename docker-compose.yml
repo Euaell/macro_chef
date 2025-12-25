@@ -40,7 +40,7 @@ services:
     networks:
       - mizan-network
 
-  # Next.js Frontend with Bun (Development with hot reload)
+  # Next.js Frontend with Bun (BFF Layer - Development with hot reload)
   frontend:
     build:
       context: ./frontend
@@ -54,14 +54,24 @@ services:
       - /app/.next
     environment:
       - NODE_ENV=development
+      # Database (for BetterAuth)
       - DATABASE_URL=postgres://mizan:${DB_PASSWORD:-mizan_dev_password}@postgres:5432/mizan
+
+      # BetterAuth config
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev_secret_change_in_production}
       - BETTER_AUTH_URL=http://localhost:3000
+
+      # BFF Trusted Secret (shared with backend)
+      - BFF_TRUSTED_SECRET=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
+
+      # Backend API (internal network - server-side)
+      - BACKEND_API_URL=http://backend:8080
+
+      # Public URLs
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      # Client-side API URL - browser connects via localhost (which uses Next.js rewrites to proxy to backend)
       - NEXT_PUBLIC_API_URL=http://localhost:3000
-      # Server-side API URL - Next.js server connects to backend via Docker network
-      - API_URL=http://mizan-backend:8080
+
+      # External services
       - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
       - NEXT_PUBLIC_CLOUDINARY_API_KEY=${NEXT_PUBLIC_CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
@@ -77,27 +87,35 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      backend:
+        condition: service_started
     networks:
       - mizan-network
 
-  # .NET Backend API (Development with hot reload)
+  # .NET Backend API (Internal Only - BFF Protected)
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: mizan-backend
-    ports:
-      - "5000:8080"
+    # NO PORT EXPOSURE - backend is only accessible via Docker network from frontend
+    expose:
+      - "8080"
     volumes:
       - ./backend:/src
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+
+      # Database
       - ConnectionStrings__PostgreSQL=Host=postgres;Database=mizan;Username=mizan;Password=${DB_PASSWORD:-mizan_dev_password}
+
+      # Redis
       - ConnectionStrings__Redis=redis:6379
-      - BetterAuth__JwksUrl=http://frontend:3000/api/auth/jwks
-      - BetterAuth__Issuer=http://localhost:3000
-      - BetterAuth__Audience=mizan-api
-      - Cors__Origins__0=http://localhost:3000
+
+      # BFF Authentication (replaces JWT/BetterAuth)
+      - Bff__TrustedSecret=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
+      - Bff__AllowedOrigins__0=http://frontend:3000
       - OpenAI__ApiKey=${OPENAI_API_KEY:-}
     depends_on:
       postgres:
@@ -119,9 +137,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__PostgreSQL=Host=postgres;Database=mizan_test;Username=mizan;Password=${DB_PASSWORD:-mizan_dev_password}
       - ConnectionStrings__Redis=redis:6379
-      - BetterAuth__JwksUrl=http://frontend:3000/api/auth/jwks
-      - BetterAuth__Issuer=http://localhost:3000
-      - BetterAuth__Audience=mizan-api
+      - Bff__TrustedSecret=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
     command: dotnet test --logger "console;verbosity=normal"
     depends_on:
       postgres:

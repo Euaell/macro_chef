@@ -5,9 +5,11 @@ namespace Mizan.Application.Interfaces;
 
 public interface IMizanDbContext
 {
+    // Auth tables - Users is read-only (managed by frontend)
     DbSet<User> Users { get; }
-    DbSet<Account> Accounts { get; }
-    DbSet<Session> Sessions { get; }
+    // Accounts, Sessions - REMOVED (managed by frontend)
+
+    // Business tables (managed by backend)
     DbSet<Household> Households { get; }
     DbSet<HouseholdMember> HouseholdMembers { get; }
     DbSet<Food> Foods { get; }

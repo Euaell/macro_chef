@@ -10,12 +10,10 @@ public class MizanDbContext : DbContext, IMizanDbContext
     {
     }
 
-    // BetterAuth core tables
+    // BetterAuth core tables (managed by frontend Drizzle)
+    // User is read-only for backend (not migrated, but mapped for queries)
     public DbSet<User> Users => Set<User>();
-    public DbSet<Account> Accounts => Set<Account>();
-    public DbSet<Session> Sessions => Set<Session>();
-    public DbSet<Jwk> Jwks => Set<Jwk>();
-    public DbSet<Verification> Verifications => Set<Verification>();
+    // Account, Session, Jwk, Verification - REMOVED (managed entirely by frontend)
 
     // Household/Organization
     public DbSet<Household> Households => Set<Household>();
@@ -64,88 +62,30 @@ public class MizanDbContext : DbContext, IMizanDbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // User configuration
+        // User configuration (READ-ONLY - managed by frontend Drizzle, excluded from backend migrations)
         modelBuilder.Entity<User>(entity =>
         {
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
-            entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
-            entity.Property(e => e.EmailVerified).HasColumnName("email_verified").HasDefaultValue(false);
-            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(255);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.EmailVerified).HasColumnName("email_verified");
+            entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.Image).HasColumnName("image");
-            entity.Property(e => e.Role).HasColumnName("role").HasMaxLength(50).HasDefaultValue("user");
-            entity.Property(e => e.Banned).HasColumnName("banned").HasDefaultValue(false);
+            entity.Property(e => e.Role).HasColumnName("role");
+            entity.Property(e => e.Banned).HasColumnName("banned");
             entity.Property(e => e.BanReason).HasColumnName("ban_reason");
             entity.Property(e => e.BanExpires).HasColumnName("ban_expires");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
-            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            // CRITICAL: Exclude from migrations - table managed by frontend
+            entity.Metadata.SetIsTableExcludedFromMigrations(true);
         });
 
-        // Account configuration
-        modelBuilder.Entity<Account>(entity =>
-        {
-            entity.ToTable("accounts");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
-            entity.Property(e => e.AccountId).HasColumnName("account_id").IsRequired();
-            entity.Property(e => e.ProviderId).HasColumnName("provider_id").IsRequired();
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.AccessToken).HasColumnName("access_token");
-            entity.Property(e => e.RefreshToken).HasColumnName("refresh_token");
-            entity.Property(e => e.IdToken).HasColumnName("id_token");
-            entity.Property(e => e.AccessTokenExpiresAt).HasColumnName("access_token_expires_at");
-            entity.Property(e => e.RefreshTokenExpiresAt).HasColumnName("refresh_token_expires_at");
-            entity.Property(e => e.Scope).HasColumnName("scope");
-            entity.Property(e => e.Password).HasColumnName("password");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
-            entity.HasIndex(e => e.UserId);
-            entity.HasOne(e => e.User).WithMany(u => u.Accounts).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Session configuration
-        modelBuilder.Entity<Session>(entity =>
-        {
-            entity.ToTable("sessions");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.Token).HasColumnName("token").HasMaxLength(255).IsRequired();
-            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at").IsRequired();
-            entity.Property(e => e.IpAddress).HasColumnName("ip_address");
-            entity.Property(e => e.UserAgent).HasColumnName("user_agent");
-            entity.Property(e => e.ImpersonatedBy).HasColumnName("impersonated_by");
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
-            entity.HasIndex(e => e.Token).IsUnique();
-            entity.HasOne(e => e.User).WithMany(u => u.Sessions).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Jwk configuration
-        modelBuilder.Entity<Jwk>(entity =>
-        {
-            entity.ToTable("jwks");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.PublicKey).HasColumnName("public_key").IsRequired();
-            entity.Property(e => e.PrivateKey).HasColumnName("private_key").IsRequired();
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
-        });
-
-        // Verification configuration
-        modelBuilder.Entity<Verification>(entity =>
-        {
-            entity.ToTable("verification");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
-            entity.Property(e => e.Identifier).HasColumnName("identifier").IsRequired();
-            entity.Property(e => e.Value).HasColumnName("value").IsRequired();
-            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at").IsRequired();
-            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
-            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
-        });
+        // AUTH TABLES (Account, Session, Jwk, Verification) - REMOVED
+        // These are managed entirely by frontend Drizzle ORM
+        // Backend does not configure or migrate these tables
 
         // Household configuration
         modelBuilder.Entity<Household>(entity =>

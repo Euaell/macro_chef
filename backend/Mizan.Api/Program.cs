@@ -1,10 +1,7 @@
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Mizan.Api.Authentication;
 using Mizan.Api.Hubs;
-using Mizan.Api.Services;
 using Mizan.Application;
 using Mizan.Infrastructure;
 using Serilog;
@@ -26,21 +23,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Mizan API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new()
+    c.SwaggerDoc("v1", new() { Title = "Mizan API (BFF Backend)", Version = "v1" });
+    c.AddSecurityDefinition("BFF", new()
     {
-        Description = "JWT Authorization header using the Bearer scheme",
-        Name = "Authorization",
+        Description = "BFF Trusted Secret (X-BFF-Secret) and User ID (X-User-Id) headers",
+        Name = "X-BFF-Secret",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Scheme = "BFF"
     });
     c.AddSecurityRequirement(new()
     {
         {
             new()
             {
-                Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "BFF" }
             },
             Array.Empty<string>()
         }
@@ -54,21 +51,14 @@ builder.Services.AddFluentValidationRulesToSwagger();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// HttpClient factory for JWKS fetching
-builder.Services.AddHttpClient("JwksClient", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
+// BFF Authentication - validates trusted secret from frontend
+var trustedSecret = builder.Configuration["Bff:TrustedSecret"] ?? throw new InvalidOperationException("BFF:TrustedSecret is required");
 
-// Register JWKS cache service (uses Redis or in-memory fallback)
-builder.Services.AddSingleton<IJwksCache, JwksCache>();
-
-// Configure JWT Bearer options using dependency injection
-builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
-
-// JWT Authentication - validates tokens from BetterAuth JWKS endpoint
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
+builder.Services.AddAuthentication("BffTrustedSource")
+    .AddScheme<BffAuthenticationSchemeOptions, BffAuthenticationHandler>("BffTrustedSource", options =>
+    {
+        options.TrustedSecret = trustedSecret;
+    });
 
 builder.Services.AddAuthorization();
 
