@@ -141,15 +141,24 @@ export default function Page() {
 			tags: Array.from(tags),
 		}
 
-		fetch('/api/recipes/add', {
+		fetch('/api/bff/Recipes', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify(recipeData),
 		})
-		.then(res => res.json())
+		.then(res => {
+			if (!res.ok) {
+				throw new Error(`Failed to create recipe: ${res.status}`);
+			}
+			return res.json();
+		})
 		.then(() => router.push('/recipes'))
+		.catch(err => {
+			console.error('Recipe creation failed:', err);
+			alert('Failed to create recipe. Please try again.');
+		})
 		.finally(() => setIsSubmitting(false))
 	}
 
@@ -316,7 +325,7 @@ export default function Page() {
 				</div>
 
 				{/* Ingredients Card */}
-				<div className="card p-6 space-y-4 overflow-visible">
+				<div className="card p-6 space-y-4 relative">
 					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
 						<i className="ri-list-check-2 text-brand-500" />
 						Ingredients
@@ -334,7 +343,7 @@ export default function Page() {
 										className="input w-full"
 									/>
 									{activeDropdownIndex === index && (
-										<div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+										<div className="absolute z-[9999] w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
 											{ingredientSearch.length > 0 ? (
 												ingredientSearch.map((ingredient) => (
 													<button
