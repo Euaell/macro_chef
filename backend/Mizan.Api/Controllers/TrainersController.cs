@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
 using Mizan.Application.Interfaces;
+using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
 
@@ -13,11 +14,13 @@ public class TrainersController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILogger<TrainersController> _logger;
 
-    public TrainersController(IMediator mediator, ICurrentUserService currentUser)
+    public TrainersController(IMediator mediator, ICurrentUserService currentUser, ILogger<TrainersController> logger)
     {
         _mediator = mediator;
         _currentUser = currentUser;
+        _logger = logger;
     }
 
     [HttpPost("request")]
@@ -30,6 +33,8 @@ public class TrainersController : ControllerBase
 
         var command = new SendTrainerRequestCommand(_currentUser.UserId.Value, request.TrainerId);
         var id = await _mediator.Send(command);
+
+        _logger.LogInformation("Client {ClientId} sent trainer request to {TrainerId}", _currentUser.UserId.Value, request.TrainerId);
 
         return Ok(new { RelationshipId = id });
     }
@@ -45,7 +50,74 @@ public class TrainersController : ControllerBase
             return NotFound("Relationship not found");
         }
 
+        _logger.LogInformation("Trainer {TrainerId} responded to request {RelationshipId}: {Accepted}",
+            _currentUser.UserId, request.RelationshipId, request.Accept);
+
         return NoContent();
+    }
+
+    [HttpGet("clients")]
+    public async Task<IActionResult> GetClients()
+    {
+        try
+        {
+            var query = new GetTrainerClientsQuery();
+            var clients = await _mediator.Send(query);
+
+            _logger.LogInformation("Trainer {TrainerId} retrieved {Count} clients", _currentUser.UserId, clients.Count);
+
+            return Ok(clients);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access to trainer clients: {Message}", ex.Message);
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpGet("requests")]
+    public async Task<IActionResult> GetPendingRequests()
+    {
+        try
+        {
+            var query = new GetTrainerPendingRequestsQuery();
+            var requests = await _mediator.Send(query);
+
+            _logger.LogInformation("Trainer {TrainerId} retrieved {Count} pending requests", _currentUser.UserId, requests.Count);
+
+            return Ok(requests);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access to pending requests: {Message}", ex.Message);
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpGet("clients/{clientId}/nutrition")]
+    public async Task<IActionResult> GetClientNutrition(Guid clientId, [FromQuery] DateTime? date = null)
+    {
+        try
+        {
+            var query = new GetClientNutritionQuery(clientId, date);
+            var nutrition = await _mediator.Send(query);
+
+            if (nutrition == null)
+            {
+                return NotFound("No nutrition data found");
+            }
+
+            _logger.LogInformation("Trainer {TrainerId} accessed nutrition for client {ClientId} on {Date}",
+                _currentUser.UserId, clientId, nutrition.Date);
+
+            return Ok(nutrition);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access to client nutrition: Trainer {TrainerId}, Client {ClientId}: {Message}",
+                _currentUser.UserId, clientId, ex.Message);
+            return Unauthorized(ex.Message);
+        }
     }
 }
 

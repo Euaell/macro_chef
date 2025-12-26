@@ -2,13 +2,21 @@
 
 import { createAuthClient } from "better-auth/react";
 import { jwtClient, organizationClient, adminClient } from "better-auth/client/plugins";
+import { ac, adminRole, trainerRole, userRole } from "@/lib/permissions";
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   plugins: [
     jwtClient(),
     organizationClient(),
-    adminClient(),
+    adminClient({
+      ac,
+      roles: {
+        user: userRole,
+        trainer: trainerRole,
+        admin: adminRole,
+      },
+    }),
   ],
 });
 

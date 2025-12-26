@@ -4,6 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { jwt, organization, admin } from "better-auth/plugins";
 import { db } from "@/db/client";
 import { sendEmail, getVerificationEmailTemplate, getPasswordResetEmailTemplate } from "@/lib/email";
+import { ac, adminRole, trainerRole, userRole } from "@/lib/permissions";
 
 import * as schema from "@/db/schema";
 
@@ -95,6 +96,12 @@ export const auth = betterAuth({
       adminRoles: ["admin"], // Only system admins, NOT trainers
       impersonationSessionDuration: 60 * 60 * 24, // 24 hours
       allowImpersonatingAdmins: false,
+      ac, // Access control configuration
+      roles: {
+        user: userRole,
+        trainer: trainerRole,
+        admin: adminRole,
+      },
     }),
   ],
   session: {
