@@ -1,9 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
-import { db } from "@/db/client";
-import { users } from "@/db/schema";
-import { inArray } from "drizzle-orm";
 
 export const metadata = {
   title: "Trainer-Client Relationships | Admin",

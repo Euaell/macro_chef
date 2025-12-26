@@ -32,9 +32,19 @@ public class DeleteShoppingListCommandHandler : IRequestHandler<DeleteShoppingLi
 
         var shoppingList = await _context.ShoppingLists
             .Include(sl => sl.Items)
-            .FirstOrDefaultAsync(sl => sl.Id == request.Id && sl.UserId == _currentUser.UserId, cancellationToken);
+            .FirstOrDefaultAsync(sl => sl.Id == request.Id, cancellationToken);
 
         if (shoppingList == null)
+        {
+            return new DeleteShoppingListResult
+            {
+                Success = false,
+                Message = "Shopping list not found or access denied"
+            };
+        }
+
+        // Authorization: User must own the list OR be a member of the household
+        if (!await IsAuthorizedAsync(shoppingList, cancellationToken))
         {
             return new DeleteShoppingListResult
             {
@@ -52,5 +62,30 @@ public class DeleteShoppingListCommandHandler : IRequestHandler<DeleteShoppingLi
             Success = true,
             Message = "Shopping list deleted successfully"
         };
+    }
+
+    private async Task<bool> IsAuthorizedAsync(Domain.Entities.ShoppingList shoppingList, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId;
+        if (!userId.HasValue)
+        {
+            return false;
+        }
+
+        // User owns the list
+        if (shoppingList.UserId == userId.Value)
+        {
+            return true;
+        }
+
+        // List belongs to a household and user is a member
+        if (shoppingList.HouseholdId.HasValue)
+        {
+            var isMember = await _context.HouseholdMembers
+                .AnyAsync(hm => hm.HouseholdId == shoppingList.HouseholdId.Value && hm.UserId == userId.Value, cancellationToken);
+            return isMember;
+        }
+
+        return false;
     }
 }

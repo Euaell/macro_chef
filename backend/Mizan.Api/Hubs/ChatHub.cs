@@ -2,7 +2,9 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Mizan.Application.Commands;
+using Mizan.Application.Interfaces;
 
 namespace Mizan.Api.Hubs;
 
@@ -36,11 +38,13 @@ public class ChatHub : Hub
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ChatHub> _logger;
+    private readonly IMizanDbContext _context;
 
-    public ChatHub(IMediator mediator, ILogger<ChatHub> logger)
+    public ChatHub(IMediator mediator, ILogger<ChatHub> logger, IMizanDbContext context)
     {
         _mediator = mediator;
         _logger = logger;
+        _context = context;
     }
 
     public override async Task OnConnectedAsync()
@@ -69,9 +73,30 @@ public class ChatHub : Hub
 
     public async Task JoinConversation(Guid conversationId)
     {
+        var userId = GetUserId();
+        if (!userId.HasValue)
+        {
+            throw new HubException("User not authenticated");
+        }
+
+        // Authorization: Validate user is participant in this conversation
+        var conversation = await _context.ChatConversations
+            .Include(c => c.Relationship)
+            .FirstOrDefaultAsync(c => c.Id == conversationId);
+
+        if (conversation == null)
+        {
+            throw new HubException("Conversation not found");
+        }
+
+        var relationship = conversation.Relationship;
+        if (relationship.TrainerId != userId.Value && relationship.ClientId != userId.Value)
+        {
+            throw new HubException("Access denied to this conversation");
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, $"conversation_{conversationId}");
-        _logger.LogInformation("User {UserId} joined conversation {ConversationId}",
-            GetUserId(), conversationId);
+        _logger.LogInformation("User {UserId} joined conversation {ConversationId}", userId, conversationId);
     }
 
     public async Task LeaveConversation(Guid conversationId)

@@ -62,9 +62,15 @@ public class GetMealPlanByIdQueryHandler : IRequestHandler<GetMealPlanByIdQuery,
             .Include(mp => mp.MealPlanRecipes)
                 .ThenInclude(mpr => mpr.Recipe)
                     .ThenInclude(r => r.Nutrition)
-            .FirstOrDefaultAsync(mp => mp.Id == request.Id && mp.UserId == _currentUser.UserId, cancellationToken);
+            .FirstOrDefaultAsync(mp => mp.Id == request.Id, cancellationToken);
 
         if (mealPlan == null)
+        {
+            return null;
+        }
+
+        // Authorization: User must own the meal plan OR be a member of the household
+        if (!await IsAuthorizedAsync(mealPlan, cancellationToken))
         {
             return null;
         }
@@ -111,5 +117,30 @@ public class GetMealPlanByIdQueryHandler : IRequestHandler<GetMealPlanByIdQuery,
             CreatedAt = mealPlan.CreatedAt,
             UpdatedAt = mealPlan.UpdatedAt
         };
+    }
+
+    private async Task<bool> IsAuthorizedAsync(Domain.Entities.MealPlan mealPlan, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId;
+        if (!userId.HasValue)
+        {
+            return false;
+        }
+
+        // User owns the meal plan
+        if (mealPlan.UserId == userId.Value)
+        {
+            return true;
+        }
+
+        // Meal plan belongs to a household and user is a member
+        if (mealPlan.HouseholdId.HasValue)
+        {
+            var isMember = await _context.HouseholdMembers
+                .AnyAsync(hm => hm.HouseholdId == mealPlan.HouseholdId.Value && hm.UserId == userId.Value, cancellationToken);
+            return isMember;
+        }
+
+        return false;
     }
 }

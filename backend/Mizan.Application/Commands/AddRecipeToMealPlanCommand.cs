@@ -54,9 +54,15 @@ public class AddRecipeToMealPlanCommandHandler : IRequestHandler<AddRecipeToMeal
         }
 
         var mealPlan = await _context.MealPlans
-            .FirstOrDefaultAsync(mp => mp.Id == request.MealPlanId && mp.UserId == _currentUser.UserId, cancellationToken);
+            .FirstOrDefaultAsync(mp => mp.Id == request.MealPlanId, cancellationToken);
 
         if (mealPlan == null)
+        {
+            throw new InvalidOperationException("Meal plan not found or access denied");
+        }
+
+        // Authorization: User must own the meal plan OR be a member of the household
+        if (!await IsAuthorizedAsync(mealPlan, cancellationToken))
         {
             throw new InvalidOperationException("Meal plan not found or access denied");
         }
@@ -80,5 +86,30 @@ public class AddRecipeToMealPlanCommandHandler : IRequestHandler<AddRecipeToMeal
             Id = mealPlanRecipe.Id,
             Success = true
         };
+    }
+
+    private async Task<bool> IsAuthorizedAsync(MealPlan mealPlan, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId;
+        if (!userId.HasValue)
+        {
+            return false;
+        }
+
+        // User owns the meal plan
+        if (mealPlan.UserId == userId.Value)
+        {
+            return true;
+        }
+
+        // Meal plan belongs to a household and user is a member
+        if (mealPlan.HouseholdId.HasValue)
+        {
+            var isMember = await _context.HouseholdMembers
+                .AnyAsync(hm => hm.HouseholdId == mealPlan.HouseholdId.Value && hm.UserId == userId.Value, cancellationToken);
+            return isMember;
+        }
+
+        return false;
     }
 }

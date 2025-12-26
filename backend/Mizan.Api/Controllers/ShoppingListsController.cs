@@ -24,7 +24,6 @@ public class ShoppingListsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ShoppingListDto>> GetShoppingList(Guid id)
     {
-        // TODO: Validate user access
         var result = await _mediator.Send(new GetShoppingListQuery(id));
         if (result == null)
         {
