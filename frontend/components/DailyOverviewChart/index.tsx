@@ -36,10 +36,10 @@ export default function DailyOverviewChart() {
 			try {
 				const today = new Date().toISOString().split('T')[0];
 
-				// Fetch goal and daily meals in parallel
+				// Fetch goal and daily meals in parallel (via BFF proxy)
 				const [goalResponse, mealsResponse] = await Promise.all([
-					apiClient<Goal>('/api/Goals').catch(() => null),
-					apiClient<{ totals: Macros }>('/api/Meals?date=' + today).catch(() => ({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } }))
+					apiClient<Goal>('/api/bff/Goals').catch(() => null),
+					apiClient<{ totals: Macros }>('/api/bff/Meals?date=' + today).catch(() => ({ totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } }))
 				]);
 
 				setGoal(goalResponse);

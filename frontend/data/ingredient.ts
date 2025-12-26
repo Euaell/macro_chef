@@ -80,7 +80,7 @@ export async function addIngredient(data: {
 }): Promise<Ingredient> {
     const result = await callBackendApi<{ id: string }>("/api/Foods", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
             name: data.name,
             brand: data.brand || null,
             barcode: data.barcode || null,
@@ -91,7 +91,7 @@ export async function addIngredient(data: {
             carbsPer100g: data.carbs || 0,
             fatPer100g: data.fat || 0,
             fiberPer100g: data.fiber || null,
-        }),
+        },
     });
 
     return {

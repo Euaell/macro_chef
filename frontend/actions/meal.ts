@@ -1,8 +1,7 @@
 "use server";
 
-import { apiClient } from "@/lib/auth-client";
+import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
-import { cookies } from "next/headers";
 
 /**
  * Add a meal entry via the backend API (Server Action)
@@ -19,12 +18,9 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
         const carbs = parseFloat(formData.get("carbs") as string);
         const fat = parseFloat(formData.get("fat") as string);
 
-        // Server actions can access cookies - BetterAuth stores session there
-        // The apiClient will need to be enhanced to read from cookies on server-side
-        // For now, this will use the existing apiClient behavior
-        await apiClient("/api/Meals", {
+        await callBackendApi("/api/Meals", {
             method: "POST",
-            body: JSON.stringify({
+            body: {
                 recipeId: recipeId || null,
                 foodId: foodId || null,
                 entryDate: date,
@@ -34,7 +30,7 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
                 proteinGrams: isNaN(protein) ? null : protein,
                 carbsGrams: isNaN(carbs) ? null : carbs,
                 fatGrams: isNaN(fat) ? null : fat,
-            }),
+            },
         });
 
         return createSuccessState("Meal logged successfully!");

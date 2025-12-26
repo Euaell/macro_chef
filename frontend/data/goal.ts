@@ -46,15 +46,15 @@ export async function createGoal(prevState: FormState, formData: FormData): Prom
             ]);
         }
 
-        await apiClient("/api/Goals", {
+        await callBackendApi("/api/Goals", {
             method: "POST",
-            body: JSON.stringify({
+            body: {
                 goalType,
                 targetCalories: isNaN(targetCalories) ? null : targetCalories,
                 targetProteinGrams: isNaN(targetProtein) ? null : targetProtein,
                 targetCarbsGrams: isNaN(targetCarbs) ? null : targetCarbs,
                 targetFatGrams: isNaN(targetFat) ? null : targetFat,
-            }),
+            },
         });
 
         return createSuccessState("Goal saved successfully!");

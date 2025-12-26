@@ -30,15 +30,15 @@ export default function DashboardStats() {
 				setLoading(true);
 				setError(null);
 
-				// Fetch daily meals and goal in parallel
+				// Fetch daily meals and goal in parallel (via BFF proxy)
 				const today = new Date().toISOString().split('T')[0];
 				const [mealsResponse, goalResponse] = await Promise.all([
-					apiClient<{ date: string; entries: any[]; totals: DailyTotals }>('/api/Meals?date=' + today)
+					apiClient<{ date: string; entries: any[]; totals: DailyTotals }>('/api/bff/Meals?date=' + today)
 						.catch((err) => {
 							console.error('[Dashboard] Meals API error:', err);
 							return { date: today, entries: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } };
 						}),
-					apiClient<Goal>('/api/Goals')
+					apiClient<Goal>('/api/bff/Goals')
 						.catch((err) => {
 							console.error('[Dashboard] Goals API error:', err);
 							return null;
