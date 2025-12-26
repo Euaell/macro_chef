@@ -1,6 +1,6 @@
 "use server";
 
-import { apiClient } from "@/lib/auth-client";
+import { callBackendApi } from "@/lib/backend-api-client";
 
 export interface MealPlanEntry {
     id: string;

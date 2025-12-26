@@ -1,7 +1,7 @@
 "use server";
 
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
-import { signUp } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
 
 /**
  * Register a new user with email and password via BetterAuth
@@ -19,15 +19,22 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
             ]);
         }
 
-        // Use BetterAuth's signUp function
-        const result = await signUp.email({
-            email: email.toLowerCase(),
-            password,
-            name: name || email.split("@")[0],
+        // Use BetterAuth's server-side signUpEmail API
+        const result = await auth.api.signUpEmail({
+            body: {
+                email: email.toLowerCase(),
+                password,
+                name: name || email.split("@")[0],
+            },
         });
 
         if (result.error) {
-            return createErrorState(result.error.message || "Failed to create account");
+            return createErrorState(
+                result.error.message || "Failed to create account",
+                result.error.status === 400
+                    ? [{ field: "email", message: result.error.message || "" }]
+                    : undefined
+            );
         }
 
         return createSuccessState("Account created! Please check your email to verify your account.");

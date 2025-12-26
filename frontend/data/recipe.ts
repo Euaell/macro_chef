@@ -1,6 +1,6 @@
 "use server";
 
-import { apiClient } from "@/lib/auth-client";
+import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
 export interface PopularRecipe {
@@ -46,7 +46,7 @@ export interface RecipeIngredient {
  */
 export async function getPopularRecipes(): Promise<PopularRecipe[]> {
     try {
-        const result = await apiClient<{ recipes: Recipe[] }>("/api/Recipes?IncludePublic=true&PageSize=6");
+        const result = await callBackendApi<{ recipes: Recipe[] }>("/api/Recipes?IncludePublic=true&PageSize=6");
 
         return (result.recipes || []).map((r) => ({
             _id: r.id,
@@ -59,6 +59,7 @@ export async function getPopularRecipes(): Promise<PopularRecipe[]> {
             },
         }));
     } catch (error) {
+        // If not authenticated, return empty array (public recipes require auth in BFF)
         console.error("Failed to get popular recipes:", error);
         return [];
     }
@@ -73,7 +74,7 @@ export async function getAllRecipes(searchTerm?: string): Promise<Recipe[]> {
         if (searchTerm) params.append("SearchTerm", searchTerm);
         params.append("IncludePublic", "true");
 
-        const result = await apiClient<{ recipes: Recipe[] }>(`/api/Recipes?${params.toString()}`);
+        const result = await callBackendApi<{ recipes: Recipe[] }>(`/api/Recipes?${params.toString()}`);
         return result.recipes || [];
     } catch (error) {
         console.error("Failed to get all recipes:", error);
@@ -86,7 +87,7 @@ export async function getAllRecipes(searchTerm?: string): Promise<Recipe[]> {
  */
 export async function getRecipeById(recipeId: string): Promise<Recipe | null> {
     try {
-        const result = await apiClient<Recipe>(`/api/Recipes/${recipeId}`);
+        const result = await callBackendApi<Recipe>(`/api/Recipes/${recipeId}`);
         return result;
     } catch (error) {
         console.error("Failed to get recipe:", error);

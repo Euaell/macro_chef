@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/auth-client";
+import { callBackendApi } from "@/lib/backend-api-client";
 
 export interface MealEntry {
     id: string;
@@ -31,7 +31,7 @@ export interface FoodDiaryResult {
 export async function getTodayMeal(): Promise<MealEntry[]> {
     try {
         const today = new Date().toISOString().split("T")[0];
-        const result = await apiClient<FoodDiaryResult>(`/api/Meals?date=${today}`);
+        const result = await callBackendApi<FoodDiaryResult>(`/api/Meals?date=${today}`);
         return result.entries || [];
     } catch (error) {
         console.error("Failed to get today's meals:", error);
@@ -44,7 +44,7 @@ export async function getTodayMeal(): Promise<MealEntry[]> {
  */
 export async function getMeal(date: string): Promise<MealEntry[]> {
     try {
-        const result = await apiClient<FoodDiaryResult>(`/api/Meals?date=${date}`);
+        const result = await callBackendApi<FoodDiaryResult>(`/api/Meals?date=${date}`);
         return result.entries || [];
     } catch (error) {
         console.error("Failed to get meals:", error);
@@ -58,7 +58,7 @@ export async function getMeal(date: string): Promise<MealEntry[]> {
 export async function getDailyTotals(date?: string): Promise<FoodDiaryResult["totals"] | null> {
     try {
         const queryDate = date || new Date().toISOString().split("T")[0];
-        const result = await apiClient<FoodDiaryResult>(`/api/Meals?date=${queryDate}`);
+        const result = await callBackendApi<FoodDiaryResult>(`/api/Meals?date=${queryDate}`);
         return result.totals;
     } catch (error) {
         console.error("Failed to get daily totals:", error);

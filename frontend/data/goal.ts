@@ -1,6 +1,6 @@
 "use server";
 
-import { apiClient } from "@/lib/auth-client";
+import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
 export interface UserGoal {
@@ -21,7 +21,7 @@ export interface UserGoal {
  */
 export async function getCurrentGoal(): Promise<UserGoal | null> {
     try {
-        const result = await apiClient<UserGoal>("/api/Goals");
+        const result = await callBackendApi<UserGoal>("/api/Goals");
         return result;
     } catch (error) {
         console.error("Failed to get current goal:", error);

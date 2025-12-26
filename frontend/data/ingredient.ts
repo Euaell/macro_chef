@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/auth-client";
+import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
 export interface Ingredient {
@@ -25,7 +25,7 @@ export async function getAllIngredient(searchTerm?: string, sortBy?: string, lim
         params.set("Limit", String(limit || 100));
         if (searchTerm) params.set("SearchTerm", searchTerm);
 
-        const result = await apiClient<{ foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);
+        const result = await callBackendApi<{ foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);
         let foods = result.foods || [];
 
         // Sort if requested
@@ -53,7 +53,7 @@ export async function getAllIngredient(searchTerm?: string, sortBy?: string, lim
  */
 export async function getIngredientById(id: string): Promise<Ingredient | null> {
     try {
-        const result = await apiClient<Ingredient>(`/api/Foods/${id}`);
+        const result = await callBackendApi<Ingredient>(`/api/Foods/${id}`);
         return result;
     } catch (error) {
         console.error("Failed to get ingredient:", error);
@@ -76,7 +76,7 @@ export async function addIngredient(data: {
     fat: number;
     fiber: number;
 }): Promise<Ingredient> {
-    const result = await apiClient<{ id: string }>("/api/Foods", {
+    const result = await callBackendApi<{ id: string }>("/api/Foods", {
         method: "POST",
         body: JSON.stringify({
             name: data.name,
