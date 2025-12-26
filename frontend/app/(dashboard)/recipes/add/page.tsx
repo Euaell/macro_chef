@@ -315,7 +315,7 @@ export default function Page() {
 							id="description"
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
-							className="input min-h-[100px] resize-none"
+							className="input min-h-25 resize-none"
 							placeholder="Describe your recipe..."
 							rows={3}
 							required
@@ -375,7 +375,7 @@ export default function Page() {
 									<button
 										type="button"
 										onClick={() => handleRemoveIngredient(index)}
-										className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors flex-shrink-0"
+										className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors shrink-0"
 										aria-label="Remove ingredient"
 									>
 										<i className="ri-delete-bin-line" />
@@ -405,7 +405,7 @@ export default function Page() {
 						id="instructions"
 						value={instructions}
 						onChange={(e) => setInstructions(e.target.value)}
-						className="input min-h-[180px] resize-none"
+						className="input min-h-45 resize-none"
 						rows={6}
 						placeholder="Enter each instruction on a new line...&#10;1. Preheat oven to 375°F&#10;2. Season the chicken&#10;3. Grill for 6-8 minutes per side"
 					/>
@@ -476,7 +476,7 @@ export default function Page() {
 
 				{/* Macro Summary */}
 				{selectedIngredients.some(ing => ing.ingredient && ing.amount) && (
-					<div className="card p-6 bg-gradient-to-br from-brand-50 to-accent-50">
+					<div className="card p-6 bg-linear-to-br from-brand-50 to-accent-50">
 						<h2 className="font-semibold text-slate-900 mb-4">Nutrition Summary</h2>
 						<div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
 							<div className="text-center p-3 bg-white rounded-xl">
