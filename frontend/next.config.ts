@@ -47,81 +47,8 @@ const nextConfig: NextConfig = {
 		];
 	},
 
-	// Proxy backend API requests (explicitly list backend endpoints)
-	async rewrites() {
-		const backendUrl = process.env.API_URL || "http://localhost:5000";
-
-		return {
-			afterFiles: [
-				// Proxy specific backend API endpoints
-				// /api/auth/* and /api/health are handled by Next.js routes
-				{
-					source: "/api/Users/:path*",
-					destination: `${backendUrl}/api/Users/:path*`,
-				},
-				{
-					source: "/api/Foods/:path*",
-					destination: `${backendUrl}/api/Foods/:path*`,
-				},
-				{
-					source: "/api/Goals/:path*",
-					destination: `${backendUrl}/api/Goals/:path*`,
-				},
-				{
-					source: "/api/Meals/:path*",
-					destination: `${backendUrl}/api/Meals/:path*`,
-				},
-				{
-					source: "/api/Recipes/:path*",
-					destination: `${backendUrl}/api/Recipes/:path*`,
-				},
-				{
-					source: "/api/MealPlans/:path*",
-					destination: `${backendUrl}/api/MealPlans/:path*`,
-				},
-				{
-					source: "/api/ShoppingLists/:path*",
-					destination: `${backendUrl}/api/ShoppingLists/:path*`,
-				},
-				{
-					source: "/api/Workouts/:path*",
-					destination: `${backendUrl}/api/Workouts/:path*`,
-				},
-				{
-					source: "/api/Exercises/:path*",
-					destination: `${backendUrl}/api/Exercises/:path*`,
-				},
-				{
-					source: "/api/BodyMeasurements/:path*",
-					destination: `${backendUrl}/api/BodyMeasurements/:path*`,
-				},
-				{
-					source: "/api/Achievements/:path*",
-					destination: `${backendUrl}/api/Achievements/:path*`,
-				},
-				{
-					source: "/api/Nutrition/:path*",
-					destination: `${backendUrl}/api/Nutrition/:path*`,
-				},
-				{
-					source: "/api/Households/:path*",
-					destination: `${backendUrl}/api/Households/:path*`,
-				},
-				{
-					source: "/api/Trainers/:path*",
-					destination: `${backendUrl}/api/Trainers/:path*`,
-				},
-				{
-					source: "/api/Chat/:path*",
-					destination: `${backendUrl}/api/Chat/:path*`,
-				},
-				{
-					source: "/hubs/:path*",
-					destination: `${backendUrl}/hubs/:path*`,
-				},
-			],
-		};
-	},
+	// BFF Architecture: All backend API calls go through /api/bff/*
+	// No direct rewrites to backend - the BFF proxy route handles forwarding
 };
 
 export default nextConfig;

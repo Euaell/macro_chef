@@ -1,3 +1,5 @@
+"use server";
+
 import { callBackendApi } from "@/lib/backend-api-client";
 
 export interface MealEntry {

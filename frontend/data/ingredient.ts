@@ -1,3 +1,5 @@
+"use server";
+
 import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
