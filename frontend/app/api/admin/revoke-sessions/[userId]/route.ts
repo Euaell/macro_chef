@@ -20,6 +20,16 @@ export async function POST(
   try {
     const { userId } = await params;
 
+    // Validate UUID format
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return Response.json(
+        { error: "Invalid user ID format" },
+        { status: 400 }
+      );
+    }
+
     await db.delete(sessions).where(eq(sessions.userId, userId));
 
     return Response.json({
@@ -27,7 +37,7 @@ export async function POST(
       message: "All sessions revoked",
     });
   } catch (error) {
-    console.error("Failed to revoke sessions:", error);
+    console.error("Failed to revoke sessions");
     return Response.json(
       { error: "Failed to revoke sessions" },
       { status: 500 }

@@ -28,7 +28,7 @@ export async function getApiToken(): Promise<string | null> {
     const { data } = await authClient.token();
     return data?.token || null;
   } catch (error) {
-    console.error("Failed to get API token:", error);
+    console.error("Failed to get API token");
     return null;
   }
 }
@@ -62,7 +62,7 @@ export async function apiClient<T>(
 
   if (!response.ok) {
     const error = await response.text();
-    console.error(`[apiClient] Request failed: ${endpoint} - Status: ${response.status} - Error: ${error}`);
+    console.error(`[apiClient] Request failed: ${endpoint} - Status: ${response.status}`);
     throw new Error(error || `API error: ${response.status}`);
   }
 
