@@ -324,17 +324,17 @@ export default function Page() {
 
 					<div className="space-y-3">
 						{selectedIngredients.map((ing, index) => (
-							<div key={index} className="flex gap-3 items-start">
-								<div ref={dropdownRef} className="relative flex-1">
+							<div key={index} className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-start">
+								<div ref={dropdownRef} className="relative flex-1 min-w-0">
 									<input
 										type="text"
 										placeholder="Search ingredient..."
 										value={ing.name}
 										onChange={(e) => handleIngredientNameChange(index, e.target.value)}
-										className="input"
+										className="input w-full"
 									/>
 									{activeDropdownIndex === index && (
-										<div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+										<div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
 											{ingredientSearch.length > 0 ? (
 												ingredientSearch.map((ingredient) => (
 													<button
@@ -353,21 +353,26 @@ export default function Page() {
 										</div>
 									)}
 								</div>
-								<input
-									type="number"
-									placeholder="Amt"
-									value={ing.amount?.toString() || ''}
-									onChange={(e) => handleIngredientAmountChange(index, parseFloat(e.target.value))}
-									className="input w-20"
-								/>
-								<span className="px-3 py-2.5 bg-slate-100 rounded-xl text-slate-600 text-sm">g</span>
-								<button
-									type="button"
-									onClick={() => handleRemoveIngredient(index)}
-									className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors"
-								>
-									<i className="ri-delete-bin-line" />
-								</button>
+								<div className="flex gap-2 sm:gap-3 items-center">
+									<input
+										type="number"
+										placeholder="Amount"
+										value={ing.amount?.toString() || ''}
+										onChange={(e) => handleIngredientAmountChange(index, parseFloat(e.target.value))}
+										className="input w-24 sm:w-28"
+										min="0"
+										step="0.1"
+									/>
+									<span className="px-3 py-2.5 bg-slate-100 rounded-xl text-slate-600 text-sm font-medium whitespace-nowrap">grams</span>
+									<button
+										type="button"
+										onClick={() => handleRemoveIngredient(index)}
+										className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors flex-shrink-0"
+										aria-label="Remove ingredient"
+									>
+										<i className="ri-delete-bin-line" />
+									</button>
+								</div>
 							</div>
 						))}
 					</div>
