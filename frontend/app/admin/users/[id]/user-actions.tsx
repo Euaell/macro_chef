@@ -88,15 +88,26 @@ export function UserActions({ user }: { user: User }) {
     setError(null);
 
     try {
-      // TODO: Implement password reset via API
-      setError("Password reset not yet implemented");
-      // await authClient.admin.setPassword({
-      //   userId: user.id,
-      //   password: newPassword,
-      // });
+      const response = await fetch("/api/admin/set-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          password: newPassword,
+        }),
+      });
 
-      // setShowPasswordDialog(false);
-      // alert("Password updated successfully");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to set password");
+      }
+
+      setShowPasswordDialog(false);
+      alert("Password updated successfully");
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to set password"
