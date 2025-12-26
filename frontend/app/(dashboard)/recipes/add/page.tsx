@@ -1,6 +1,5 @@
 'use client';
 
-import { RecipeInput } from "@/types/recipe";
 import { useEffect, useRef, useState } from "react";
 import { getAllIngredient } from "@/data/ingredient";
 import type { Ingredient } from "@/data/ingredient";
@@ -148,18 +147,18 @@ export default function Page() {
 			},
 			body: JSON.stringify(recipeData),
 		})
-		.then(res => {
-			if (!res.ok) {
-				throw new Error(`Failed to create recipe: ${res.status}`);
-			}
-			return res.json();
-		})
-		.then(() => router.push('/recipes'))
-		.catch(err => {
-			console.error('Recipe creation failed:', err);
-			alert('Failed to create recipe. Please try again.');
-		})
-		.finally(() => setIsSubmitting(false))
+			.then(res => {
+				if (!res.ok) {
+					throw new Error(`Failed to create recipe: ${res.status}`);
+				}
+				return res.json();
+			})
+			.then(() => router.push('/recipes'))
+			.catch(err => {
+				console.error('Recipe creation failed:', err);
+				alert('Failed to create recipe. Please try again.');
+			})
+			.finally(() => setIsSubmitting(false))
 	}
 
 	return (
@@ -325,7 +324,7 @@ export default function Page() {
 				</div>
 
 				{/* Ingredients Card */}
-				<div className="card p-6 space-y-4 relative">
+				<div className="card p-6 space-y-4 relative overflow-visible!">
 					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
 						<i className="ri-list-check-2 text-brand-500" />
 						Ingredients
@@ -343,7 +342,7 @@ export default function Page() {
 										className="input w-full"
 									/>
 									{activeDropdownIndex === index && (
-										<div className="absolute z-[9999] w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+										<div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
 											{ingredientSearch.length > 0 ? (
 												ingredientSearch.map((ingredient) => (
 													<button
