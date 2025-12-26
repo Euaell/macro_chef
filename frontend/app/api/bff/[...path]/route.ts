@@ -12,10 +12,11 @@ import { callBackendApi, BackendApiError } from "@/lib/backend-api-client";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = `/api/${params.path.join("/")}`;
+    const { path: pathSegments } = await params;
+    const path = `/api/${pathSegments.join("/")}`;
     const searchParams = request.nextUrl.searchParams.toString();
     const fullPath = searchParams ? `${path}?${searchParams}` : path;
 
@@ -35,10 +36,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = `/api/${params.path.join("/")}`;
+    const { path: pathSegments } = await params;
+    const path = `/api/${pathSegments.join("/")}`;
     const body = await request.json();
 
     const data = await callBackendApi(path, {
@@ -61,10 +63,11 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = `/api/${params.path.join("/")}`;
+    const { path: pathSegments } = await params;
+    const path = `/api/${pathSegments.join("/")}`;
     const body = await request.json();
 
     const data = await callBackendApi(path, {
@@ -87,10 +90,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = `/api/${params.path.join("/")}`;
+    const { path: pathSegments } = await params;
+    const path = `/api/${pathSegments.join("/")}`;
 
     await callBackendApi(path, { method: "DELETE" });
 
@@ -109,10 +113,11 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const path = `/api/${params.path.join("/")}`;
+    const { path: pathSegments } = await params;
+    const path = `/api/${pathSegments.join("/")}`;
     const body = await request.json();
 
     const data = await callBackendApi(path, {

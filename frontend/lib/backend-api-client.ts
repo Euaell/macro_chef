@@ -25,7 +25,7 @@ export async function callBackendApi<T>(
   options: BackendApiOptions = {}
 ): Promise<T> {
   // Get authenticated session (server-side only)
-  const session = await auth();
+  const session = await auth.api.getSession({ headers: await import("next/headers").then(m => m.headers()) });
 
   if (!session?.user?.id) {
     throw new BackendApiError(401, "Unauthorized", { error: "Not authenticated" });
