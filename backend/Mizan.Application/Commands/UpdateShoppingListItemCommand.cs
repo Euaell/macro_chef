@@ -40,9 +40,19 @@ public class UpdateShoppingListItemCommandHandler : IRequestHandler<UpdateShoppi
 
         var item = await _context.ShoppingListItems
             .Include(i => i.ShoppingList)
-            .FirstOrDefaultAsync(i => i.Id == request.ItemId && i.ShoppingList.UserId == _currentUser.UserId, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == request.ItemId, cancellationToken);
 
         if (item == null)
+        {
+            return new UpdateShoppingListItemResult
+            {
+                Success = false,
+                Message = "Item not found or access denied"
+            };
+        }
+
+        // Authorization: User must own the list OR be a member of the household
+        if (!await IsAuthorizedAsync(item.ShoppingList, cancellationToken))
         {
             return new UpdateShoppingListItemResult
             {
@@ -70,5 +80,30 @@ public class UpdateShoppingListItemCommandHandler : IRequestHandler<UpdateShoppi
             Success = true,
             Message = "Item updated successfully"
         };
+    }
+
+    private async Task<bool> IsAuthorizedAsync(Domain.Entities.ShoppingList shoppingList, CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.UserId;
+        if (!userId.HasValue)
+        {
+            return false;
+        }
+
+        // User owns the list
+        if (shoppingList.UserId == userId.Value)
+        {
+            return true;
+        }
+
+        // List belongs to a household and user is a member
+        if (shoppingList.HouseholdId.HasValue)
+        {
+            var isMember = await _context.HouseholdMembers
+                .AnyAsync(hm => hm.HouseholdId == shoppingList.HouseholdId.Value && hm.UserId == userId.Value, cancellationToken);
+            return isMember;
+        }
+
+        return false;
     }
 }

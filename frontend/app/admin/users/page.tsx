@@ -107,12 +107,20 @@ export default async function UsersPage({
             {totalCount} total users
           </p>
         </div>
-        <Link
-          href="/admin"
-          className="px-4 py-2 text-sm border rounded-lg hover:bg-accent"
-        >
-          ← Back to Dashboard
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/users/create"
+            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+          >
+            + Create User
+          </Link>
+          <Link
+            href="/admin"
+            className="px-4 py-2 text-sm border rounded-lg hover:bg-accent"
+          >
+            ← Back to Dashboard
+          </Link>
+        </div>
       </div>
 
       <div className="mb-6 bg-card rounded-lg border p-4">

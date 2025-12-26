@@ -88,22 +88,10 @@ export function UserActions({ user }: { user: User }) {
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/set-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          password: newPassword,
-        }),
+      await authClient.admin.setUserPassword({
+        userId: user.id,
+        newPassword: newPassword,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to set password");
-      }
 
       setShowPasswordDialog(false);
       alert("Password updated successfully");
@@ -160,8 +148,8 @@ export function UserActions({ user }: { user: User }) {
     setError(null);
 
     try {
-      await fetch(`/api/admin/revoke-sessions/${user.id}`, {
-        method: "POST",
+      await authClient.admin.revokeUserSessions({
+        userId: user.id,
       });
 
       alert("All sessions revoked");

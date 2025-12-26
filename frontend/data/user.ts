@@ -28,13 +28,8 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
             },
         });
 
-        if (result.error) {
-            return createErrorState(
-                result.error.message || "Failed to create account",
-                result.error.status === 400
-                    ? [{ field: "email", message: result.error.message || "" }]
-                    : undefined
-            );
+        if (!result || !result.user) {
+            return createErrorState("Failed to create account");
         }
 
         return createSuccessState("Account created! Please check your email to verify your account.");
