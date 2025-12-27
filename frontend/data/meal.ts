@@ -13,7 +13,7 @@ export interface MealEntry {
     proteinGrams?: number;
     carbsGrams?: number;
     fatGrams?: number;
-    loggedAt: Date;
+    loggedAt: string;
 }
 
 export interface FoodDiaryResult {

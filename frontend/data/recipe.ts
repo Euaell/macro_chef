@@ -68,17 +68,26 @@ export async function getPopularRecipes(): Promise<PopularRecipe[]> {
 /**
  * Get all recipes with optional search term
  */
-export async function getAllRecipes(searchTerm?: string): Promise<Recipe[]> {
+export async function getAllRecipes(searchTerm?: string, page: number = 1, limit: number = 20): Promise<{ recipes: Recipe[], totalCount: number, totalPages: number }> {
     try {
         const params = new URLSearchParams();
         if (searchTerm) params.append("SearchTerm", searchTerm);
         params.append("IncludePublic", "true");
+        params.append("Page", page.toString());
+        params.append("PageSize", limit.toString());
 
-        const result = await callBackendApi<{ recipes: Recipe[] }>(`/api/Recipes?${params.toString()}`);
-        return result.recipes || [];
+        const result = await callBackendApi<{ recipes: Recipe[], totalCount: number, page: number, pageSize: number }>(`/api/Recipes?${params.toString()}`);
+
+        const totalPages = Math.ceil((result.totalCount || 0) / limit);
+
+        return {
+            recipes: result.recipes || [],
+            totalCount: result.totalCount || 0,
+            totalPages
+        };
     } catch (error) {
         console.error("Failed to get all recipes:", error);
-        return [];
+        return { recipes: [], totalCount: 0, totalPages: 0 };
     }
 }
 

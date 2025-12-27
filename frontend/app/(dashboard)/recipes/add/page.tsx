@@ -139,6 +139,13 @@ export default function Page() {
 			instructions: instructions.split('\n').filter(line => line.trim()),
 			servings,
 			tags: Array.from(tags),
+			nutrition: {
+				caloriesPerServing: Math.round(totalMacros.calories),
+				proteinGrams: totalMacros.protein,
+				carbsGrams: totalMacros.carbs,
+				fatGrams: totalMacros.fat,
+				fiberGrams: totalMacros.fiber
+			}
 		}
 
 		fetch('/api/bff/Recipes', {

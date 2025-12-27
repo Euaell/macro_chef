@@ -82,7 +82,7 @@ if (!string.IsNullOrEmpty(redisConnectionString))
 {
     signalRBuilder.AddStackExchangeRedis(redisConnectionString, options =>
     {
-        options.Configuration.ChannelPrefix = "Mizan";
+        options.Configuration.ChannelPrefix = RedisChannel.Literal("Mizan");
     });
 }
 

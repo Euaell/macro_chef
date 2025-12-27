@@ -4,10 +4,19 @@ import placeHolderImage from "@/public/placeholder-recipe.jpg";
 import { getAllRecipes } from "@/data/recipe";
 import { getUserOptionalServer } from "@/helper/session";
 
+import Pagination from "@/components/Pagination";
+
 export const dynamic = 'force-dynamic';
 
-export default async function Page() {
-	const recipes = await getAllRecipes();
+export default async function Page({
+	searchParams,
+}: {
+	searchParams: Promise<{ page?: string }>;
+}) {
+	const params = await searchParams;
+	const page = Number(params.page) || 1;
+	// Fetch recipes for the current page
+	const { recipes, totalPages, totalCount } = await getAllRecipes(undefined, page, 10);
 	const user = await getUserOptionalServer();
 
 	return (
@@ -30,7 +39,7 @@ export default async function Page() {
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 				{[
 					{ name: "Favorites", icon: "ri-heart-3-line", count: 0, color: "from-rose-400 to-rose-600" },
-					{ name: "My Recipes", icon: "ri-restaurant-line", count: recipes.length, color: "from-brand-400 to-brand-600" },
+					{ name: "My Recipes", icon: "ri-restaurant-line", count: totalCount, color: "from-brand-400 to-brand-600" },
 					{ name: "Recent", icon: "ri-history-line", count: Math.min(recipes.length, 5), color: "from-violet-400 to-violet-600" },
 				].map((collection) => (
 					<div key={collection.name} className="card-hover p-5 group cursor-pointer">
@@ -152,6 +161,12 @@ export default async function Page() {
 						)}
 					</div>
 				)}
+
+				<Pagination
+					currentPage={page}
+					totalPages={totalPages}
+					baseUrl="/recipes"
+				/>
 			</div>
 		</div>
 	);

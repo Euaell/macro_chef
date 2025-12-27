@@ -231,6 +231,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.ProteinGrams).HasColumnName("protein_grams").HasPrecision(8, 2);
             entity.Property(e => e.CarbsGrams).HasColumnName("carbs_grams").HasPrecision(8, 2);
             entity.Property(e => e.FatGrams).HasColumnName("fat_grams").HasPrecision(8, 2);
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(255).HasDefaultValue("");
             entity.Property(e => e.LoggedAt).HasColumnName("logged_at").HasDefaultValueSql("NOW()");
             entity.HasIndex(e => new { e.UserId, e.EntryDate });
             entity.HasOne(e => e.User).WithMany(u => u.FoodDiaryEntries).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);

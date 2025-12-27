@@ -64,7 +64,7 @@ public class GetFoodDiaryQueryHandler : IRequestHandler<GetFoodDiaryQuery, FoodD
             {
                 Id = e.Id,
                 MealType = e.MealType,
-                Name = e.Food != null ? e.Food.Name : (e.Recipe != null ? e.Recipe.Title : "Unknown"),
+                Name = !string.IsNullOrEmpty(e.Name) ? e.Name : (e.Food != null ? e.Food.Name : (e.Recipe != null ? e.Recipe.Title : "Unknown")),
                 Servings = e.Servings,
                 Calories = e.Calories,
                 ProteinGrams = e.ProteinGrams,

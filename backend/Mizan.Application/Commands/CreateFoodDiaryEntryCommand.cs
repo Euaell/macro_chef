@@ -16,6 +16,7 @@ public record CreateFoodDiaryEntryCommand : IRequest<CreateFoodDiaryEntryResult>
     public decimal? ProteinGrams { get; init; }
     public decimal? CarbsGrams { get; init; }
     public decimal? FatGrams { get; init; }
+    public string Name { get; init; } = string.Empty;
 }
 
 public record CreateFoodDiaryEntryResult
@@ -75,6 +76,7 @@ public class CreateFoodDiaryEntryCommandHandler : IRequestHandler<CreateFoodDiar
             ProteinGrams = request.ProteinGrams,
             CarbsGrams = request.CarbsGrams,
             FatGrams = request.FatGrams,
+            Name = request.Name,
             LoggedAt = DateTime.UtcNow
         };
 
