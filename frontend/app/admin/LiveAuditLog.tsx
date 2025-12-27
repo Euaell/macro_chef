@@ -77,7 +77,7 @@ export default function LiveAuditLog() {
 
                 <div className="flex items-center gap-3">
                     {refreshInterval > 0 && !isLoading && (
-                        <span className="text-xs text-muted-foreground tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums lg:hidden xl:inline">
                             Next refresh in {countdown}s
                         </span>
                     )}

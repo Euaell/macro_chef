@@ -134,7 +134,7 @@ export default async function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         <div className="lg:col-span-2 bg-card rounded-lg border p-6">
           <h2 className="text-xl font-semibold mb-4">Recent Users</h2>
           <div className="space-y-4">
@@ -163,7 +163,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <div className="lg:col-span-1 min-h-[500px]">
+        <div className="lg:col-span-1 xl:col-span-2 min-h-125">
           <LiveAuditLog />
         </div>
       </div>

@@ -33,6 +33,7 @@ export default function ProfilePage() {
 	}
 
 	const user = session.user;
+	const isTrainer = user.role === "trainer" || user.role === "admin";
 
 	const handleSignOut = async () => {
 		await signOut();
@@ -194,6 +195,75 @@ export default function ProfilePage() {
 					</div>
 				</Link>
 			</div>
+
+			{/* Trainer Features - Only visible for users with trainer role */}
+			{isTrainer && (
+				<div className="card p-6 border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50">
+					<div className="flex items-center gap-3 mb-4">
+						<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+							<i className="ri-user-star-line text-xl text-white" />
+						</div>
+						<div>
+							<h2 className="font-semibold text-slate-900">Trainer Features</h2>
+							<p className="text-sm text-slate-600">Manage your clients and training</p>
+						</div>
+					</div>
+
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<Link href="/trainer" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+									<i className="ri-dashboard-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">Dashboard</h3>
+									<p className="text-xs text-slate-500">View clients & stats</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-emerald-500 transition-colors" />
+							</div>
+						</Link>
+
+						<Link href="/trainer#clients" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center">
+									<i className="ri-group-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">My Clients</h3>
+									<p className="text-xs text-slate-500">Manage relationships</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-emerald-500 transition-colors" />
+							</div>
+						</Link>
+
+						<Link href="/trainer#requests" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+									<i className="ri-user-add-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">Requests</h3>
+									<p className="text-xs text-slate-500">Pending client requests</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-emerald-500 transition-colors" />
+							</div>
+						</Link>
+
+						<Link href="/trainer#messages" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center">
+									<i className="ri-message-3-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">Messages</h3>
+									<p className="text-xs text-slate-500">Chat with clients</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-emerald-500 transition-colors" />
+							</div>
+						</Link>
+					</div>
+				</div>
+			)}
 
 			{/* Account Settings */}
 			<div className="card p-6 space-y-4">

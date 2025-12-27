@@ -27,6 +27,7 @@ export default function Page() {
 	const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>([]);
 	const [servings, setServings] = useState(1);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [visibility, setVisibility] = useState<'public' | 'private' | 'household'>('private');
 
 	const [tags, setTags] = useState<Set<string>>(new Set<string>());
 	const [currentTag, setCurrentTag] = useState('');
@@ -142,8 +143,10 @@ export default function Page() {
 			// prepTimeMinutes: prepTime || undefined, // Assuming prepTime is not yet implemented
 			// cookTimeMinutes: cookTime || undefined, // Assuming cookTime is not yet implemented
 			imageUrl: images[0] || undefined,
-			isPublic: true
+			isPublic: visibility === 'public',
+			householdId: visibility === 'household' ? null : undefined
 			// NOTE: Nutrition is calculated on backend from ingredients
+			// NOTE: HouseholdId will be set to actual household ID once household selection is implemented
 		}
 
 		console.log('[Recipe Create] Submitting recipe:', JSON.stringify(recipeData, null, 2));
@@ -432,6 +435,26 @@ export default function Page() {
 						<i className="ri-settings-3-line text-brand-500" />
 						Additional Details
 					</h2>
+
+					{/* Visibility */}
+					<div>
+						<label htmlFor="visibility" className="label">Visibility</label>
+						<select
+							id="visibility"
+							value={visibility}
+							onChange={(e) => setVisibility(e.target.value as 'public' | 'private' | 'household')}
+							className="input"
+						>
+							<option value="private">Private (Only me)</option>
+							<option value="household">Household (Shared with household members)</option>
+							<option value="public">Public (Visible to everyone)</option>
+						</select>
+						<p className="text-sm text-slate-500 mt-1.5">
+							{visibility === 'private' && 'Only you can view and edit this recipe'}
+							{visibility === 'household' && 'All members of your household can view this recipe'}
+							{visibility === 'public' && 'Anyone can view this recipe'}
+						</p>
+					</div>
 
 					{/* Servings */}
 					<div>

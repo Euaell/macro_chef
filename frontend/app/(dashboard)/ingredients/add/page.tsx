@@ -1,6 +1,6 @@
 "use client";
 
-import { addIngredient } from "@/data/ingredient";
+import { addIngredientData } from "@/data/ingredient";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ export default function Page() {
 		}
 
 		try {
-			await addIngredient({
+			await addIngredientData({
 				name,
 				brand,
 				barcode,

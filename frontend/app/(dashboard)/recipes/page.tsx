@@ -112,7 +112,7 @@ export default async function Page({
 								<div className="sm:w-48 h-48 sm:h-auto relative bg-slate-200">
 									<Image
 										src={recipe.imageUrl || placeHolderImage}
-										alt={recipe.title}
+										alt={recipe.title || "Recipe"}
 										fill
 										className="object-cover group-hover:scale-105 transition-transform duration-300"
 									/>

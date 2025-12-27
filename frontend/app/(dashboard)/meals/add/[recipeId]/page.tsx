@@ -79,7 +79,7 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 			</div>
 
 			{/* Form Component */}
-			<AddMealFromRecipe recipeId={recipeId} name={recipe.title} macros={macros} />
+			<AddMealFromRecipe recipeId={recipeId} name={recipe.title || ""} macros={macros} />
 		</div>
 	);
 }

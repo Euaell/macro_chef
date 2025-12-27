@@ -2,6 +2,29 @@
 
 import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
+import type { components } from "@/types/api.generated";
+
+// Base generated types
+export type RecipeIngredient = components["schemas"]["RecipeIngredientDto"];
+export type RecipeInstruction = components["schemas"]["RecipeInstructionDto"];
+
+// Extended nutrition type with fiber support
+export interface RecipeNutrition {
+    caloriesPerServing?: number | null;
+    proteinGrams?: number | null;
+    carbsGrams?: number | null;
+    fatGrams?: number | null;
+    fiberGrams?: number | null;
+}
+
+// Extended recipe types with fiber in nutrition
+export interface Recipe extends Omit<components["schemas"]["RecipeDetailDto"], "nutrition"> {
+    nutrition?: RecipeNutrition;
+}
+
+export interface RecipeDto extends Omit<components["schemas"]["RecipeDto"], "nutrition"> {
+    nutrition?: RecipeNutrition;
+}
 
 export interface PopularRecipe {
     _id: string;
@@ -14,49 +37,16 @@ export interface PopularRecipe {
     };
 }
 
-export interface Recipe {
-    id: string;
-    title: string;
-    description?: string;
-    servings: number;
-    prepTimeMinutes?: number;
-    cookTimeMinutes?: number;
-    imageUrl?: string;
-    isPublic: boolean;
-    isOwner?: boolean;
-    isFavorited?: boolean;
-    nutrition?: {
-        caloriesPerServing: number;
-        proteinGrams: number;
-        carbsGrams: number;
-        fatGrams: number;
-        fiberGrams?: number;
-    };
-    tags?: string[];
-    ingredients?: RecipeIngredient[];
-    instructions?: string[];
-    createdAt: Date;
-}
-
-export interface RecipeIngredient {
-    id: string;
-    foodId?: string;
-    name: string;
-    ingredientText: string;
-    amount?: number;
-    unit?: string;
-}
-
 /**
  * Get popular recipes for the homepage from the backend API.
  */
 export async function getPopularRecipes(): Promise<PopularRecipe[]> {
     try {
-        const result = await callBackendApi<{ recipes: Recipe[] }>("/api/Recipes?IncludePublic=true&PageSize=6");
+        const result = await callBackendApi<{ recipes: RecipeDto[] }>("/api/Recipes?IncludePublic=true&PageSize=6");
 
         return (result.recipes || []).map((r) => ({
-            _id: r.id,
-            name: r.title,
+            _id: r.id || "",
+            name: r.title || "",
             totalMacros: {
                 calories: r.nutrition?.caloriesPerServing || 0,
                 protein: r.nutrition?.proteinGrams || 0,
@@ -74,7 +64,7 @@ export async function getPopularRecipes(): Promise<PopularRecipe[]> {
 /**
  * Get all recipes with optional filters
  */
-export async function getAllRecipes(searchTerm?: string, page: number = 1, limit: number = 20, favoritesOnly: boolean = false): Promise<{ recipes: Recipe[], totalCount: number, totalPages: number }> {
+export async function getAllRecipes(searchTerm?: string, page: number = 1, limit: number = 20, favoritesOnly: boolean = false): Promise<{ recipes: RecipeDto[], totalCount: number, totalPages: number }> {
     try {
         const params = new URLSearchParams();
         if (searchTerm) params.append("SearchTerm", searchTerm);
@@ -83,7 +73,7 @@ export async function getAllRecipes(searchTerm?: string, page: number = 1, limit
         params.append("Page", page.toString());
         params.append("PageSize", limit.toString());
 
-        const result = await callBackendApi<{ recipes: Recipe[], totalCount: number, page: number, pageSize: number }>(`/api/Recipes?${params.toString()}`);
+        const result = await callBackendApi<{ recipes: RecipeDto[], totalCount: number, page: number, pageSize: number }>(`/api/Recipes?${params.toString()}`);
 
         const totalPages = Math.ceil((result.totalCount || 0) / limit);
 

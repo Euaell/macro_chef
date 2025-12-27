@@ -69,10 +69,15 @@ export function UserActions({ user }: { user: User }) {
     setError(null);
 
     try {
-      await authClient.admin.setRole({
-        userId: user.id,
-        role: role as "user" | "admin" | "trainer",
-      });
+      // BetterAuth only supports "user" and "admin" roles
+      // "trainer" is a separate business concept managed by the backend
+      if (role === "user" || role === "admin") {
+        await authClient.admin.setRole({
+          userId: user.id,
+          role: role as "user" | "admin",
+        });
+      }
+      // TODO: If role is "trainer", call backend API to set trainer status
 
       setShowRoleDialog(false);
       router.refresh();

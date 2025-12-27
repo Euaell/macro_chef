@@ -59,7 +59,7 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 				<div className="relative h-72 sm:h-96">
 					<Image
 						src={recipe.imageUrl || placeHolderImage}
-						alt={recipe.title}
+						alt={recipe.title || "Recipe"}
 						fill
 						className="object-cover"
 					/>

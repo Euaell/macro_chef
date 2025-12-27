@@ -23,15 +23,15 @@ interface EditRecipeFormProps {
 }
 
 export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
-    const [name, setName] = useState(recipe.title);
+    const [name, setName] = useState(recipe.title || "");
     const [images, setImages] = useState<string[]>(recipe.imageUrl ? [recipe.imageUrl] : []);
     const [description, setDescription] = useState(recipe.description || '');
-    const [instructions, setInstructions] = useState((recipe.instructions || []).join('\n'));
+    const [instructions, setInstructions] = useState((recipe.instructions || []).map(i => i.instruction || "").join('\n'));
     const [selectedIngredients, setSelectedIngredients] = useState<SelectedIngredient[]>(
         (recipe.ingredients || []).map(ing => ({
             ingredient: {
                 id: ing.foodId!,
-                name: ing.name,
+                name: ing.foodName || ing.ingredientText || "",
                 caloriesPer100g: 0,
                 proteinPer100g: 0,
                 carbsPer100g: 0,
@@ -41,12 +41,12 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
                 servingUnit: 'g',
                 isVerified: false
             },
-            name: ing.name,
+            name: ing.foodName || ing.ingredientText || "",
             amount: ing.amount ?? null,
             unit: 'gram'
         }))
     );
-    const [servings, setServings] = useState(recipe.servings);
+    const [servings, setServings] = useState(recipe.servings || 1);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [tags, setTags] = useState<Set<string>>(new Set<string>(recipe.tags || []));

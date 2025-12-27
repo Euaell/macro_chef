@@ -78,6 +78,41 @@ export async function getIngredientById(id: string): Promise<Ingredient | null> 
 }
 
 /**
+ * Add a new ingredient with plain object data
+ */
+export async function addIngredientData(data: {
+    name: string;
+    brand?: string;
+    barcode?: string;
+    servingSize: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber?: number;
+}): Promise<void> {
+    await callBackendApi("/api/Foods", {
+        method: "POST",
+        body: {
+            name: data.name,
+            brand: data.brand || undefined,
+            barcode: data.barcode || undefined,
+            servingSize: data.servingSize,
+            servingUnit: "g",
+            caloriesPer100g: data.calories,
+            proteinPer100g: data.protein,
+            carbsPer100g: data.carbs,
+            fatPer100g: data.fat,
+            fiberPer100g: data.fiber || null,
+            isVerified: false
+        },
+    });
+
+    revalidatePath("/admin/ingredients");
+    revalidatePath("/ingredients");
+}
+
+/**
  * Add a new ingredient (food) via the backend API (Server Action)
  */
 export async function addIngredient(prevState: FormState, formData: FormData): Promise<FormState> {
@@ -164,9 +199,10 @@ export async function deleteIngredient(id: string): Promise<{ success: boolean; 
     try {
         await callBackendApi(`/api/Foods/${id}`, {
             method: "DELETE",
-        });
+        }).then(() => {
 
-        revalidatePath("/admin/ingredients");
+            revalidatePath("/admin/ingredients");
+        });
 
         return { success: true };
     } catch (error) {
