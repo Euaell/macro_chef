@@ -23,6 +23,8 @@ export interface Recipe {
     cookTimeMinutes?: number;
     imageUrl?: string;
     isPublic: boolean;
+    isOwner?: boolean;
+    isFavorited?: boolean;
     calories?: number;
     protein?: number;
     carbs?: number;

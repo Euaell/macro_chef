@@ -6,8 +6,9 @@ using Mizan.Domain.Entities;
 
 namespace Mizan.Application.Commands;
 
-public record CreateRecipeCommand : IRequest<CreateRecipeResult>
+public record UpdateRecipeCommand : IRequest<UpdateRecipeResult>
 {
+    public Guid Id { get; init; }
     public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
     public int Servings { get; init; } = 1;
@@ -15,25 +16,23 @@ public record CreateRecipeCommand : IRequest<CreateRecipeResult>
     public int? CookTimeMinutes { get; init; }
     public string? ImageUrl { get; init; }
     public bool IsPublic { get; init; }
-    public Guid? HouseholdId { get; init; }
     public List<CreateRecipeIngredientDto> Ingredients { get; init; } = new();
     public List<string> Instructions { get; init; } = new();
     public List<string> Tags { get; init; } = new();
     public CreateRecipeNutritionDto? Nutrition { get; init; }
 }
 
-
-
-public record CreateRecipeResult
+public record UpdateRecipeResult
 {
-    public Guid Id { get; init; }
-    public string Title { get; init; } = string.Empty;
+    public bool Success { get; init; }
+    public string? Message { get; init; }
 }
 
-public class CreateRecipeCommandValidator : AbstractValidator<CreateRecipeCommand>
+public class UpdateRecipeCommandValidator : AbstractValidator<UpdateRecipeCommand>
 {
-    public CreateRecipeCommandValidator()
+    public UpdateRecipeCommandValidator()
     {
+        RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Title).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Servings).GreaterThan(0);
         RuleFor(x => x.Ingredients).NotEmpty().WithMessage("At least one ingredient is required");
@@ -44,41 +43,56 @@ public class CreateRecipeCommandValidator : AbstractValidator<CreateRecipeComman
     }
 }
 
-public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, CreateRecipeResult>
+public class UpdateRecipeCommandHandler : IRequestHandler<UpdateRecipeCommand, UpdateRecipeResult>
 {
     private readonly IMizanDbContext _context;
     private readonly ICurrentUserService _currentUser;
 
-    public CreateRecipeCommandHandler(IMizanDbContext context, ICurrentUserService currentUser)
+    public UpdateRecipeCommandHandler(IMizanDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
         _currentUser = currentUser;
     }
 
-    public async Task<CreateRecipeResult> Handle(CreateRecipeCommand request, CancellationToken cancellationToken)
+    public async Task<UpdateRecipeResult> Handle(UpdateRecipeCommand request, CancellationToken cancellationToken)
     {
         if (!_currentUser.UserId.HasValue)
         {
-            throw new UnauthorizedAccessException("User must be authenticated");
+            return new UpdateRecipeResult { Success = false, Message = "Unauthorized" };
         }
 
-        var recipe = new Recipe
-        {
-            Id = Guid.NewGuid(),
-            UserId = _currentUser.UserId.Value,
-            HouseholdId = request.HouseholdId,
-            Title = request.Title,
-            Description = request.Description,
-            Servings = request.Servings,
-            PrepTimeMinutes = request.PrepTimeMinutes,
-            CookTimeMinutes = request.CookTimeMinutes,
-            ImageUrl = request.ImageUrl,
-            IsPublic = request.IsPublic,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        var recipe = await _context.Recipes
+            .Include(r => r.Ingredients)
+            .Include(r => r.Instructions)
+            .Include(r => r.Tags)
+            .Include(r => r.Nutrition)
+            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
 
-        // Add ingredients
+        if (recipe == null)
+        {
+            return new UpdateRecipeResult { Success = false, Message = "Recipe not found" };
+        }
+
+        var user = await _context.Users.FindAsync(new object[] { _currentUser.UserId.Value }, cancellationToken);
+        var isAdmin = user?.Role == "admin";
+
+        if (recipe.UserId != _currentUser.UserId && !isAdmin)
+        {
+            return new UpdateRecipeResult { Success = false, Message = "You do not have permission to edit this recipe" };
+        }
+
+        // Update properties
+        recipe.Title = request.Title;
+        recipe.Description = request.Description;
+        recipe.Servings = request.Servings;
+        recipe.PrepTimeMinutes = request.PrepTimeMinutes;
+        recipe.CookTimeMinutes = request.CookTimeMinutes;
+        recipe.ImageUrl = request.ImageUrl;
+        recipe.IsPublic = request.IsPublic;
+        recipe.UpdatedAt = DateTime.UtcNow;
+
+        // Update Ingredients (Replace all)
+        _context.RecipeIngredients.RemoveRange(recipe.Ingredients);
         for (int i = 0; i < request.Ingredients.Count; i++)
         {
             var ingredientDto = request.Ingredients[i];
@@ -94,7 +108,8 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             });
         }
 
-        // Add instructions
+        // Update Instructions (Replace all)
+        _context.RecipeInstructions.RemoveRange(recipe.Instructions);
         for (int i = 0; i < request.Instructions.Count; i++)
         {
             recipe.Instructions.Add(new RecipeInstruction
@@ -106,7 +121,8 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             });
         }
 
-        // Add tags
+        // Update Tags (Replace all)
+        _context.RecipeTags.RemoveRange(recipe.Tags);
         foreach (var tag in request.Tags)
         {
             recipe.Tags.Add(new RecipeTag
@@ -117,13 +133,12 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             });
         }
 
-        // Calculate nutrition from ingredients
+        // Update Nutrition
+        // Logic mirroring CreateRecipeCommand: Prioritize ingredients
         var ingredientFoodIds = request.Ingredients
             .Where(i => i.FoodId.HasValue)
             .Select(i => i.FoodId!.Value)
             .ToList();
-
-
 
         if (ingredientFoodIds.Any())
         {
@@ -141,9 +156,7 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             {
                 if (foods.TryGetValue(ingredientDto.FoodId!.Value, out var food))
                 {
-                    var ratio = ingredientDto.Amount!.Value / 100m; // Ensure decimal division
-                    
-                    // Use decimal for calories during calculation to avoid early truncation
+                    var ratio = ingredientDto.Amount!.Value / 100m;
                     totalCalories += food.CaloriesPer100g * ratio;
                     totalProtein += food.ProteinPer100g * ratio;
                     totalCarbs += food.CarbsPer100g * ratio;
@@ -152,42 +165,34 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 }
             }
 
-            // Calculate per serving values
             var servings = request.Servings > 0 ? request.Servings : 1;
-            
-            recipe.Nutrition = new RecipeNutrition
+
+            if (recipe.Nutrition == null)
             {
-                RecipeId = recipe.Id,
-                CaloriesPerServing = (int)(totalCalories / servings),
-                ProteinGrams = totalProtein / servings,
-                CarbsGrams = totalCarbs / servings,
-                FatGrams = totalFat / servings,
-                FiberGrams = totalFiber / servings
-            };
+                recipe.Nutrition = new RecipeNutrition { RecipeId = recipe.Id };
+            }
+
+            recipe.Nutrition.CaloriesPerServing = (int)(totalCalories / servings);
+            recipe.Nutrition.ProteinGrams = totalProtein / servings;
+            recipe.Nutrition.CarbsGrams = totalCarbs / servings;
+            recipe.Nutrition.FatGrams = totalFat / servings;
+            recipe.Nutrition.FiberGrams = totalFiber / servings;
         }
         else if (request.Nutrition != null)
         {
-            // Fallback to provided nutrition only if no ingredients are linked
-            recipe.Nutrition = new RecipeNutrition
+            if (recipe.Nutrition == null)
             {
-                RecipeId = recipe.Id,
-                CaloriesPerServing = request.Nutrition.CaloriesPerServing,
-                ProteinGrams = request.Nutrition.ProteinGrams,
-                CarbsGrams = request.Nutrition.CarbsGrams,
-                FatGrams = request.Nutrition.FatGrams,
-                FiberGrams = request.Nutrition.FiberGrams,
-                SugarGrams = 0,
-                SodiumMg = 0
-            };
+                recipe.Nutrition = new RecipeNutrition { RecipeId = recipe.Id };
+            }
+            recipe.Nutrition.CaloriesPerServing = request.Nutrition.CaloriesPerServing;
+            recipe.Nutrition.ProteinGrams = request.Nutrition.ProteinGrams;
+            recipe.Nutrition.CarbsGrams = request.Nutrition.CarbsGrams;
+            recipe.Nutrition.FatGrams = request.Nutrition.FatGrams;
+            recipe.Nutrition.FiberGrams = request.Nutrition.FiberGrams;
         }
 
-        _context.Recipes.Add(recipe);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new CreateRecipeResult
-        {
-            Id = recipe.Id,
-            Title = recipe.Title
-        };
+        return new UpdateRecipeResult { Success = true, Message = "Recipe updated successfully" };
     }
 }

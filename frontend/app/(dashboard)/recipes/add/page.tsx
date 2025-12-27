@@ -140,11 +140,11 @@ export default function Page() {
 			servings,
 			tags: Array.from(tags),
 			nutrition: {
-				caloriesPerServing: Math.round(totalMacros.calories),
-				proteinGrams: totalMacros.protein,
-				carbsGrams: totalMacros.carbs,
-				fatGrams: totalMacros.fat,
-				fiberGrams: totalMacros.fiber
+				caloriesPerServing: Math.round(totalMacros.calories / (servings || 1)),
+				proteinGrams: totalMacros.protein / (servings || 1),
+				carbsGrams: totalMacros.carbs / (servings || 1),
+				fatGrams: totalMacros.fat / (servings || 1),
+				fiberGrams: totalMacros.fiber / (servings || 1)
 			}
 		}
 

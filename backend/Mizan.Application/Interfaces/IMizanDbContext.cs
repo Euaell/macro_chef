@@ -18,6 +18,8 @@ public interface IMizanDbContext
     DbSet<RecipeInstruction> RecipeInstructions { get; }
     DbSet<RecipeNutrition> RecipeNutritions { get; }
     DbSet<RecipeTag> RecipeTags { get; }
+    DbSet<FavoriteRecipe> FavoriteRecipes { get; }
+    DbSet<AuditLog> AuditLogs { get; }
     DbSet<FoodDiaryEntry> FoodDiaryEntries { get; }
     DbSet<MealPlan> MealPlans { get; }
     DbSet<MealPlanRecipe> MealPlanRecipes { get; }
