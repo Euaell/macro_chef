@@ -41,7 +41,17 @@ export async function POST(
   try {
     const { path: pathSegments } = await params;
     const path = `/api/${pathSegments.join("/")}`;
-    const body = await request.json();
+
+    // Some POST requests (like toggle favorite) might not have a body
+    let body = undefined;
+    const contentType = request.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        body = await request.json();
+      } catch (e) {
+        // Body is empty or not valid JSON, ignore
+      }
+    }
 
     const data = await callBackendApi(path, {
       method: "POST",
