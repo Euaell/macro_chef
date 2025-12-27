@@ -37,4 +37,13 @@ public class MealsController : ControllerBase
             return BadRequest(result.Message);
         return CreatedAtAction(nameof(GetMeals), new { id = result.Id }, result);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteMeal(Guid id)
+    {
+        var result = await _mediator.Send(new DeleteFoodDiaryEntryCommand { Id = id });
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result);
+    }
 }

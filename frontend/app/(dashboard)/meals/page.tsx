@@ -3,6 +3,8 @@
 import { getMeal, getDailyTotals, MealEntry } from "@/data/meal";
 import { getCurrentGoal, UserGoal } from "@/data/goal";
 import { useSession } from "@/lib/auth-client";
+import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
+import { deleteMeal } from "@/actions/meal";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,6 +33,8 @@ export default function MealsPage() {
 	const [history, setHistory] = useState<DailyStat[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [mealToDelete, setMealToDelete] = useState<{ id: string; name: string } | null>(null);
 
 	// Navigation
 	const handlePrevDay = () => {
@@ -43,6 +47,22 @@ export default function MealsPage() {
 		const d = new Date(queryDate);
 		d.setDate(d.getDate() + 1);
 		router.push(`/meals?date=${d.toISOString().split("T")[0]}`);
+	};
+
+	const handleDeleteClick = (id: string, name: string) => {
+		setMealToDelete({ id, name });
+		setDeleteModalOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!mealToDelete) return;
+		const result = await deleteMeal(mealToDelete.id);
+		if (result.success) {
+			// Refresh the meal list
+			const meals = await getMeal(queryDate);
+			setTodayMeals(meals);
+		}
+		setMealToDelete(null);
 	};
 
 	useEffect(() => {
@@ -252,15 +272,24 @@ export default function MealsPage() {
 									</h3>
 									<p className="text-sm text-slate-500 capitalize">{meal.mealType} • {new Date(meal.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
 								</div>
-								<div className="text-right">
-									<p className="font-semibold text-orange-600">
-										{meal.calories || 0} kcal
-									</p>
-									<div className="flex gap-2 text-xs text-slate-500 mt-1">
-										<span>P: {meal.proteinGrams?.toFixed(1)}g</span>
-										<span>C: {meal.carbsGrams?.toFixed(1)}g</span>
-										<span>F: {meal.fatGrams?.toFixed(1)}g</span>
+								<div className="flex items-center gap-4">
+									<div className="text-right">
+										<p className="font-semibold text-orange-600">
+											{meal.calories || 0} kcal
+										</p>
+										<div className="flex gap-2 text-xs text-slate-500 mt-1">
+											<span>P: {meal.proteinGrams?.toFixed(1)}g</span>
+											<span>C: {meal.carbsGrams?.toFixed(1)}g</span>
+											<span>F: {meal.fatGrams?.toFixed(1)}g</span>
+										</div>
 									</div>
+									<button
+										onClick={() => handleDeleteClick(meal.id, meal.name || meal.mealType)}
+										className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+										title="Delete meal"
+									>
+										<i className="ri-delete-bin-line text-xl" />
+									</button>
 								</div>
 							</div>
 						))}
@@ -279,6 +308,13 @@ export default function MealsPage() {
 					</div>
 				)}
 			</div>
+
+			<DeleteConfirmModal
+				isOpen={deleteModalOpen}
+				onClose={() => setDeleteModalOpen(false)}
+				onConfirm={handleDeleteConfirm}
+				itemName={mealToDelete?.name || "Meal"}
+			/>
 		</div>
 	);
 }

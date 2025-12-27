@@ -10,7 +10,7 @@ public record CreateFoodDiaryEntryCommand : IRequest<CreateFoodDiaryEntryResult>
     public Guid? FoodId { get; init; }
     public Guid? RecipeId { get; init; }
     public DateOnly? EntryDate { get; init; }
-    public string MealType { get; init; } = "snack";
+    public string MealType { get; init; } = "SNACK";
     public decimal Servings { get; init; } = 1;
     public int? Calories { get; init; }
     public decimal? ProteinGrams { get; init; }
@@ -31,8 +31,8 @@ public class CreateFoodDiaryEntryCommandValidator : AbstractValidator<CreateFood
     public CreateFoodDiaryEntryCommandValidator()
     {
         RuleFor(x => x.MealType).NotEmpty()
-            .Must(m => new[] { "breakfast", "lunch", "dinner", "snack" }.Contains(m.ToLower()))
-            .WithMessage("Meal type must be breakfast, lunch, dinner, or snack");
+            .Must(m => new[] { "MEAL", "SNACK", "DRINK" }.Contains(m.ToUpper()))
+            .WithMessage("Meal type must be MEAL, SNACK, or DRINK");
         RuleFor(x => x.Servings).GreaterThan(0);
         RuleFor(x => x.Calories).GreaterThanOrEqualTo(0).When(x => x.Calories.HasValue);
         RuleFor(x => x.ProteinGrams).GreaterThanOrEqualTo(0).When(x => x.ProteinGrams.HasValue);
@@ -70,7 +70,7 @@ public class CreateFoodDiaryEntryCommandHandler : IRequestHandler<CreateFoodDiar
             FoodId = request.FoodId,
             RecipeId = request.RecipeId,
             EntryDate = request.EntryDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
-            MealType = request.MealType,
+            MealType = request.MealType.ToUpper(),
             Servings = request.Servings,
             Calories = request.Calories,
             ProteinGrams = request.ProteinGrams,

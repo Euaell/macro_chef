@@ -54,10 +54,9 @@ export default function Page() {
 						<div>
 							<label htmlFor="mealType" className="label">Meal Type</label>
 							<select id="mealType" name="mealType" className="input">
-								<option value="breakfast">Breakfast</option>
-								<option value="lunch">Lunch</option>
-								<option value="dinner">Dinner</option>
-								<option value="snack">Snack</option>
+								<option value="MEAL">Meal</option>
+								<option value="SNACK">Snack</option>
+								<option value="DRINK">Drink</option>
 							</select>
 							<FieldError formState={formState} name="mealType" />
 						</div>
