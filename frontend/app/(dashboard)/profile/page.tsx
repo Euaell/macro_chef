@@ -159,11 +159,37 @@ export default function ProfilePage() {
 				<Link href="/meals" className="card-hover p-5 group">
 					<div className="flex items-center gap-4">
 						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center">
-							<i className="ri-restaurant-2-line text-xl text-white" />
+							<i className="ri-bowl-line text-xl text-white" />
 						</div>
 						<div className="flex-1">
 							<h3 className="font-semibold text-slate-900">Food Diary</h3>
-							<p className="text-sm text-slate-500">Track your meals</p>
+							<p className="text-sm text-slate-500">Track your daily meals</p>
+						</div>
+						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
+					</div>
+				</Link>
+
+				<Link href="/meal-plan" className="card-hover p-5 group">
+					<div className="flex items-center gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
+							<i className="ri-calendar-line text-xl text-white" />
+						</div>
+						<div className="flex-1">
+							<h3 className="font-semibold text-slate-900">Meal Plan</h3>
+							<p className="text-sm text-slate-500">Plan your weekly meals</p>
+						</div>
+						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
+					</div>
+				</Link>
+
+				<Link href="/suggestions" className="card-hover p-5 group">
+					<div className="flex items-center gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center">
+							<i className="ri-magic-line text-xl text-white" />
+						</div>
+						<div className="flex-1">
+							<h3 className="font-semibold text-slate-900">AI Coach</h3>
+							<p className="text-sm text-slate-500">Get AI-powered suggestions</p>
 						</div>
 						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
 					</div>
@@ -182,14 +208,14 @@ export default function ProfilePage() {
 					</div>
 				</Link>
 
-				<Link href="/suggestions" className="card-hover p-5 group">
+				<Link href="/ingredients" className="card-hover p-5 group">
 					<div className="flex items-center gap-4">
-						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center">
-							<i className="ri-sparkling-2-line text-xl text-white" />
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+							<i className="ri-leaf-line text-xl text-white" />
 						</div>
 						<div className="flex-1">
-							<h3 className="font-semibold text-slate-900">AI Coach</h3>
-							<p className="text-sm text-slate-500">Get personalized tips</p>
+							<h3 className="font-semibold text-slate-900">Foods</h3>
+							<p className="text-sm text-slate-500">Browse food database</p>
 						</div>
 						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
 					</div>

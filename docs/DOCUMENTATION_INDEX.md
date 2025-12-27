@@ -182,6 +182,30 @@ Start here and read in order:
 - Testing real-time features
 - Deployment considerations (Redis backplane)
 
+#### 6a. IMPLEMENTATION_2025_12_27.md
+**Purpose:** December 2025 feature implementations (recipe visibility, trainer discovery)
+**Size:** ~12,000 words
+**Time to read:** 25-30 minutes
+**When to read:**
+- Understanding recipe visibility feature
+- Working on trainer discovery/request features
+- Integrating trainer-client relationship queries
+- Extending trainer features (permissions, acceptance flow)
+- Writing tests for new features
+- Understanding new backend queries and DTOs
+
+**Contains:**
+- Recipe visibility feature (private/household/public)
+- Trainer discovery page (browse available trainers)
+- Trainer requests page (manage pending requests)
+- My trainer page (view active relationship)
+- Backend query handlers (GetAvailableTrainersQuery, GetMyTrainerQuery, GetMyTrainerRequestsQuery)
+- Data relationships and access patterns
+- Performance considerations and caching opportunities
+- Testing strategies for all features
+- Known issues and future enhancements
+- File changes summary and deployment checklist
+
 ---
 
 ### Deployment and Operations

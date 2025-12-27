@@ -83,21 +83,11 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 					<i className="ri-restaurant-line mr-1.5" />
 					Recipes
 				</NavLink>
-				{user && (
-					<>
-						<NavLink href="/meals">
-							<i className="ri-bowl-line mr-1.5" />
-							Diary
-						</NavLink>
-						<NavLink href="/meal-plan">
-							<i className="ri-calendar-line mr-1.5" />
-							Plan
-						</NavLink>
-						<NavLink href="/suggestions">
-							<i className="ri-magic-line mr-1.5" />
-							AI Coach
-						</NavLink>
-					</>
+				{user?.role === 'admin' && (
+					<NavLink href="/admin">
+						<i className="ri-shield-user-line mr-1.5" />
+						Admin
+					</NavLink>
 				)}
 			</nav>
 
@@ -169,21 +159,11 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 							<i className="ri-restaurant-line mr-2" />
 							Recipes
 						</NavLink>
-						{user && (
-							<>
-								<NavLink href="/meals" onClick={closeMenu}>
-									<i className="ri-bowl-line mr-2" />
-									Food Diary
-								</NavLink>
-								<NavLink href="/meal-plan" onClick={closeMenu}>
-									<i className="ri-calendar-line mr-2" />
-									Meal Plan
-								</NavLink>
-								<NavLink href="/suggestions" onClick={closeMenu}>
-									<i className="ri-magic-line mr-2" />
-									AI Coach
-								</NavLink>
-							</>
+						{user?.role === 'admin' && (
+							<NavLink href="/admin" onClick={closeMenu}>
+								<i className="ri-shield-user-line mr-2" />
+								Admin
+							</NavLink>
 						)}
 					</nav>
 

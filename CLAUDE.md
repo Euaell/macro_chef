@@ -648,6 +648,7 @@ mcp__MCP_DOCKER__listRepositoryTags
 - `docs/SIGNALR_IMPLEMENTATION.md` - SignalR setup and usage guide
 - `docs/SECURITY_ANALYSIS.md` - Security audit and authorization patterns
 - `docs/SECURITY.md` - Security policies and vulnerability reporting
+- `docs/IMPLEMENTATION_2025_12_27.md` - December 2025 feature implementations (recipe visibility, trainer discovery)
 - `docs/context/` - Design decisions and access control documentation
 - `.fpf/` - First Principles Framework knowledge base (if initialized)
 
