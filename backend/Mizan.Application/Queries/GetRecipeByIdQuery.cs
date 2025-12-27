@@ -17,6 +17,7 @@ public record RecipeDetailDto
     public string? ImageUrl { get; init; }
     public bool IsPublic { get; init; }
     public bool IsOwner { get; init; }
+    public bool IsFavorited { get; init; }
     public RecipeNutritionDto? Nutrition { get; init; }
     public List<RecipeIngredientDto> Ingredients { get; init; } = new();
     public List<RecipeInstructionDto> Instructions { get; init; } = new();
@@ -78,6 +79,7 @@ public class GetRecipeByIdQueryHandler : IRequestHandler<GetRecipeByIdQuery, Rec
             ImageUrl = recipe.ImageUrl,
             IsPublic = recipe.IsPublic,
             IsOwner = recipe.UserId == _currentUser.UserId,
+            IsFavorited = _currentUser.UserId.HasValue && await _context.FavoriteRecipes.AnyAsync(f => f.UserId == _currentUser.UserId.Value && f.RecipeId == recipe.Id, cancellationToken),
             Nutrition = recipe.Nutrition != null ? new RecipeNutritionDto
             {
                 CaloriesPerServing = recipe.Nutrition.CaloriesPerServing,

@@ -3,6 +3,7 @@ import { getUserOptionalServer } from "@/helper/session";
 import Image from "next/image";
 import Link from "next/link";
 import placeHolderImage from "@/public/placeholder-recipe.jpg";
+import RecipeActions from "./RecipeActions";
 
 export const dynamic = 'force-dynamic';
 
@@ -190,22 +191,11 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 			)}
 
 			{/* Actions */}
-			<div className="card p-6">
-				<div className="flex flex-wrap gap-3">
-					<button className="btn-primary flex-1 sm:flex-none">
-						<i className="ri-add-line" />
-						Add to Meal Plan
-					</button>
-					<button className="btn-secondary flex-1 sm:flex-none">
-						<i className="ri-heart-3-line" />
-						Save to Favorites
-					</button>
-					<button className="btn-secondary flex-1 sm:flex-none">
-						<i className="ri-share-line" />
-						Share
-					</button>
-				</div>
-			</div>
+			<RecipeActions
+				recipeId={recipeId}
+				isOwner={recipe.isOwner || false}
+				isFavorited={recipe.isFavorited || false}
+			/>
 		</div>
 	);
 }

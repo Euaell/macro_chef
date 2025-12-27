@@ -40,4 +40,35 @@ public class RecipesController : ControllerBase
         var result = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetRecipeById), new { id = result.Id }, result);
     }
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<ActionResult<UpdateRecipeResult>> UpdateRecipe(Guid id, [FromBody] UpdateRecipeCommand command)
+    {
+        if (id != command.Id)
+            return BadRequest("ID mismatch");
+
+        var result = await _mediator.Send(command);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize]
+    public async Task<ActionResult<DeleteRecipeResult>> DeleteRecipe(Guid id)
+    {
+        var result = await _mediator.Send(new DeleteRecipeCommand { Id = id });
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result);
+    }
+
+
+    [HttpPost("{id}/favorite")]
+    [Authorize]
+    public async Task<ActionResult<ToggleFavoriteRecipeResult>> ToggleFavorite(Guid id)
+    {
+        var result = await _mediator.Send(new ToggleFavoriteRecipeCommand { RecipeId = id });
+        return Ok(result);
+    }
 }

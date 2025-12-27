@@ -26,6 +26,8 @@ public class MizanDbContext : DbContext, IMizanDbContext
     public DbSet<RecipeInstruction> RecipeInstructions => Set<RecipeInstruction>();
     public DbSet<RecipeNutrition> RecipeNutritions => Set<RecipeNutrition>();
     public DbSet<RecipeTag> RecipeTags => Set<RecipeTag>();
+    public DbSet<FavoriteRecipe> FavoriteRecipes => Set<FavoriteRecipe>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<FoodDiaryEntry> FoodDiaryEntries => Set<FoodDiaryEntry>();
 
     // Meal Planning
@@ -213,6 +215,18 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.RecipeId).HasColumnName("recipe_id");
             entity.Property(e => e.Tag).HasColumnName("tag").HasMaxLength(50).IsRequired();
             entity.HasOne(e => e.Recipe).WithMany(r => r.Tags).HasForeignKey(e => e.RecipeId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // FavoriteRecipe configuration
+        modelBuilder.Entity<FavoriteRecipe>(entity =>
+        {
+            entity.ToTable("favorite_recipes");
+            entity.HasKey(e => new { e.UserId, e.RecipeId });
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.RecipeId).HasColumnName("recipe_id");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Recipe).WithMany().HasForeignKey(e => e.RecipeId).OnDelete(DeleteBehavior.Cascade);
         });
 
         // FoodDiaryEntry configuration
@@ -532,6 +546,22 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // AuditLog configuration
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("audit_logs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Action).HasColumnName("action").HasMaxLength(50).IsRequired();
+            entity.Property(e => e.EntityType).HasColumnName("entity_type").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.EntityId).HasColumnName("entity_id").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Details).HasColumnName("details");
+            entity.Property(e => e.IpAddress).HasColumnName("ip_address").HasMaxLength(45);
+            entity.Property(e => e.Timestamp).HasColumnName("timestamp").HasDefaultValueSql("NOW()");
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
         });
     }
 }
