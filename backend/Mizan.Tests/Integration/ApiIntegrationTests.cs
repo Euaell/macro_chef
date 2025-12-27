@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
@@ -21,6 +22,11 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
     {
         // Use real PostgreSQL database from connection string or environment variable
         // This works in both docker-compose and GitHub Actions environments
+
+        // Set environment variables for BFF configuration required by startup validation
+        Environment.SetEnvironmentVariable("Bff__TrustedSecret", "test-secret-for-integration-tests");
+        Environment.SetEnvironmentVariable("Bff__JwksUrl", "http://localhost:3000/api/auth/jwks");
+
         _factory = factory;
 
         _client = _factory.CreateClient();
@@ -167,7 +173,7 @@ public record FoodResponse
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
-    public int CaloriesPer100g { get; init; }
+    public decimal CaloriesPer100g { get; init; }
 }
 
 public record GetRecipesResponse

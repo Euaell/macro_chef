@@ -72,7 +72,7 @@ public class LogFoodCommandTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().NotBeEmpty();
-        result.Calories.Should().Be((int)(165 * 1.5));
+        result.Calories.Should().Be(165 * 1.5m);
         result.ProteinGrams.Should().Be(31 * 1.5m);
         result.Message.Should().Contain("Chicken Breast");
 
