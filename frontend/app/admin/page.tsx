@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
-import { users, sessions } from "@/db/schema";
-import { eq, sql, count } from "drizzle-orm";
+import { users, sessions, foods } from "@/db/schema";
+import { eq, sql, count, gte } from "drizzle-orm";
 import LiveAuditLog from "./LiveAuditLog";
+import { getAuditLogs } from "@/data/audit";
 
 
 export const metadata = {
@@ -47,12 +48,26 @@ async function getAdminStats() {
     .orderBy(sql`${users.createdAt} DESC`)
     .limit(5);
 
+  const totalFoods = await db
+    .select({ count: count() })
+    .from(foods)
+    .then((res) => res[0]?.count || 0);
+
+  const yesterday = new Date();
+  yesterday.setHours(yesterday.getHours() - 24);
+
+  const recentAuditLogs = await getAuditLogs({
+    pageSize: 1,
+  }).then(res => res.totalCount);
+
   return {
     totalUsers,
     activeTrainers,
     bannedUsers,
     activeSessions,
     recentUsers,
+    totalFoods,
+    recentAuditLogs
   };
 }
 
@@ -80,7 +95,7 @@ export default async function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <StatCard
           title="Total Users"
           value={stats.totalUsers}
@@ -98,6 +113,18 @@ export default async function AdminDashboard() {
           value={stats.bannedUsers}
           link="/admin/users?banned=true"
           linkText="View banned"
+        />
+        <StatCard
+          title="Public Ingredients"
+          value={stats.totalFoods}
+          link="/admin/ingredients"
+          linkText="Manage foods"
+        />
+        <StatCard
+          title="Recent Activity"
+          value={stats.recentAuditLogs}
+          link="/admin/audit-logs"
+          linkText="View logs"
         />
         <StatCard
           title="Active Sessions"
