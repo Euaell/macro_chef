@@ -305,7 +305,7 @@ docker exec -it mizan-backend dotnet ef database update --project Mizan.Infrastr
 cd frontend
 
 # 1. Reinstall dependencies
-rm -rf node_modules bun.lockb
+rm -rf node_modules bun.lock
 bun install
 
 # 2. Clear Next.js cache
