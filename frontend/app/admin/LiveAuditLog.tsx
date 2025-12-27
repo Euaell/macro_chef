@@ -26,12 +26,14 @@ export default function LiveAuditLog() {
             const result = await fetchLiveAuditLogs(1, 10);
             setLogs(result.logs);
             setLastUpdated(new Date());
+            setCountdown(refreshInterval / 1000); // Reset countdown after successful load
         } catch (error) {
             console.error("Failed to fetch live audit logs:", error);
+            setLogs([]); // Clear logs on error
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [refreshInterval]);
 
     // Initial load
     useEffect(() => {
