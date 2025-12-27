@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
 
@@ -48,17 +49,26 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
 {
     private readonly IMizanDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILogger<CreateRecipeCommandHandler> _logger;
 
-    public CreateRecipeCommandHandler(IMizanDbContext context, ICurrentUserService currentUser)
+    public CreateRecipeCommandHandler(
+        IMizanDbContext context, 
+        ICurrentUserService currentUser,
+        ILogger<CreateRecipeCommandHandler> logger)
     {
         _context = context;
         _currentUser = currentUser;
+        _logger = logger;
     }
 
     public async Task<CreateRecipeResult> Handle(CreateRecipeCommand request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("[CreateRecipe] Starting recipe creation: Title={Title}, Servings={Servings}, IngredientCount={Count}", 
+            request.Title, request.Servings, request.Ingredients?.Count ?? 0);
+
         if (!_currentUser.UserId.HasValue)
         {
+            _logger.LogWarning("[CreateRecipe] Unauthorized attempt - no user ID");
             throw new UnauthorizedAccessException("User must be authenticated");
         }
 
@@ -77,6 +87,8 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+        _logger.LogDebug("[CreateRecipe] Created recipe entity: Id={Id}, UserId={UserId}", recipe.Id, recipe.UserId);
 
         // Add ingredients
         for (int i = 0; i < request.Ingredients.Count; i++)
@@ -123,13 +135,16 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             .Select(i => i.FoodId!.Value)
             .ToList();
 
-
+        _logger.LogInformation("[CreateRecipe] Processing nutrition calculation. IngredientFoodIds count: {Count}", ingredientFoodIds.Count);
 
         if (ingredientFoodIds.Any())
         {
             var foods = await _context.Foods
                 .Where(f => ingredientFoodIds.Contains(f.Id))
                 .ToDictionaryAsync(f => f.Id, cancellationToken);
+
+            _logger.LogInformation("[CreateRecipe] Found {FoodCount} foods in database for {RequestCount} ingredient IDs", 
+                foods.Count, ingredientFoodIds.Count);
 
             decimal totalCalories = 0;
             decimal totalProtein = 0;
@@ -143,6 +158,9 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 {
                     var ratio = ingredientDto.Amount!.Value / 100m; // Ensure decimal division
                     
+                    _logger.LogDebug("[CreateRecipe] Processing ingredient: Food={FoodName}, Amount={Amount}g, Ratio={Ratio}", 
+                        food.Name, ingredientDto.Amount, ratio);
+                    
                     // Use decimal for calories during calculation to avoid early truncation
                     totalCalories += food.CaloriesPer100g * ratio;
                     totalProtein += food.ProteinPer100g * ratio;
@@ -150,10 +168,17 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                     totalFat += food.FatPer100g * ratio;
                     totalFiber += (food.FiberPer100g ?? 0) * ratio;
                 }
+                else
+                {
+                    _logger.LogWarning("[CreateRecipe] Food not found for ingredient: FoodId={FoodId}", ingredientDto.FoodId);
+                }
             }
 
             // Calculate per serving values
             var servings = request.Servings > 0 ? request.Servings : 1;
+            
+            _logger.LogInformation("[CreateRecipe] Totals BEFORE division: Calories={Cal}, Protein={Prot}g, Carbs={Carbs}g, Fat={Fat}g, Fiber={Fiber}g, Servings={Servings}", 
+                totalCalories, totalProtein, totalCarbs, totalFat, totalFiber, servings);
             
             recipe.Nutrition = new RecipeNutrition
             {
@@ -164,9 +189,14 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 FatGrams = totalFat / servings,
                 FiberGrams = totalFiber / servings
             };
+
+            _logger.LogInformation("[CreateRecipe] Final nutrition PER SERVING: Calories={Cal}, Protein={Prot}g, Carbs={Carbs}g, Fat={Fat}g, Fiber={Fiber}g", 
+                recipe.Nutrition.CaloriesPerServing, recipe.Nutrition.ProteinGrams, recipe.Nutrition.CarbsGrams, 
+                recipe.Nutrition.FatGrams, recipe.Nutrition.FiberGrams);
         }
         else if (request.Nutrition != null)
         {
+            _logger.LogInformation("[CreateRecipe] No ingredients with FoodId, using provided nutrition data");
             // Fallback to provided nutrition only if no ingredients are linked
             recipe.Nutrition = new RecipeNutrition
             {
@@ -180,9 +210,15 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 SodiumMg = 0
             };
         }
+        else
+        {
+            _logger.LogWarning("[CreateRecipe] No ingredients with FoodId and no nutrition data provided");
+        }
 
         _context.Recipes.Add(recipe);
         await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("[CreateRecipe] Recipe saved successfully: Id={Id}, Title={Title}", recipe.Id, recipe.Title);
 
         return new CreateRecipeResult
         {

@@ -123,30 +123,30 @@ export default function Page() {
 		setSelectedIngredients(newIngredients);
 	}
 
-	function handleSubmit(e: React.FormEvent) {
-		e.preventDefault();
-		setIsSubmitting(true);
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault()
+		setIsSubmitting(true)
+
 		const recipeData = {
 			title: name,
 			description,
-			imageUrl: images[0], // Use first image as main image
 			ingredients: selectedIngredients.map(ing => ({
 				foodId: ing.ingredient!.id,
 				ingredientText: ing.name,
 				amount: ing.amount!,
-				unit: ing.unit,
+				unit: ing.unit
 			})),
 			instructions: instructions.split('\n').filter(line => line.trim()),
 			servings,
 			tags: Array.from(tags),
-			nutrition: {
-				caloriesPerServing: Math.round(totalMacros.calories / (servings || 1)),
-				proteinGrams: totalMacros.protein / (servings || 1),
-				carbsGrams: totalMacros.carbs / (servings || 1),
-				fatGrams: totalMacros.fat / (servings || 1),
-				fiberGrams: totalMacros.fiber / (servings || 1)
-			}
+			// prepTimeMinutes: prepTime || undefined, // Assuming prepTime is not yet implemented
+			// cookTimeMinutes: cookTime || undefined, // Assuming cookTime is not yet implemented
+			imageUrl: images[0] || undefined,
+			isPublic: true
+			// NOTE: Nutrition is calculated on backend from ingredients
 		}
+
+		console.log('[Recipe Create] Submitting recipe:', JSON.stringify(recipeData, null, 2));
 
 		fetch('/api/bff/Recipes', {
 			method: 'POST',
@@ -156,14 +156,21 @@ export default function Page() {
 			body: JSON.stringify(recipeData),
 		})
 			.then(res => {
+				console.log('[Recipe Create] Response status:', res.status);
 				if (!res.ok) {
-					throw new Error(`Failed to create recipe: ${res.status}`);
+					return res.text().then(text => {
+						console.error('[Recipe Create] Error response:', text);
+						throw new Error(`Failed to create recipe: ${res.status}`);
+					});
 				}
 				return res.json();
 			})
-			.then(() => router.push('/recipes'))
+			.then((data) => {
+				console.log('[Recipe Create] Success:', data);
+				router.push('/recipes');
+			})
 			.catch(err => {
-				console.error('Recipe creation failed:', err);
+				console.error('[Recipe Create] Failed:', err);
 				alert('Failed to create recipe. Please try again.');
 			})
 			.finally(() => setIsSubmitting(false))

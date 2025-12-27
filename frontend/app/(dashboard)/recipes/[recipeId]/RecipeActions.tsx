@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 interface RecipeActionsProps {
     recipeId: string;
@@ -14,11 +15,12 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     const [isFavorited, setIsFavorited] = useState(initialFavorited);
     const [isToggling, setIsToggling] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const handleToggleFavorite = async () => {
         setIsToggling(true);
         try {
-            const response = await fetch(`/api/recipes/${recipeId}/favorite`, {
+            const response = await fetch(`/api/bff/Recipes/${recipeId}/favorite`, {
                 method: "POST",
             });
 
@@ -36,31 +38,41 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     };
 
     const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this recipe? This action cannot be undone.")) {
-            return;
-        }
-
+        console.log('[Recipe Delete] Starting delete for recipe:', recipeId);
         setIsDeleting(true);
+        setShowDeleteModal(false);
+
         try {
-            const response = await fetch(`/api/recipes/${recipeId}`, {
+            console.log('[Recipe Delete] Sending DELETE request to:', `/api/bff/Recipes/${recipeId}`);
+            const response = await fetch(`/api/bff/Recipes/${recipeId}`, {
                 method: "DELETE",
             });
 
+            console.log('[Recipe Delete] Response status:', response.status);
+
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || "Failed to delete recipe");
+                const text = await response.text();
+                console.error('[Recipe Delete] Error response:', text);
+
+                try {
+                    const data = JSON.parse(text);
+                    throw new Error(data.message || "Failed to delete recipe");
+                } catch {
+                    throw new Error(`Failed to delete recipe: ${response.status}`);
+                }
             }
+
+            // Success - DELETE typically returns 204 No Content or 200 with JSON
+            console.log('[Recipe Delete] Success - recipe deleted');
 
             router.push("/recipes");
             router.refresh();
         } catch (error: any) {
-            console.error("Error deleting recipe:", error);
+            console.error('[Recipe Delete] Failed:', error);
             alert(error.message || "Failed to delete recipe");
-        } finally {
             setIsDeleting(false);
         }
     };
-
     const handleShare = async () => {
         const url = `${window.location.origin}/recipes/${recipeId}`;
         try {
@@ -78,47 +90,59 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     };
 
     return (
-        <div className="card p-6 space-y-4">
-            {/* Primary Actions */}
-            <div className="flex flex-wrap gap-3">
-                <button onClick={handleAddToMealPlan} className="btn-primary flex-1 sm:flex-none">
-                    <i className="ri-add-line" />
-                    Add to Meal Plan
-                </button>
-                <button
-                    onClick={handleToggleFavorite}
-                    disabled={isToggling}
-                    className={`btn-secondary flex-1 sm:flex-none ${isFavorited ? "!bg-red-100 !text-red-600" : ""}`}
-                >
-                    <i className={isFavorited ? "ri-heart-3-fill" : "ri-heart-3-line"} />
-                    {isFavorited ? "Favorited" : "Save to Favorites"}
-                </button>
-                <button onClick={handleShare} className="btn-secondary flex-1 sm:flex-none">
-                    <i className="ri-share-line" />
-                    Share
-                </button>
-            </div>
+        <>
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDelete}
+                title="Delete Recipe"
+                message="Are you sure you want to delete this recipe? This action cannot be undone."
+                confirmText="Delete Recipe"
+                isLoading={isDeleting}
+            />
 
-            {/* Owner Actions */}
-            {isOwner && (
-                <div className="flex flex-wrap gap-3 pt-3 border-t border-slate-200">
-                    <button
-                        onClick={() => router.push(`/recipes/${recipeId}/edit`)}
-                        className="btn-secondary flex-1 sm:flex-none"
-                    >
-                        <i className="ri-edit-line" />
-                        Edit Recipe
+            <div className="card p-6 space-y-4">
+                {/* Primary Actions */}
+                <div className="flex flex-wrap gap-3">
+                    <button onClick={handleAddToMealPlan} className="btn-primary flex-1 sm:flex-none">
+                        <i className="ri-add-line" />
+                        Add to Meal Plan
                     </button>
                     <button
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="btn-secondary flex-1 sm:flex-none !text-red-600 !border-red-200 hover:!bg-red-50"
+                        onClick={handleToggleFavorite}
+                        disabled={isToggling}
+                        className={`btn-secondary flex-1 sm:flex-none ${isFavorited ? "!bg-red-100 !text-red-600" : ""}`}
                     >
-                        <i className="ri-delete-bin-line" />
-                        {isDeleting ? "Deleting..." : "Delete Recipe"}
+                        <i className={isFavorited ? "ri-heart-3-fill" : "ri-heart-3-line"} />
+                        {isFavorited ? "Favorited" : "Save to Favorites"}
+                    </button>
+                    <button onClick={handleShare} className="btn-secondary flex-1 sm:flex-none">
+                        <i className="ri-share-line" />
+                        Share
                     </button>
                 </div>
-            )}
-        </div>
+
+                {/* Owner Actions */}
+                {isOwner && (
+                    <div className="flex flex-wrap gap-3 pt-3 border-t border-slate-200">
+                        <button
+                            onClick={() => router.push(`/recipes/${recipeId}/edit`)}
+                            className="btn-secondary flex-1 sm:flex-none"
+                        >
+                            <i className="ri-edit-line" />
+                            Edit Recipe
+                        </button>
+                        <button
+                            onClick={() => setShowDeleteModal(true)}
+                            disabled={isDeleting}
+                            className="btn-secondary flex-1 sm:flex-none !text-red-600 !border-red-200 hover:!bg-red-50"
+                        >
+                            <i className="ri-delete-bin-line" />
+                            {isDeleting ? "Deleting..." : "Delete Recipe"}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </>
     );
 }

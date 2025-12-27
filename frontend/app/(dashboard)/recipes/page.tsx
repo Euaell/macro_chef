@@ -124,22 +124,22 @@ export default async function Page({
 									</div>
 
 									{/* Macro Pills */}
-									<div className="flex flex-wrap gap-2">
-										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-medium">
+									<div className="flex flex-wrap gap-2 mt-4">
+										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 text-sm font-medium">
 											<i className="ri-fire-line" />
-											{recipe.calories || 0} kcal
+											{recipe.nutrition?.caloriesPerServing || 0} kcal
 										</span>
-										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-sm font-medium">
+										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-sm font-medium">
 											<i className="ri-heart-pulse-line" />
-											{recipe.protein || 0}g protein
+											{recipe.nutrition?.proteinGrams?.toFixed(0) || 0}g protein
 										</span>
-										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 text-sm font-medium">
+										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 text-sm font-medium">
 											<i className="ri-bread-line" />
-											{recipe.carbs || 0}g carbs
+											{recipe.nutrition?.carbsGrams?.toFixed(0) || 0}g carbs
 										</span>
-										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700 text-sm font-medium">
+										<span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 text-yellow-700 text-sm font-medium">
 											<i className="ri-drop-line" />
-											{recipe.fat || 0}g fat
+											{recipe.nutrition?.fatGrams?.toFixed(0) || 0}g fat
 										</span>
 									</div>
 								</div>
