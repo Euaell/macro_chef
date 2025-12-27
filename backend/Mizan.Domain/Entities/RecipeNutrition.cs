@@ -3,6 +3,7 @@ namespace Mizan.Domain.Entities;
 public class RecipeNutrition
 {
     public Guid RecipeId { get; set; }
+    // TODO: DB column is currently int?, cast to decimal? if needed until migration is applied
     public decimal? CaloriesPerServing { get; set; }
     public decimal? ProteinGrams { get; set; }
     public decimal? CarbsGrams { get; set; }
