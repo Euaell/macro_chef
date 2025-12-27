@@ -4,7 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { addMeal } from "@/actions/meal";
 import { EMPTY_FORM_STATE } from "@/helper/FormErrorHandler";
-import { FieldError } from "../FieldError";
+import { FieldError } from "@/components/FieldError";
 import Macros from "@/types/macro";
 
 interface AddMealFromRecipeProps {

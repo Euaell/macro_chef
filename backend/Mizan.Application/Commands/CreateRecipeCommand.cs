@@ -114,13 +114,14 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
         {
             for (int i = 0; i < request.Instructions.Count; i++)
             {
-            recipe.Instructions.Add(new RecipeInstruction
-            {
-                Id = Guid.NewGuid(),
-                RecipeId = recipe.Id,
-                StepNumber = i + 1,
-                Instruction = request.Instructions[i]
-            });
+                recipe.Instructions.Add(new RecipeInstruction
+                {
+                    Id = Guid.NewGuid(),
+                    RecipeId = recipe.Id,
+                    StepNumber = i + 1,
+                    Instruction = request.Instructions[i]
+                });
+            }
         }
 
         // Add tags

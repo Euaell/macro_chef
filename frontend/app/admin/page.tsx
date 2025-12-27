@@ -152,6 +152,18 @@ export default async function AdminDashboard() {
           link="/admin/relationships"
           icon="🤝"
         />
+        <QuickActionCard
+          title="Ingredient Management"
+          description="Add, edit, and verify public food ingredients"
+          link="/admin/ingredients"
+          icon="🍎"
+        />
+        <QuickActionCard
+          title="Audit Logs"
+          description="View system-wide activity and security logs"
+          link="/admin/audit-logs"
+          icon="📋"
+        />
       </div>
     </div>
   );
