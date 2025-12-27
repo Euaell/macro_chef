@@ -166,7 +166,8 @@ When reasoning through problems, apply these principles:
 ### 2. Investigate the Codebase
 - **Check `.fpf/context.md` first** — Project context, constraints, and tech stack
 - **Check `.fpf/knowledge/`** — Project knowledge base with verified claims
-- **Check `.context/` directory** — Architectural documentation and design decisions
+- **Check `docs/` directory** — Comprehensive documentation (architecture, API, deployment, testing)
+- **Check `docs/context/` directory** — Design decisions and access control documentation
 - Use Task tool for broader/multi-file exploration (preferred for context efficiency)
 - Explore relevant files and directories
 - Search for key functions, classes, variables
@@ -393,7 +394,7 @@ await chatService.sendMessage(recipientId, message);
 - SignalR uses Redis backplane for horizontal scaling
 - Configured in `Program.cs` with `AddStackExchangeRedis`
 
-See `SIGNALR_IMPLEMENTATION.md` for detailed implementation guide.
+See `docs/SIGNALR_IMPLEMENTATION.md` for detailed implementation guide.
 
 ## Caching Strategy
 
@@ -622,10 +623,15 @@ mcp__MCP_DOCKER__listRepositoryTags
 
 ## Documentation Files
 
-- `ARCHITECTURE.md` - Comprehensive architecture documentation
-- `SIGNALR_IMPLEMENTATION.md` - SignalR setup and usage guide
 - `README.md` - Getting started and deployment
-- `.context/` - Design decisions and access control documentation
+- `docs/ARCHITECTURE.md` - Comprehensive architecture documentation
+- `docs/API_REFERENCE.md` - Complete API endpoint documentation
+- `docs/DEPLOYMENT_GUIDE.md` - Production deployment instructions
+- `docs/TESTING_GUIDE.md` - Testing strategy and how to run tests
+- `docs/SIGNALR_IMPLEMENTATION.md` - SignalR setup and usage guide
+- `docs/SECURITY_ANALYSIS.md` - Security audit and authorization patterns
+- `docs/SECURITY.md` - Security policies and vulnerability reporting
+- `docs/context/` - Design decisions and access control documentation
 - `.fpf/` - First Principles Framework knowledge base (if initialized)
 
 ## Environment Variables

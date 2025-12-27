@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Mizan.Application.Interfaces;
 using Mizan.Domain.Entities;
 
@@ -131,8 +132,54 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             });
         }
 
-        // Add nutrition
-        if (request.Nutrition != null)
+        // Calculate nutrition from ingredients
+        var ingredientFoodIds = request.Ingredients
+            .Where(i => i.FoodId.HasValue)
+            .Select(i => i.FoodId!.Value)
+            .ToList();
+
+        if (ingredientFoodIds.Any())
+        {
+            var foods = await _context.Foods
+                .Where(f => ingredientFoodIds.Contains(f.Id))
+                .ToDictionaryAsync(f => f.Id, cancellationToken);
+
+            int totalCalories = 0;
+            decimal totalProtein = 0;
+            decimal totalCarbs = 0;
+            decimal totalFat = 0;
+            decimal totalFiber = 0;
+
+            foreach (var ingredientDto in request.Ingredients.Where(i => i.FoodId.HasValue && i.Amount.HasValue))
+            {
+                if (foods.TryGetValue(ingredientDto.FoodId!.Value, out var food))
+                {
+                    var ratio = ingredientDto.Amount.Value / 100;
+                    totalCalories += (int)(food.CaloriesPer100g * ratio);
+                    totalProtein += food.ProteinPer100g * ratio;
+                    totalCarbs += food.CarbsPer100g * ratio;
+                    totalFat += food.FatPer100g * ratio;
+                    totalFiber += (food.FiberPer100g ?? 0) * ratio;
+                }
+            }
+
+            var caloriesPerServing = request.Servings > 0 ? totalCalories / request.Servings : totalCalories;
+            var proteinPerServing = request.Servings > 0 ? totalProtein / request.Servings : totalProtein;
+            var carbsPerServing = request.Servings > 0 ? totalCarbs / request.Servings : totalCarbs;
+            var fatPerServing = request.Servings > 0 ? totalFat / request.Servings : totalFat;
+            var fiberPerServing = request.Servings > 0 ? totalFiber / request.Servings : totalFiber;
+
+            recipe.Nutrition = new RecipeNutrition
+            {
+                RecipeId = recipe.Id,
+                CaloriesPerServing = caloriesPerServing,
+                ProteinGrams = proteinPerServing,
+                CarbsGrams = carbsPerServing,
+                FatGrams = fatPerServing,
+                FiberGrams = fiberPerServing
+            };
+        }
+        else if (request.Nutrition != null)
         {
             recipe.Nutrition = new RecipeNutrition
             {

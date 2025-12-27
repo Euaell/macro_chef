@@ -157,9 +157,9 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 							{recipe.instructions.map((instruction, index) => (
 								<li key={index} className="flex gap-3">
 									<div className="w-8 h-8 rounded-lg bg-accent-100 text-accent-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-										{index + 1}
+										{instruction.stepNumber || index + 1}
 									</div>
-									<p className="text-slate-700 pt-1">{instruction}</p>
+									<p className="text-slate-700 pt-1">{instruction.instruction}</p>
 								</li>
 							))}
 						</ol>
