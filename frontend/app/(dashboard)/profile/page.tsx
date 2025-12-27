@@ -265,6 +265,79 @@ export default function ProfilePage() {
 				</div>
 			)}
 
+			{/* Find a Trainer - Only visible for regular users (non-trainers) */}
+			{!isTrainer && (
+				<div className="card p-6 border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+					<div className="flex items-center gap-3 mb-4">
+						<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+							<i className="ri-user-search-line text-xl text-white" />
+						</div>
+						<div>
+							<h2 className="font-semibold text-slate-900">Personal Training</h2>
+							<p className="text-sm text-slate-600">Connect with a certified trainer</p>
+						</div>
+					</div>
+
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<Link href="/trainers" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+									<i className="ri-search-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">Find a Trainer</h3>
+									<p className="text-xs text-slate-500">Browse available trainers</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-blue-500 transition-colors" />
+							</div>
+						</Link>
+
+						<Link href="/trainers/my-trainer" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center">
+									<i className="ri-user-heart-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">My Trainer</h3>
+									<p className="text-xs text-slate-500">View current trainer</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-blue-500 transition-colors" />
+							</div>
+						</Link>
+
+						<Link href="/trainers/requests" className="card-hover p-4 bg-white group">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+									<i className="ri-mail-send-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">My Requests</h3>
+									<p className="text-xs text-slate-500">Pending trainer requests</p>
+								</div>
+								<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-blue-500 transition-colors" />
+							</div>
+						</Link>
+
+						<div className="card-hover p-4 bg-white">
+							<div className="flex items-center gap-3">
+								<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center">
+									<i className="ri-star-line text-lg text-white" />
+								</div>
+								<div className="flex-1">
+									<h3 className="font-medium text-slate-900">Benefits</h3>
+									<div className="text-xs text-slate-500 mt-1 space-y-1">
+										<p>• Personalized meal plans</p>
+										<p>• Custom workout programs</p>
+										<p>• Progress tracking</p>
+										<p>• Direct messaging</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Account Settings */}
 			<div className="card p-6 space-y-4">
 				<h2 className="font-semibold text-slate-900 flex items-center gap-2">

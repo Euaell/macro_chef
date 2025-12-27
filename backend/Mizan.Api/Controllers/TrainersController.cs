@@ -126,6 +126,60 @@ public class TrainersController : ControllerBase
             return Unauthorized(ex.Message);
         }
     }
+
+    [HttpGet("available")]
+    public async Task<IActionResult> GetAvailableTrainers()
+    {
+        var query = new GetAvailableTrainersQuery();
+        var trainers = await _mediator.Send(query);
+
+        _logger.LogInformation("User {UserId} retrieved {Count} available trainers", _currentUser.UserId, trainers.Count);
+
+        return Ok(trainers);
+    }
+
+    [HttpGet("my-trainer")]
+    public async Task<IActionResult> GetMyTrainer()
+    {
+        try
+        {
+            var query = new GetMyTrainerQuery();
+            var trainer = await _mediator.Send(query);
+
+            if (trainer == null)
+            {
+                return NotFound("No active trainer relationship found");
+            }
+
+            _logger.LogInformation("Client {ClientId} retrieved their trainer {TrainerId}", _currentUser.UserId, trainer.TrainerId);
+
+            return Ok(trainer);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access to my trainer: {Message}", ex.Message);
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpGet("my-requests")]
+    public async Task<IActionResult> GetMyTrainerRequests()
+    {
+        try
+        {
+            var query = new GetMyTrainerRequestsQuery();
+            var requests = await _mediator.Send(query);
+
+            _logger.LogInformation("Client {ClientId} retrieved {Count} trainer requests", _currentUser.UserId, requests.Count);
+
+            return Ok(requests);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning("Unauthorized access to my trainer requests: {Message}", ex.Message);
+            return Unauthorized(ex.Message);
+        }
+    }
 }
 
 public record SendTrainerRequestRequest(Guid TrainerId);
