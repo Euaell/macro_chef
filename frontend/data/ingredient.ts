@@ -77,48 +77,92 @@ export async function getIngredientById(id: string): Promise<Ingredient | null> 
 }
 
 /**
- * Add a new ingredient (food) via the backend API - Client-side version
- * This must run on the client to access JWT tokens for authentication
+ * Add a new ingredient (food) via the backend API (Server Action)
  */
-export async function addIngredient(data: {
-    name: string;
-    brand?: string;
-    barcode?: string;
-    servingSize: number;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    fiber: number;
-}): Promise<Ingredient> {
-    const result = await callBackendApi<{ id: string }>("/api/Foods", {
-        method: "POST",
-        body: {
-            name: data.name,
-            brand: data.brand || null,
-            barcode: data.barcode || null,
-            servingSize: data.servingSize,
-            servingUnit: "g",
-            caloriesPer100g: data.calories,
-            proteinPer100g: data.protein || 0,
-            carbsPer100g: data.carbs || 0,
-            fatPer100g: data.fat || 0,
-            fiberPer100g: data.fiber || null,
-        },
-    });
+export async function addIngredient(prevState: FormState, formData: FormData): Promise<FormState> {
+    try {
+        const name = formData.get("name") as string;
+        const servingSize = parseFloat(formData.get("servingSize") as string) || 100;
+        const servingUnit = formData.get("servingUnit") as string || "g";
+        const calories = parseFloat(formData.get("calories") as string);
+        const protein = parseFloat(formData.get("protein") as string);
+        const carbs = parseFloat(formData.get("carbs") as string);
+        const fat = parseFloat(formData.get("fat") as string);
+        const fiber = parseFloat(formData.get("fiber") as string);
+        const isVerified = formData.get("isVerified") === "true";
 
-    return {
-        id: result.id,
-        name: data.name,
-        brand: data.brand,
-        barcode: data.barcode,
-        servingSize: data.servingSize,
-        servingUnit: "g",
-        caloriesPer100g: data.calories,
-        proteinPer100g: data.protein || 0,
-        carbsPer100g: data.carbs || 0,
-        fatPer100g: data.fat || 0,
-        fiberPer100g: data.fiber,
-        isVerified: false,
-    };
+        await callBackendApi("/api/Foods", {
+            method: "POST",
+            body: {
+                name,
+                servingSize,
+                servingUnit,
+                caloriesPer100g: calories,
+                proteinPer100g: protein,
+                carbsPer100g: carbs,
+                fatPer100g: fat,
+                fiberPer100g: isNaN(fiber) ? null : fiber,
+                isVerified
+            },
+        });
+
+        return createSuccessState("Ingredient added successfully!");
+    } catch (error) {
+        console.error("Failed to add ingredient:", error);
+        return createErrorState("Failed to add ingredient");
+    }
+}
+
+/**
+ * Update an existing ingredient via the backend API (Server Action)
+ */
+export async function updateIngredient(prevState: FormState, formData: FormData): Promise<FormState> {
+    try {
+        const id = formData.get("id") as string;
+        const name = formData.get("name") as string;
+        const servingSize = parseFloat(formData.get("servingSize") as string) || 100;
+        const servingUnit = formData.get("servingUnit") as string || "g";
+        const calories = parseFloat(formData.get("calories") as string);
+        const protein = parseFloat(formData.get("protein") as string);
+        const carbs = parseFloat(formData.get("carbs") as string);
+        const fat = parseFloat(formData.get("fat") as string);
+        const fiber = parseFloat(formData.get("fiber") as string);
+        const isVerified = formData.get("isVerified") === "true";
+
+        await callBackendApi(`/api/Foods/${id}`, {
+            method: "PUT",
+            body: {
+                id,
+                name,
+                servingSize,
+                servingUnit,
+                caloriesPer100g: calories,
+                proteinPer100g: protein,
+                carbsPer100g: carbs,
+                fatPer100g: fat,
+                fiberPer100g: isNaN(fiber) ? null : fiber,
+                isVerified
+            },
+        });
+
+        return createSuccessState("Ingredient updated successfully!");
+    } catch (error) {
+        console.error("Failed to update ingredient:", error);
+        return createErrorState("Failed to update ingredient");
+    }
+}
+
+/**
+ * Delete an ingredient entry
+ */
+export async function deleteIngredient(id: string): Promise<{ success: boolean; message?: string }> {
+    try {
+        await callBackendApi(`/api/Foods/${id}`, {
+            method: "DELETE",
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete ingredient:", error);
+        return { success: false, message: "Failed to delete ingredient" };
+    }
 }

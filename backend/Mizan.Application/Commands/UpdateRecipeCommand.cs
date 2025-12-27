@@ -125,6 +125,7 @@ public class UpdateRecipeCommandHandler : IRequestHandler<UpdateRecipeCommand, U
                 Instruction = request.Instructions[i]
             });
         }
+    }
 
         // Update Tags (Replace all)
         _context.RecipeTags.RemoveRange(recipe.Tags);
