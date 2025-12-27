@@ -11,7 +11,7 @@ public record CreateRecipeIngredientDto
 
 public record CreateRecipeNutritionDto
 {
-    public int? CaloriesPerServing { get; init; }
+    public decimal? CaloriesPerServing { get; init; }
     public decimal? ProteinGrams { get; init; }
     public decimal? CarbsGrams { get; init; }
     public decimal? FatGrams { get; init; }

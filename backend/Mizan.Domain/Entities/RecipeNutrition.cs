@@ -3,7 +3,7 @@ namespace Mizan.Domain.Entities;
 public class RecipeNutrition
 {
     public Guid RecipeId { get; set; }
-    public int? CaloriesPerServing { get; set; }
+    public decimal? CaloriesPerServing { get; set; }
     public decimal? ProteinGrams { get; set; }
     public decimal? CarbsGrams { get; set; }
     public decimal? FatGrams { get; set; }

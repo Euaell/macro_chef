@@ -12,11 +12,11 @@ public record GetDailyNutritionQuery : IRequest<DailyNutritionResult>
 public record DailyNutritionResult
 {
     public DateOnly Date { get; init; }
-    public int TotalCalories { get; init; }
+    public decimal TotalCalories { get; init; }
     public decimal TotalProtein { get; init; }
     public decimal TotalCarbs { get; init; }
     public decimal TotalFat { get; init; }
-    public int? TargetCalories { get; init; }
+    public decimal? TargetCalories { get; init; }
     public decimal? TargetProtein { get; init; }
     public decimal? TargetCarbs { get; init; }
     public decimal? TargetFat { get; init; }
@@ -26,7 +26,7 @@ public record DailyNutritionResult
 public record MealSummary
 {
     public string MealType { get; init; } = string.Empty;
-    public int Calories { get; init; }
+    public decimal Calories { get; init; }
     public decimal Protein { get; init; }
     public decimal Carbs { get; init; }
     public decimal Fat { get; init; }

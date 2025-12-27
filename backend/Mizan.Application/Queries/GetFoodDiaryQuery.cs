@@ -22,7 +22,7 @@ public record FoodDiaryEntryDto
     public string MealType { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public decimal Servings { get; init; }
-    public int? Calories { get; init; }
+    public decimal? Calories { get; init; }
     public decimal? ProteinGrams { get; init; }
     public decimal? CarbsGrams { get; init; }
     public decimal? FatGrams { get; init; }
@@ -31,7 +31,7 @@ public record FoodDiaryEntryDto
 
 public record DailyTotalsDto
 {
-    public int Calories { get; init; }
+    public decimal Calories { get; init; }
     public decimal Protein { get; init; }
     public decimal Carbs { get; init; }
     public decimal Fat { get; init; }

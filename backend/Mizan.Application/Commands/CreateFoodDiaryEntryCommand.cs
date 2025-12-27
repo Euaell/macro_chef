@@ -12,7 +12,7 @@ public record CreateFoodDiaryEntryCommand : IRequest<CreateFoodDiaryEntryResult>
     public DateOnly? EntryDate { get; init; }
     public string MealType { get; init; } = "SNACK";
     public decimal Servings { get; init; } = 1;
-    public int? Calories { get; init; }
+    public decimal? Calories { get; init; }
     public decimal? ProteinGrams { get; init; }
     public decimal? CarbsGrams { get; init; }
     public decimal? FatGrams { get; init; }

@@ -9,7 +9,7 @@ public interface INutritionAiService
 public record FoodAnalysisResult
 {
     public List<RecognizedFood> Foods { get; init; } = new();
-    public int TotalCalories { get; init; }
+    public decimal TotalCalories { get; init; }
     public decimal Confidence { get; init; }
 }
 
@@ -17,7 +17,7 @@ public record RecognizedFood
 {
     public string Name { get; init; } = string.Empty;
     public decimal PortionGrams { get; init; }
-    public int Calories { get; init; }
+    public decimal Calories { get; init; }
     public decimal Protein { get; init; }
     public decimal Carbs { get; init; }
     public decimal Fat { get; init; }

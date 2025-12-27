@@ -9,7 +9,7 @@ public class FoodDiaryEntry
     public DateOnly EntryDate { get; set; }
     public string MealType { get; set; } = "snack"; // breakfast, lunch, dinner, snack
     public decimal Servings { get; set; } = 1;
-    public int? Calories { get; set; }
+    public decimal? Calories { get; set; }
     public decimal? ProteinGrams { get; set; }
     public decimal? CarbsGrams { get; set; }
     public decimal? FatGrams { get; set; }

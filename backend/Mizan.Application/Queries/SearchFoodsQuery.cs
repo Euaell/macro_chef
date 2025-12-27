@@ -26,7 +26,7 @@ public record FoodDto
     public string? Barcode { get; init; }
     public decimal ServingSize { get; init; }
     public string ServingUnit { get; init; } = string.Empty;
-    public int CaloriesPer100g { get; init; }
+    public decimal CaloriesPer100g { get; init; }
     public decimal ProteinPer100g { get; init; }
     public decimal CarbsPer100g { get; init; }
     public decimal FatPer100g { get; init; }

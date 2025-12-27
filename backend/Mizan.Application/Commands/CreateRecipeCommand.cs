@@ -106,8 +106,8 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 Unit = ingredientDto.Unit,
                 SortOrder = i
             });
+            }
         }
-    }
 
         // Add instructions
         if (request.Instructions != null)
@@ -136,7 +136,7 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
         }
 
         // Calculate nutrition from ingredients
-        var ingredientFoodIds = request.Ingredients
+        var ingredientFoodIds = (request.Ingredients ?? new List<CreateRecipeIngredientDto>())
             .Where(i => i.FoodId.HasValue)
             .Select(i => i.FoodId!.Value)
             .ToList();
@@ -189,7 +189,7 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             recipe.Nutrition = new RecipeNutrition
             {
                 RecipeId = recipe.Id,
-                CaloriesPerServing = (int)(totalCalories / servings),
+                CaloriesPerServing = totalCalories / servings,
                 ProteinGrams = totalProtein / servings,
                 CarbsGrams = totalCarbs / servings,
                 FatGrams = totalFat / servings,

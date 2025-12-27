@@ -5,7 +5,7 @@ public class GoalProgress
     public Guid Id { get; set; }
     public Guid UserGoalId { get; set; }
     public Guid UserId { get; set; }
-    public int ActualCalories { get; set; }
+    public decimal ActualCalories { get; set; }
     public decimal ActualProteinGrams { get; set; }
     public decimal ActualCarbsGrams { get; set; }
     public decimal ActualFatGrams { get; set; }
