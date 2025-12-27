@@ -5,7 +5,7 @@ public class UserGoal
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string? GoalType { get; set; } // weight_loss, muscle_gain, maintenance
-    public int? TargetCalories { get; set; }
+    public decimal? TargetCalories { get; set; }
     public decimal? TargetProteinGrams { get; set; }
     public decimal? TargetCarbsGrams { get; set; }
     public decimal? TargetFatGrams { get; set; }

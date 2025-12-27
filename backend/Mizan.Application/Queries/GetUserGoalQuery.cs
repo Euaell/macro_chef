@@ -10,7 +10,7 @@ public record UserGoalDto
 {
     public Guid Id { get; init; }
     public string? GoalType { get; init; }
-    public int? TargetCalories { get; init; }
+    public decimal? TargetCalories { get; init; }
     public decimal? TargetProteinGrams { get; init; }
     public decimal? TargetCarbsGrams { get; init; }
     public decimal? TargetFatGrams { get; init; }

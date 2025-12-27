@@ -18,7 +18,7 @@ public record LogFoodCommand : IRequest<LogFoodResult>
 public record LogFoodResult
 {
     public Guid Id { get; init; }
-    public int Calories { get; init; }
+    public decimal Calories { get; init; }
     public decimal ProteinGrams { get; init; }
     public decimal CarbsGrams { get; init; }
     public decimal FatGrams { get; init; }
@@ -55,7 +55,7 @@ public class LogFoodCommandHandler : IRequestHandler<LogFoodCommand, LogFoodResu
             throw new UnauthorizedAccessException("User must be authenticated");
         }
 
-        int calories = 0;
+        decimal calories = 0;
         decimal protein = 0, carbs = 0, fat = 0;
         string itemName = "";
 
@@ -64,7 +64,7 @@ public class LogFoodCommandHandler : IRequestHandler<LogFoodCommand, LogFoodResu
             var food = await _context.Foods.FindAsync(new object[] { request.FoodId.Value }, cancellationToken);
             if (food != null)
             {
-                calories = (int)(food.CaloriesPer100g * (food.ServingSize / 100m) * request.Servings);
+                calories = food.CaloriesPer100g * (food.ServingSize / 100m) * request.Servings;
                 protein = food.ProteinPer100g * (food.ServingSize / 100m) * request.Servings;
                 carbs = food.CarbsPer100g * (food.ServingSize / 100m) * request.Servings;
                 fat = food.FatPer100g * (food.ServingSize / 100m) * request.Servings;
@@ -79,7 +79,7 @@ public class LogFoodCommandHandler : IRequestHandler<LogFoodCommand, LogFoodResu
 
             if (recipe?.Nutrition != null)
             {
-                calories = (int)((recipe.Nutrition.CaloriesPerServing ?? 0) * request.Servings);
+                calories = (recipe.Nutrition.CaloriesPerServing ?? 0) * request.Servings;
                 protein = (recipe.Nutrition.ProteinGrams ?? 0) * request.Servings;
                 carbs = (recipe.Nutrition.CarbsGrams ?? 0) * request.Servings;
                 fat = (recipe.Nutrition.FatGrams ?? 0) * request.Servings;

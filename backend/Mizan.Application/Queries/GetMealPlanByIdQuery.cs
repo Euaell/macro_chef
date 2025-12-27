@@ -27,17 +27,17 @@ public record MealPlanRecipeDetailDto
     public DateOnly Date { get; init; }
     public string MealType { get; init; } = string.Empty;
     public decimal Servings { get; init; }
-    public int? CaloriesPerServing { get; init; }
+    public decimal? CaloriesPerServing { get; init; }
 }
 
 public record MealPlanNutritionSummaryDto
 {
-    public int TotalCalories { get; init; }
+    public decimal TotalCalories { get; init; }
     public decimal TotalProteinGrams { get; init; }
     public decimal TotalCarbsGrams { get; init; }
     public decimal TotalFatGrams { get; init; }
     public int DaysCount { get; init; }
-    public int AvgCaloriesPerDay { get; init; }
+    public decimal AvgCaloriesPerDay { get; init; }
 }
 
 public class GetMealPlanByIdQueryHandler : IRequestHandler<GetMealPlanByIdQuery, MealPlanDetailDto?>
@@ -107,12 +107,12 @@ public class GetMealPlanByIdQueryHandler : IRequestHandler<GetMealPlanByIdQuery,
             Recipes = recipes,
             NutritionSummary = new MealPlanNutritionSummaryDto
             {
-                TotalCalories = (int)totalCalories,
+                TotalCalories = totalCalories,
                 TotalProteinGrams = totalProtein,
                 TotalCarbsGrams = totalCarbs,
                 TotalFatGrams = totalFat,
                 DaysCount = daysCount,
-                AvgCaloriesPerDay = daysCount > 0 ? (int)(totalCalories / daysCount) : 0
+                AvgCaloriesPerDay = daysCount > 0 ? totalCalories / daysCount : 0
             },
             CreatedAt = mealPlan.CreatedAt,
             UpdatedAt = mealPlan.UpdatedAt

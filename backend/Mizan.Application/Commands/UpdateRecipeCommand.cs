@@ -141,7 +141,7 @@ public class UpdateRecipeCommandHandler : IRequestHandler<UpdateRecipeCommand, U
 
         // Update Nutrition
         // Logic mirroring CreateRecipeCommand: Prioritize ingredients
-        var ingredientFoodIds = request.Ingredients
+        var ingredientFoodIds = (request.Ingredients ?? new List<CreateRecipeIngredientDto>())
             .Where(i => i.FoodId.HasValue)
             .Select(i => i.FoodId!.Value)
             .ToList();
@@ -178,7 +178,7 @@ public class UpdateRecipeCommandHandler : IRequestHandler<UpdateRecipeCommand, U
                 recipe.Nutrition = new RecipeNutrition { RecipeId = recipe.Id };
             }
 
-            recipe.Nutrition.CaloriesPerServing = (int)(totalCalories / servings);
+            recipe.Nutrition.CaloriesPerServing = totalCalories / servings;
             recipe.Nutrition.ProteinGrams = totalProtein / servings;
             recipe.Nutrition.CarbsGrams = totalCarbs / servings;
             recipe.Nutrition.FatGrams = totalFat / servings;

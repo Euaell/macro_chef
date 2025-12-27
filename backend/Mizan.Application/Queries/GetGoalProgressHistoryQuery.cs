@@ -21,7 +21,7 @@ public record GoalProgressEntryDto
 {
     public Guid Id { get; init; }
     public DateOnly Date { get; init; }
-    public int ActualCalories { get; init; }
+    public decimal ActualCalories { get; init; }
     public decimal ActualProteinGrams { get; init; }
     public decimal ActualCarbsGrams { get; init; }
     public decimal ActualFatGrams { get; init; }

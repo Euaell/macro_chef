@@ -18,7 +18,7 @@ public record UserDto(
 );
 
 public record UserGoalSummaryDto(
-    int? TargetCalories,
+    decimal? TargetCalories,
     decimal? TargetProteinGrams,
     decimal? TargetCarbsGrams,
     decimal? TargetFatGrams

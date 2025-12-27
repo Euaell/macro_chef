@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db/client";
 import { users, sessions } from "@/db/schema";
 import { eq, sql, count } from "drizzle-orm";
+import LiveAuditLog from "./LiveAuditLog";
+
 
 export const metadata = {
   title: "Admin Dashboard | Macro Chef",
@@ -105,31 +107,37 @@ export default async function AdminDashboard() {
         />
       </div>
 
-      <div className="bg-card rounded-lg border p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Users</h2>
-        <div className="space-y-4">
-          {stats.recentUsers.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center justify-between py-3 border-b last:border-b-0"
-            >
-              <div>
-                <p className="font-medium">{user.name || "Unnamed User"}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-card rounded-lg border p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Users</h2>
+          <div className="space-y-4">
+            {stats.recentUsers.map((user) => (
+              <div
+                key={user.id}
+                className="flex items-center justify-between py-3 border-b last:border-b-0"
+              >
+                <div>
+                  <p className="font-medium">{user.name || "Unnamed User"}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                    {user.role}
+                  </span>
+                  <a
+                    href={`/admin/users/${user.id}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    View
+                  </a>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                  {user.role}
-                </span>
-                <a
-                  href={`/admin/users/${user.id}`}
-                  className="text-sm text-primary hover:underline"
-                >
-                  View
-                </a>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:col-span-1 min-h-[500px]">
+          <LiveAuditLog />
         </div>
       </div>
 
