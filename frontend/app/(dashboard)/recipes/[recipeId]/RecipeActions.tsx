@@ -16,21 +16,31 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     const [isToggling, setIsToggling] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showCopied, setShowCopied] = useState(false);
 
     const handleToggleFavorite = async () => {
+        console.log('[Recipe Favorite] Toggling favorite for recipe:', recipeId);
         setIsToggling(true);
         try {
+            console.log('[Recipe Favorite] Sending POST to:', `/api/bff/Recipes/${recipeId}/favorite`);
             const response = await fetch(`/api/bff/Recipes/${recipeId}/favorite`, {
                 method: "POST",
             });
 
-            if (!response.ok) throw new Error("Failed to toggle favorite");
+            console.log('[Recipe Favorite] Response status:', response.status);
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('[Recipe Favorite] Error response:', text);
+                throw new Error("Failed to toggle favorite");
+            }
 
             const data = await response.json();
+            console.log('[Recipe Favorite] Success:', data);
             setIsFavorited(data.isFavorited);
             router.refresh();
         } catch (error) {
-            console.error("Error toggling favorite:", error);
+            console.error("[Recipe Favorite] Error:", error);
             alert("Failed to update favorites");
         } finally {
             setIsToggling(false);
@@ -62,7 +72,6 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
                 }
             }
 
-            // Success - DELETE typically returns 204 No Content or 200 with JSON
             console.log('[Recipe Delete] Success - recipe deleted');
 
             router.push("/recipes");
@@ -73,11 +82,13 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
             setIsDeleting(false);
         }
     };
+
     const handleShare = async () => {
         const url = `${window.location.origin}/recipes/${recipeId}`;
         try {
             await navigator.clipboard.writeText(url);
-            // Success - no need to alert
+            setShowCopied(true);
+            setTimeout(() => setShowCopied(false), 2000);
         } catch (error) {
             console.error("Error copying to clipboard:", error);
             alert("Failed to copy link");
@@ -85,7 +96,6 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     };
 
     const handleAddToMealPlan = () => {
-        // Navigate to meals page with recipe pre-selected
         router.push(`/meals?recipeId=${recipeId}`);
     };
 
@@ -116,9 +126,18 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
                         <i className={isFavorited ? "ri-heart-3-fill" : "ri-heart-3-line"} />
                         {isFavorited ? "Favorited" : "Save to Favorites"}
                     </button>
-                    <button onClick={handleShare} className="btn-secondary flex-1 sm:flex-none">
-                        <i className="ri-share-line" />
-                        Share
+                    <button onClick={handleShare} className={`btn-secondary flex-1 sm:flex-none transition-all ${showCopied ? "!bg-green-100 !text-green-700" : ""}`}>
+                        {showCopied ? (
+                            <>
+                                <i className="ri-check-line" />
+                                Copied!
+                            </>
+                        ) : (
+                            <>
+                                <i className="ri-share-line" />
+                                Share
+                            </>
+                        )}
                     </button>
                 </div>
 

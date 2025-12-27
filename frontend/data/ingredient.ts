@@ -21,16 +21,22 @@ export interface Ingredient {
 /**
  * Get all ingredients (foods) from the backend API
  */
-export async function getAllIngredient(searchTerm?: string, sortBy?: string, limit?: number): Promise<Ingredient[]> {
+export async function getAllIngredient(
+    searchTerm?: string,
+    sortBy?: string,
+    page: number = 1,
+    limit: number = 20
+): Promise<{ ingredients: Ingredient[], totalCount: number, totalPages: number }> {
     try {
         const params = new URLSearchParams();
-        params.set("Limit", String(limit || 100));
+        params.set("Page", String(page));
+        params.set("PageSize", String(limit));
         if (searchTerm) params.set("SearchTerm", searchTerm);
 
-        const result = await callBackendApi<{ foods: Ingredient[] }>(`/api/Foods/search?${params.toString()}`);
+        const result = await callBackendApi<{ foods: Ingredient[], totalCount: number }>(`/api/Foods/search?${params.toString()}`);
         let foods = result.foods || [];
 
-        // Sort if requested
+        // Sort if requested (if backend doesn't handle it yet)
         if (sortBy) {
             const sortField = sortBy as keyof Ingredient;
             foods = [...foods].sort((a, b) => {
@@ -43,10 +49,17 @@ export async function getAllIngredient(searchTerm?: string, sortBy?: string, lim
             });
         }
 
-        return foods;
+        const totalCount = result.totalCount || 0;
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return {
+            ingredients: foods,
+            totalCount,
+            totalPages
+        };
     } catch (error) {
         console.error("Failed to get ingredients:", error);
-        return [];
+        return { ingredients: [], totalCount: 0, totalPages: 0 };
     }
 }
 

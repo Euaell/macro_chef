@@ -3,15 +3,19 @@ import { getAllIngredient } from "@/data/ingredient";
 import Link from "next/link";
 import SearchBar from "@/components/IngredientTable/SearchInputField";
 import { getUserOptionalServer } from "@/helper/session";
+import Pagination from "@/components/Pagination";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(
-	{ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }>}
+	{ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
 	const user = await getUserOptionalServer();
-	const { sortBy, searchIngredient } = await searchParams;
-	const ingredients = await getAllIngredient(searchIngredient as string, sortBy as string);
+	const params = await searchParams;
+	const sortBy = params.sortBy as string;
+	const searchIngredient = params.searchIngredient as string;
+	const page = Number(params.page) || 1;
+	const { ingredients, totalPages } = await getAllIngredient(searchIngredient, sortBy, page, 10);
 
 	return (
 		<div className="space-y-6">
@@ -103,6 +107,12 @@ export default async function Page(
 					</table>
 				</div>
 			</div>
+
+			<Pagination
+				currentPage={page}
+				totalPages={totalPages}
+				baseUrl="/ingredients"
+			/>
 		</div>
 	);
 }

@@ -23,11 +23,11 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 	}
 
 	const macros = {
-		calories: recipe.calories || 0,
-		protein: recipe.protein || 0,
-		carbs: recipe.carbs || 0,
-		fat: recipe.fat || 0,
-		fiber: recipe.fiber || 0,
+		calories: recipe.nutrition?.caloriesPerServing || 0,
+		protein: recipe.nutrition?.proteinGrams || 0,
+		carbs: recipe.nutrition?.carbsGrams || 0,
+		fat: recipe.nutrition?.fatGrams || 0,
+		fiber: recipe.nutrition?.fiberGrams || 0,
 	};
 
 	return (
@@ -39,41 +39,41 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 				</Link>
 				<div>
 					<h1 className="text-2xl font-bold text-slate-900">Log from Recipe</h1>
-					<p className="text-slate-500">Add &quot;{recipe.title}&quot; to your food diary</p>
+					<p className="text-slate-500">Quick-log nutrition from &quot;{recipe.title}&quot;</p>
 				</div>
 			</div>
 
 			{/* Recipe Info Card */}
-			<div className="card p-6 bg-gradient-to-br from-brand-50 to-accent-50">
-				<div className="flex items-center gap-4 mb-4">
-					<div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center">
-						<i className="ri-restaurant-2-line text-xl text-brand-600" />
+			<div className="card p-6 bg-linear-to-br from-brand-50 to-accent-50 border-none">
+				<div className="flex items-center gap-4 mb-6">
+					<div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+						<i className="ri-restaurant-2-line text-2xl text-brand-600" />
 					</div>
 					<div>
-						<h2 className="font-semibold text-slate-900">{recipe.title}</h2>
-						<p className="text-sm text-slate-600">{recipe.servings} servings</p>
+						<h2 className="text-lg font-bold text-slate-900">{recipe.title}</h2>
+						<p className="text-sm text-slate-600">Calculated per serving ({recipe.servings} total)</p>
 					</div>
 				</div>
-				<div className="grid grid-cols-5 gap-2">
-					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-orange-600">{macros.calories}</p>
-						<p className="text-xs text-slate-500">cal</p>
+				<div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+					<div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+						<p className="text-xl font-bold text-orange-600">{macros.calories.toFixed(0)}</p>
+						<p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1">Calories</p>
 					</div>
-					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-red-600">{macros.protein}g</p>
-						<p className="text-xs text-slate-500">protein</p>
+					<div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+						<p className="text-xl font-bold text-red-600">{macros.protein.toFixed(1)}g</p>
+						<p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1">Protein</p>
 					</div>
-					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-amber-600">{macros.carbs}g</p>
-						<p className="text-xs text-slate-500">carbs</p>
+					<div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+						<p className="text-xl font-bold text-amber-600">{macros.carbs.toFixed(1)}g</p>
+						<p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1">Carbs</p>
 					</div>
-					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-yellow-600">{macros.fat}g</p>
-						<p className="text-xs text-slate-500">fat</p>
+					<div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+						<p className="text-xl font-bold text-yellow-600">{macros.fat.toFixed(1)}g</p>
+						<p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1">Fat</p>
 					</div>
-					<div className="text-center p-2 bg-white rounded-lg">
-						<p className="text-lg font-bold text-green-600">{macros.fiber}g</p>
-						<p className="text-xs text-slate-500">fiber</p>
+					<div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+						<p className="text-xl font-bold text-green-600">{macros.fiber.toFixed(1)}g</p>
+						<p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1">Fiber</p>
 					</div>
 				</div>
 			</div>

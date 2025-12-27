@@ -8,12 +8,14 @@ public record SearchFoodsQuery : IRequest<SearchFoodsResult>
 {
     public string SearchTerm { get; init; } = string.Empty;
     public string? Barcode { get; init; }
-    public int Limit { get; init; } = 20;
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
 }
 
 public record SearchFoodsResult
 {
     public List<FoodDto> Foods { get; init; } = new();
+    public int TotalCount { get; init; }
 }
 
 public record FoodDto
@@ -46,7 +48,7 @@ public class SearchFoodsQueryHandler : IRequestHandler<SearchFoodsQuery, SearchF
     public async Task<SearchFoodsResult> Handle(SearchFoodsQuery request, CancellationToken cancellationToken)
     {
         // Generate cache key based on query parameters
-        var cacheKey = $"foods:search:{request.SearchTerm?.ToLower() ?? ""}:{request.Barcode ?? ""}:{request.Limit}";
+        var cacheKey = $"foods:search:{request.SearchTerm?.ToLower() ?? ""}:{request.Barcode ?? ""}:{request.Page}:{request.PageSize}";
 
         // Try to get from cache first
         var cachedResult = await _cache.GetAsync<SearchFoodsResult>(cacheKey, cancellationToken);
@@ -71,10 +73,13 @@ public class SearchFoodsQueryHandler : IRequestHandler<SearchFoodsQuery, SearchF
                 (f.Brand != null && f.Brand.ToLower().Contains(searchTerm)));
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+
         var foods = await query
             .OrderByDescending(f => f.IsVerified)
             .ThenBy(f => f.Name)
-            .Take(request.Limit)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(f => new FoodDto
             {
                 Id = f.Id,
@@ -92,7 +97,7 @@ public class SearchFoodsQueryHandler : IRequestHandler<SearchFoodsQuery, SearchF
             })
             .ToListAsync(cancellationToken);
 
-        var result = new SearchFoodsResult { Foods = foods };
+        var result = new SearchFoodsResult { Foods = foods, TotalCount = totalCount };
 
         // Cache result for 1 hour
         await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(1), cancellationToken);
