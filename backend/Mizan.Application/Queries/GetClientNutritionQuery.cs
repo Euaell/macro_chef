@@ -76,6 +76,7 @@ public class GetClientNutritionQueryHandler : IRequestHandler<GetClientNutrition
 
         var foodEntries = await _context.FoodDiaryEntries
             .Include(fl => fl.Food)
+            .Include(fl => fl.Recipe)
             .Where(fl => fl.UserId == request.ClientId && fl.LoggedAt >= targetDate && fl.LoggedAt < nextDate)
             .OrderBy(fl => fl.LoggedAt)
             .ToListAsync(cancellationToken);

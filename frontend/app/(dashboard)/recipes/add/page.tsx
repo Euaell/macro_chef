@@ -131,7 +131,8 @@ export default function Page() {
 			description,
 			imageUrl: images[0], // Use first image as main image
 			ingredients: selectedIngredients.map(ing => ({
-				ingredientId: ing.ingredient!.id,
+				foodId: ing.ingredient!.id,
+				ingredientText: ing.name,
 				amount: ing.amount!,
 				unit: ing.unit,
 			})),

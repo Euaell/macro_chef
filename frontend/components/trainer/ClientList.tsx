@@ -3,66 +3,39 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/auth-client";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
-interface Client {
-	id: string;
-	name: string;
-	email: string;
-	image?: string;
-	status: "active" | "pending" | "paused";
-	lastActive: string;
-	goalProgress: number;
+interface TrainerClient {
+	relationshipId: string;
+	clientId: string;
+	clientName?: string;
+	clientEmail?: string;
+	status: string;
 	canViewNutrition: boolean;
 	canViewWorkouts: boolean;
+	canMessage: boolean;
+	startedAt: string;
+	endedAt?: string;
 }
 
 export function ClientList() {
-	const [clients, setClients] = useState<Client[]>([]);
+	const [clients, setClients] = useState<TrainerClient[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [filter, setFilter] = useState<"all" | "active" | "pending">("all");
+	const [filter, setFilter] = useState<"all" | "active" | "paused">("all");
+	const { toast } = useToast();
 
 	useEffect(() => {
 		async function fetchClients() {
 			try {
-				const data = await apiClient<{ clients: Client[] }>(
-					"/api/trainer/clients"
-				);
-				setClients(data.clients);
+				const data = await apiClient<TrainerClient[]>("/api/Trainers/clients");
+				setClients(data);
 			} catch (error) {
 				console.error("Failed to fetch clients:", error);
-				// Demo data
-				setClients([
-					{
-						id: "1",
-						name: "Abebe Kebede",
-						email: "abebe@example.com",
-						status: "active",
-						lastActive: "2 hours ago",
-						goalProgress: 85,
-						canViewNutrition: true,
-						canViewWorkouts: true,
-					},
-					{
-						id: "2",
-						name: "Tigist Haile",
-						email: "tigist@example.com",
-						status: "active",
-						lastActive: "1 day ago",
-						goalProgress: 62,
-						canViewNutrition: true,
-						canViewWorkouts: false,
-					},
-					{
-						id: "3",
-						name: "Dawit Yohannes",
-						email: "dawit@example.com",
-						status: "pending",
-						lastActive: "Never",
-						goalProgress: 0,
-						canViewNutrition: true,
-						canViewWorkouts: true,
-					},
-				]);
+				toast({
+					title: "Error",
+					description: "Failed to load clients",
+					variant: "destructive",
+				});
 			} finally {
 				setLoading(false);
 			}
@@ -73,7 +46,9 @@ export function ClientList() {
 
 	const filteredClients = clients.filter((client) => {
 		if (filter === "all") return true;
-		return client.status === filter;
+		if (filter === "active") return client.status === "active";
+		if (filter === "paused") return client.status === "paused";
+		return true;
 	});
 
 	if (loading) {
@@ -95,7 +70,7 @@ export function ClientList() {
 	return (
 		<div>
 			<div className="flex space-x-2 mb-4">
-				{(["all", "active", "pending"] as const).map((f) => (
+				{(["all", "active", "paused"] as const).map((f) => (
 					<button
 						key={f}
 						onClick={() => setFilter(f)}
@@ -113,52 +88,33 @@ export function ClientList() {
 			<div className="space-y-4">
 				{filteredClients.map((client) => (
 					<div
-						key={client.id}
+						key={client.relationshipId}
 						className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
 					>
 						<div className="flex items-center space-x-3">
 							<div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-								{client.image ? (
-									<img
-										src={client.image}
-										alt={client.name}
-										className="w-10 h-10 rounded-full"
-									/>
-								) : (
-									<span className="text-green-600 font-semibold">
-										{client.name.charAt(0)}
-									</span>
-								)}
+								<span className="text-green-600 font-semibold">
+									{(client.clientName || client.clientEmail || "?").charAt(0)}
+								</span>
 							</div>
 							<div>
-								<p className="font-medium">{client.name}</p>
+								<p className="font-medium">
+									{client.clientName || client.clientEmail || "Unknown Client"}
+								</p>
 								<p className="text-sm text-gray-500">
-									Last active: {client.lastActive}
+									Started: {new Date(client.startedAt).toLocaleDateString()}
 								</p>
 							</div>
 						</div>
 
 						<div className="flex items-center space-x-4">
-							{client.status === "pending" ? (
-								<span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-									Pending
-								</span>
-							) : (
-								<div className="text-right">
-									<div className="w-24 bg-gray-200 rounded-full h-2">
-										<div
-											className="bg-green-600 rounded-full h-2"
-											style={{ width: `${client.goalProgress}%` }}
-										></div>
-									</div>
-									<span className="text-xs text-gray-500">
-										{client.goalProgress}% goal
-									</span>
-								</div>
-							)}
+							<div className="text-right text-xs text-gray-500">
+								{client.canViewNutrition && <div>✓ Nutrition</div>}
+								{client.canViewWorkouts && <div>✓ Workouts</div>}
+							</div>
 
 							<Link
-								href={`/trainer/clients/${client.id}`}
+								href={`/trainer/clients/${client.clientId}`}
 								className="p-2 hover:bg-gray-200 rounded-full"
 							>
 								<i className="ri-arrow-right-line text-gray-600"></i>

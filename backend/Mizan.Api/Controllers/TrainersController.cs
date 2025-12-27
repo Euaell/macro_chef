@@ -42,7 +42,14 @@ public class TrainersController : ControllerBase
     [HttpPost("respond")]
     public async Task<IActionResult> Respond([FromBody] RespondRequest request)
     {
-        var command = new RespondToTrainerRequestCommand(request.RelationshipId, request.Accept);
+        var command = new RespondToTrainerRequestCommand(
+            request.RelationshipId,
+            request.Accept,
+            request.CanViewNutrition,
+            request.CanViewWorkouts,
+            request.CanViewMeasurements,
+            request.CanMessage
+        );
         var success = await _mediator.Send(command);
 
         if (!success)
@@ -122,4 +129,11 @@ public class TrainersController : ControllerBase
 }
 
 public record SendTrainerRequestRequest(Guid TrainerId);
-public record RespondRequest(Guid RelationshipId, bool Accept);
+public record RespondRequest(
+    Guid RelationshipId,
+    bool Accept,
+    bool? CanViewNutrition = null,
+    bool? CanViewWorkouts = null,
+    bool? CanViewMeasurements = null,
+    bool? CanMessage = null
+);

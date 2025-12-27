@@ -4,7 +4,14 @@ using Mizan.Application.Interfaces;
 
 namespace Mizan.Application.Commands;
 
-public record RespondToTrainerRequestCommand(Guid RelationshipId, bool Accept) : IRequest<bool>;
+public record RespondToTrainerRequestCommand(
+    Guid RelationshipId,
+    bool Accept,
+    bool? CanViewNutrition = null,
+    bool? CanViewWorkouts = null,
+    bool? CanViewMeasurements = null,
+    bool? CanMessage = null
+) : IRequest<bool>;
 
 public class RespondToTrainerRequestCommandHandler : IRequestHandler<RespondToTrainerRequestCommand, bool>
 {
@@ -29,10 +36,29 @@ public class RespondToTrainerRequestCommandHandler : IRequestHandler<RespondToTr
             relationship.Status = "active";
             relationship.StartedAt = DateTime.UtcNow;
 
-            // Create a chat conversation for them if not exists (though typically created on first message, but good to have)
+            if (request.CanViewNutrition.HasValue)
+            {
+                relationship.CanViewNutrition = request.CanViewNutrition.Value;
+            }
+
+            if (request.CanViewWorkouts.HasValue)
+            {
+                relationship.CanViewWorkouts = request.CanViewWorkouts.Value;
+            }
+
+            if (request.CanViewMeasurements.HasValue)
+            {
+                relationship.CanViewMeasurements = request.CanViewMeasurements.Value;
+            }
+
+            if (request.CanMessage.HasValue)
+            {
+                relationship.CanMessage = request.CanMessage.Value;
+            }
+
             var existingConv = await _context.ChatConversations
                 .FirstOrDefaultAsync(c => c.TrainerClientRelationshipId == relationship.Id, cancellationToken);
-            
+
             if (existingConv == null)
             {
                 _context.ChatConversations.Add(new Domain.Entities.ChatConversation

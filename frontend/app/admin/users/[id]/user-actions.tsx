@@ -71,7 +71,7 @@ export function UserActions({ user }: { user: User }) {
     try {
       await authClient.admin.setRole({
         userId: user.id,
-        role: role as "user" | "admin",
+        role: role as "user" | "admin" | "trainer",
       });
 
       setShowRoleDialog(false);

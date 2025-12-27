@@ -43,7 +43,7 @@ public class GetGoalProgressHistoryHandler : IRequestHandler<GetGoalProgressHist
     public async Task<GoalProgressHistoryDto> Handle(GetGoalProgressHistoryQuery request, CancellationToken cancellationToken)
     {
         var userId = _currentUserService.UserId;
-        if (userId == Guid.Empty)
+        if (!userId.HasValue)
         {
             return new GoalProgressHistoryDto();
         }
