@@ -211,9 +211,7 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 ProteinGrams = request.Nutrition.ProteinGrams,
                 CarbsGrams = request.Nutrition.CarbsGrams,
                 FatGrams = request.Nutrition.FatGrams,
-                FiberGrams = request.Nutrition.FiberGrams,
-                SugarGrams = 0,
-                SodiumMg = 0
+                FiberGrams = request.Nutrition.FiberGrams
             };
         }
         else

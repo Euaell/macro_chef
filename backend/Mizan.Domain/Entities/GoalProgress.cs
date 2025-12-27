@@ -5,7 +5,6 @@ public class GoalProgress
     public Guid Id { get; set; }
     public Guid UserGoalId { get; set; }
     public Guid UserId { get; set; }
-    // TODO: DB column is currently int, cast to decimal if needed until migration is applied
     public decimal ActualCalories { get; set; }
     public decimal ActualProteinGrams { get; set; }
     public decimal ActualCarbsGrams { get; set; }

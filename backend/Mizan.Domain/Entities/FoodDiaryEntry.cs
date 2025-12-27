@@ -9,7 +9,6 @@ public class FoodDiaryEntry
     public DateOnly EntryDate { get; set; }
     public string MealType { get; set; } = "snack"; // breakfast, lunch, dinner, snack
     public decimal Servings { get; set; } = 1;
-    // TODO: DB column is currently int?, cast to decimal? if needed until migration is applied
     public decimal? Calories { get; set; }
     public decimal? ProteinGrams { get; set; }
     public decimal? CarbsGrams { get; set; }

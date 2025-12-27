@@ -107,6 +107,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/AuditLogs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Action?: string;
+                    EntityType?: string;
+                    EntityId?: string;
+                    UserId?: string;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GetAuditLogsResult"];
+                        "application/json": components["schemas"]["GetAuditLogsResult"];
+                        "text/json": components["schemas"]["GetAuditLogsResult"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/BodyMeasurements": {
         parameters: {
             query?: never;
@@ -352,9 +396,61 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateFoodCommand"];
+                    "text/json": components["schemas"]["UpdateFoodCommand"];
+                    "application/*+json": components["schemas"]["UpdateFoodCommand"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UpdateFoodResult"];
+                        "application/json": components["schemas"]["UpdateFoodResult"];
+                        "text/json": components["schemas"]["UpdateFoodResult"];
+                    };
+                };
+            };
+        };
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DeleteFoodResult"];
+                        "application/json": components["schemas"]["DeleteFoodResult"];
+                        "text/json": components["schemas"]["DeleteFoodResult"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -372,7 +468,8 @@ export interface paths {
                 query?: {
                     SearchTerm?: string;
                     Barcode?: string;
-                    Limit?: number;
+                    Page?: number;
+                    PageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -987,6 +1084,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Meals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Nutrition/log": {
         parameters: {
             query?: never;
@@ -1169,6 +1301,7 @@ export interface paths {
                     SearchTerm?: string;
                     Tags?: string[];
                     IncludePublic?: boolean;
+                    FavoritesOnly?: boolean;
                     Page?: number;
                     PageSize?: number;
                 };
@@ -1257,8 +1390,99 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateRecipeCommand"];
+                    "text/json": components["schemas"]["UpdateRecipeCommand"];
+                    "application/*+json": components["schemas"]["UpdateRecipeCommand"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UpdateRecipeResult"];
+                        "application/json": components["schemas"]["UpdateRecipeResult"];
+                        "text/json": components["schemas"]["UpdateRecipeResult"];
+                    };
+                };
+            };
+        };
         post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DeleteRecipeResult"];
+                        "application/json": components["schemas"]["DeleteRecipeResult"];
+                        "text/json": components["schemas"]["DeleteRecipeResult"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Recipes/{id}/favorite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ToggleFavoriteRecipeResult"];
+                        "application/json": components["schemas"]["ToggleFavoriteRecipeResult"];
+                        "text/json": components["schemas"]["ToggleFavoriteRecipeResult"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1535,6 +1759,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Trainers/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Trainers/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Trainers/clients/{clientId}/nutrition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    date?: string;
+                };
+                header?: never;
+                path: {
+                    clientId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Users/me": {
         parameters: {
             query?: never;
@@ -1722,6 +2049,20 @@ export interface components {
         AiChatResponse: {
             response?: string | null;
         };
+        AuditLogDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            userId?: string | null;
+            userEmail?: string | null;
+            action?: string | null;
+            entityType?: string | null;
+            entityId?: string | null;
+            details?: string | null;
+            ipAddress?: string | null;
+            /** Format: date-time */
+            timestamp?: string;
+        };
         AuthDebugDto: {
             isAuthenticated?: boolean;
             /** Format: uuid */
@@ -1792,12 +2133,7 @@ export interface components {
         };
         CreateFoodCommand: {
             name: string;
-            brand?: string | null;
-            barcode?: string | null;
             /** Format: double */
-            servingSize?: number;
-            servingUnit: string;
-            /** Format: int32 */
             caloriesPer100g?: number;
             /** Format: double */
             proteinPer100g?: number;
@@ -1808,9 +2144,9 @@ export interface components {
             /** Format: double */
             fiberPer100g?: number | null;
             /** Format: double */
-            sugarPer100g?: number | null;
-            /** Format: double */
-            sodiumPer100g?: number | null;
+            servingSize?: number;
+            servingUnit?: string | null;
+            isVerified?: boolean;
         };
         CreateFoodDiaryEntryCommand: {
             /** Format: uuid */
@@ -1822,7 +2158,7 @@ export interface components {
             mealType: string;
             /** Format: double */
             servings?: number;
-            /** Format: int32 */
+            /** Format: double */
             calories?: number | null;
             /** Format: double */
             proteinGrams?: number | null;
@@ -1830,6 +2166,7 @@ export interface components {
             carbsGrams?: number | null;
             /** Format: double */
             fatGrams?: number | null;
+            name?: string | null;
         };
         CreateFoodDiaryEntryResult: {
             /** Format: uuid */
@@ -1840,7 +2177,6 @@ export interface components {
         CreateFoodResult: {
             /** Format: uuid */
             id?: string;
-            name?: string | null;
             success?: boolean;
             message?: string | null;
         };
@@ -1891,7 +2227,7 @@ export interface components {
             unit?: string | null;
         };
         CreateRecipeNutritionDto: {
-            /** Format: int32 */
+            /** Format: double */
             caloriesPerServing?: number | null;
             /** Format: double */
             proteinGrams?: number | null;
@@ -1937,7 +2273,7 @@ export interface components {
         DailyNutritionResult: {
             /** Format: date */
             date?: string;
-            /** Format: int32 */
+            /** Format: double */
             totalCalories?: number;
             /** Format: double */
             totalProtein?: number;
@@ -1945,7 +2281,7 @@ export interface components {
             totalCarbs?: number;
             /** Format: double */
             totalFat?: number;
-            /** Format: int32 */
+            /** Format: double */
             targetCalories?: number | null;
             /** Format: double */
             targetProtein?: number | null;
@@ -1956,7 +2292,7 @@ export interface components {
             mealBreakdown?: components["schemas"]["MealSummary"][] | null;
         };
         DailyTotalsDto: {
-            /** Format: int32 */
+            /** Format: double */
             calories?: number;
             /** Format: double */
             protein?: number;
@@ -1965,7 +2301,15 @@ export interface components {
             /** Format: double */
             fat?: number;
         };
+        DeleteFoodResult: {
+            success?: boolean;
+            message?: string | null;
+        };
         DeleteMealPlanResult: {
+            success?: boolean;
+            message?: string | null;
+        };
+        DeleteRecipeResult: {
             success?: boolean;
             message?: string | null;
         };
@@ -1994,7 +2338,7 @@ export interface components {
         };
         FoodAnalysisResult: {
             foods?: components["schemas"]["RecognizedFood"][] | null;
-            /** Format: int32 */
+            /** Format: double */
             totalCalories?: number;
             /** Format: double */
             confidence?: number;
@@ -2006,7 +2350,7 @@ export interface components {
             name?: string | null;
             /** Format: double */
             servings?: number;
-            /** Format: int32 */
+            /** Format: double */
             calories?: number | null;
             /** Format: double */
             proteinGrams?: number | null;
@@ -2032,7 +2376,7 @@ export interface components {
             /** Format: double */
             servingSize?: number;
             servingUnit?: string | null;
-            /** Format: int32 */
+            /** Format: double */
             caloriesPer100g?: number;
             /** Format: double */
             proteinPer100g?: number;
@@ -2050,6 +2394,11 @@ export interface components {
             totalPoints?: number;
             /** Format: int32 */
             earnedCount?: number;
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        GetAuditLogsResult: {
+            logs?: components["schemas"]["AuditLogDto"][] | null;
             /** Format: int32 */
             totalCount?: number;
         };
@@ -2106,7 +2455,7 @@ export interface components {
             id?: string;
             /** Format: date */
             date?: string;
-            /** Format: int32 */
+            /** Format: double */
             actualCalories?: number;
             /** Format: double */
             actualProteinGrams?: number;
@@ -2170,7 +2519,7 @@ export interface components {
         LogFoodResult: {
             /** Format: uuid */
             id?: string;
-            /** Format: int32 */
+            /** Format: double */
             calories?: number;
             /** Format: double */
             proteinGrams?: number;
@@ -2252,7 +2601,7 @@ export interface components {
             updatedAt?: string;
         };
         MealPlanNutritionSummaryDto: {
-            /** Format: int32 */
+            /** Format: double */
             totalCalories?: number;
             /** Format: double */
             totalProteinGrams?: number;
@@ -2262,7 +2611,7 @@ export interface components {
             totalFatGrams?: number;
             /** Format: int32 */
             daysCount?: number;
-            /** Format: int32 */
+            /** Format: double */
             avgCaloriesPerDay?: number;
         };
         MealPlanRecipeDetailDto: {
@@ -2277,7 +2626,7 @@ export interface components {
             mealType?: string | null;
             /** Format: double */
             servings?: number;
-            /** Format: int32 */
+            /** Format: double */
             caloriesPerServing?: number | null;
         };
         MealPlanRecipeDto: {
@@ -2291,7 +2640,7 @@ export interface components {
         };
         MealSummary: {
             mealType?: string | null;
-            /** Format: int32 */
+            /** Format: double */
             calories?: number;
             /** Format: double */
             protein?: number;
@@ -2316,6 +2665,7 @@ export interface components {
             imageUrl?: string | null;
             isPublic?: boolean;
             isOwner?: boolean;
+            isFavorited?: boolean;
             nutrition?: components["schemas"]["RecipeNutritionDto"];
             ingredients?: components["schemas"]["RecipeIngredientDto"][] | null;
             instructions?: components["schemas"]["RecipeInstructionDto"][] | null;
@@ -2357,7 +2707,7 @@ export interface components {
             instruction?: string | null;
         };
         RecipeNutritionDto: {
-            /** Format: int32 */
+            /** Format: double */
             caloriesPerServing?: number | null;
             /** Format: double */
             proteinGrams?: number | null;
@@ -2370,7 +2720,7 @@ export interface components {
             name?: string | null;
             /** Format: double */
             portionGrams?: number;
-            /** Format: int32 */
+            /** Format: double */
             calories?: number;
             /** Format: double */
             protein?: number;
@@ -2404,9 +2754,15 @@ export interface components {
             /** Format: uuid */
             relationshipId?: string;
             accept?: boolean;
+            canViewNutrition?: boolean | null;
+            canViewWorkouts?: boolean | null;
+            canViewMeasurements?: boolean | null;
+            canMessage?: boolean | null;
         };
         SearchFoodsResult: {
             foods?: components["schemas"]["FoodDto"][] | null;
+            /** Format: int32 */
+            totalCount?: number;
         };
         SendMessageRequest: {
             /** Format: uuid */
@@ -2457,8 +2813,57 @@ export interface components {
             /** Format: double */
             uptimeSeconds?: number;
         };
+        ToggleFavoriteRecipeResult: {
+            isFavorited?: boolean;
+            message?: string | null;
+        };
         ToggleItemRequest: {
             isChecked?: boolean;
+        };
+        UpdateFoodCommand: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: double */
+            caloriesPer100g?: number;
+            /** Format: double */
+            proteinPer100g?: number;
+            /** Format: double */
+            carbsPer100g?: number;
+            /** Format: double */
+            fatPer100g?: number;
+            /** Format: double */
+            fiberPer100g?: number | null;
+            /** Format: double */
+            servingSize?: number;
+            servingUnit?: string | null;
+            isVerified?: boolean;
+        };
+        UpdateFoodResult: {
+            success?: boolean;
+            message?: string | null;
+        };
+        UpdateRecipeCommand: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description?: string | null;
+            /** Format: int32 */
+            servings?: number;
+            /** Format: int32 */
+            prepTimeMinutes?: number | null;
+            /** Format: int32 */
+            cookTimeMinutes?: number | null;
+            imageUrl?: string | null;
+            isPublic?: boolean;
+            ingredients: components["schemas"]["CreateRecipeIngredientDto"][];
+            instructions?: string[] | null;
+            tags?: string[] | null;
+            nutrition?: components["schemas"]["CreateRecipeNutritionDto"];
+        };
+        UpdateRecipeResult: {
+            success?: boolean;
+            message?: string | null;
         };
         UpdateStreakCommand: {
             streakType?: string | null;
@@ -2490,7 +2895,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             goalType?: string | null;
-            /** Format: int32 */
+            /** Format: double */
             targetCalories?: number | null;
             /** Format: double */
             targetProteinGrams?: number | null;
@@ -2506,7 +2911,7 @@ export interface components {
             isActive?: boolean;
         };
         UserGoalSummaryDto: {
-            /** Format: int32 */
+            /** Format: double */
             targetCalories?: number | null;
             /** Format: double */
             targetProteinGrams?: number | null;

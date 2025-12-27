@@ -5,7 +5,6 @@ public class UserGoal
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string? GoalType { get; set; } // weight_loss, muscle_gain, maintenance
-    // TODO: DB column is currently int?, cast to decimal? if needed until migration is applied
     public decimal? TargetCalories { get; set; }
     public decimal? TargetProteinGrams { get; set; }
     public decimal? TargetCarbsGrams { get; set; }

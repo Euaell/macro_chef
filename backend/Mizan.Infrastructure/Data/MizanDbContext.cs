@@ -127,7 +127,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.Barcode).HasColumnName("barcode").HasMaxLength(100);
             entity.Property(e => e.ServingSize).HasColumnName("serving_size").HasPrecision(10, 2).HasDefaultValue(100m);
             entity.Property(e => e.ServingUnit).HasColumnName("serving_unit").HasMaxLength(50).HasDefaultValue("g");
-            entity.Property(e => e.CaloriesPer100g).HasColumnName("calories_per_100g");
+            entity.Property(e => e.CaloriesPer100g).HasColumnName("calories_per_100g").HasPrecision(8, 2);
             entity.Property(e => e.ProteinPer100g).HasColumnName("protein_per_100g").HasPrecision(8, 2);
             entity.Property(e => e.CarbsPer100g).HasColumnName("carbs_per_100g").HasPrecision(8, 2);
             entity.Property(e => e.FatPer100g).HasColumnName("fat_per_100g").HasPrecision(8, 2);
@@ -196,7 +196,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.ToTable("recipe_nutrition");
             entity.HasKey(e => e.RecipeId);
             entity.Property(e => e.RecipeId).HasColumnName("recipe_id");
-            entity.Property(e => e.CaloriesPerServing).HasColumnName("calories_per_serving");
+            entity.Property(e => e.CaloriesPerServing).HasColumnName("calories_per_serving").HasPrecision(8, 2);
             entity.Property(e => e.ProteinGrams).HasColumnName("protein_grams").HasPrecision(8, 2);
             entity.Property(e => e.CarbsGrams).HasColumnName("carbs_grams").HasPrecision(8, 2);
             entity.Property(e => e.FatGrams).HasColumnName("fat_grams").HasPrecision(8, 2);
@@ -241,7 +241,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.EntryDate).HasColumnName("entry_date").IsRequired();
             entity.Property(e => e.MealType).HasColumnName("meal_type").HasMaxLength(20);
             entity.Property(e => e.Servings).HasColumnName("servings").HasPrecision(6, 2).HasDefaultValue(1m);
-            entity.Property(e => e.Calories).HasColumnName("calories");
+            entity.Property(e => e.Calories).HasColumnName("calories").HasPrecision(8, 2);
             entity.Property(e => e.ProteinGrams).HasColumnName("protein_grams").HasPrecision(8, 2);
             entity.Property(e => e.CarbsGrams).HasColumnName("carbs_grams").HasPrecision(8, 2);
             entity.Property(e => e.FatGrams).HasColumnName("fat_grams").HasPrecision(8, 2);
@@ -325,7 +325,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.GoalType).HasColumnName("goal_type").HasMaxLength(50);
-            entity.Property(e => e.TargetCalories).HasColumnName("target_calories");
+            entity.Property(e => e.TargetCalories).HasColumnName("target_calories").HasPrecision(8, 2);
             entity.Property(e => e.TargetProteinGrams).HasColumnName("target_protein_grams").HasPrecision(8, 2);
             entity.Property(e => e.TargetCarbsGrams).HasColumnName("target_carbs_grams").HasPrecision(8, 2);
             entity.Property(e => e.TargetFatGrams).HasColumnName("target_fat_grams").HasPrecision(8, 2);
@@ -346,7 +346,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.UserGoalId).HasColumnName("user_goal_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.ActualCalories).HasColumnName("actual_calories");
+            entity.Property(e => e.ActualCalories).HasColumnName("actual_calories").HasPrecision(8, 2);
             entity.Property(e => e.ActualProteinGrams).HasColumnName("actual_protein_grams").HasPrecision(6, 2);
             entity.Property(e => e.ActualCarbsGrams).HasColumnName("actual_carbs_grams").HasPrecision(6, 2);
             entity.Property(e => e.ActualFatGrams).HasColumnName("actual_fat_grams").HasPrecision(6, 2);

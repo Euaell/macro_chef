@@ -103,7 +103,7 @@ export default function LiveAuditLog() {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-[400px]">
+            <div className="flex-1 overflow-y-auto min-h-100">
                 {logs.length === 0 && !isLoading ? (
                     <div className="p-8 text-center text-muted-foreground">
                         No recent activity found.

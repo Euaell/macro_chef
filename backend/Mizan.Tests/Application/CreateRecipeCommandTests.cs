@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Mizan.Application.Commands;
 using Mizan.Application.Interfaces;
 using Mizan.Infrastructure.Data;
@@ -12,6 +13,7 @@ public class CreateRecipeCommandTests : IDisposable
 {
     private readonly MizanDbContext _context;
     private readonly Mock<ICurrentUserService> _currentUserMock;
+    private readonly Mock<ILogger<CreateRecipeCommandHandler>> _loggerMock;
     private readonly CreateRecipeCommandHandler _handler;
     private readonly Guid _testUserId = Guid.NewGuid();
 
@@ -27,7 +29,9 @@ public class CreateRecipeCommandTests : IDisposable
         _currentUserMock.Setup(x => x.UserId).Returns(_testUserId);
         _currentUserMock.Setup(x => x.IsAuthenticated).Returns(true);
 
-        _handler = new CreateRecipeCommandHandler(_context, _currentUserMock.Object);
+        _loggerMock = new Mock<ILogger<CreateRecipeCommandHandler>>();
+
+        _handler = new CreateRecipeCommandHandler(_context, _currentUserMock.Object, _loggerMock.Object);
     }
 
     [Fact]

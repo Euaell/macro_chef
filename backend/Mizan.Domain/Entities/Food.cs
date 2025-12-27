@@ -8,7 +8,6 @@ public class Food
     public string? Barcode { get; set; }
     public decimal ServingSize { get; set; } = 100;
     public string ServingUnit { get; set; } = "g";
-    // TODO: DB column is currently int, cast to decimal if needed until migration is applied
     public decimal CaloriesPer100g { get; set; }
     public decimal ProteinPer100g { get; set; }
     public decimal CarbsPer100g { get; set; }
