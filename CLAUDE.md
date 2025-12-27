@@ -1,6 +1,23 @@
-# CLAUDE.md
+# CLAUDE.md - MacroChef Developer Guidance
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code and other LLM tools when working with the MacroChef codebase.
+
+**Last Updated:** 2025-12-27
+**Project:** MacroChef (Mizan) - Full-stack meal planning + nutrition tracking application
+
+---
+
+## Quick Reference
+
+**New to the project?** Start here in order:
+1. Read this file (5 min)
+2. Read `docs/DEVELOPER_ONBOARDING.md` (15 min)
+3. Run `docker-compose up -d` and verify services are healthy
+4. Review `docs/ARCHITECTURE.md` to understand structure
+
+**Something broken?** Check `docs/TROUBLESHOOTING.md` first (90% of issues covered).
+
+---
 
 ## Communication Style
 

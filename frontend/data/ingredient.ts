@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { callBackendApi } from "@/lib/backend-api-client";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
@@ -106,6 +107,8 @@ export async function addIngredient(prevState: FormState, formData: FormData): P
             },
         });
 
+        revalidatePath("/admin/ingredients");
+
         return createSuccessState("Ingredient added successfully!");
     } catch (error) {
         console.error("Failed to add ingredient:", error);
@@ -145,6 +148,8 @@ export async function updateIngredient(prevState: FormState, formData: FormData)
             },
         });
 
+        revalidatePath("/admin/ingredients");
+
         return createSuccessState("Ingredient updated successfully!");
     } catch (error) {
         console.error("Failed to update ingredient:", error);
@@ -160,6 +165,9 @@ export async function deleteIngredient(id: string): Promise<{ success: boolean; 
         await callBackendApi(`/api/Foods/${id}`, {
             method: "DELETE",
         });
+
+        revalidatePath("/admin/ingredients");
+
         return { success: true };
     } catch (error) {
         console.error("Failed to delete ingredient:", error);

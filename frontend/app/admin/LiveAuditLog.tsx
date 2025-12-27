@@ -26,18 +26,22 @@ export default function LiveAuditLog() {
             const result = await fetchLiveAuditLogs(1, 10);
             setLogs(result.logs);
             setLastUpdated(new Date());
-            setCountdown(refreshInterval / 1000);
         } catch (error) {
             console.error("Failed to fetch live audit logs:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [refreshInterval]);
+    }, []);
 
     // Initial load
     useEffect(() => {
         loadLogs();
-    }, []);
+    }, [loadLogs]);
+
+    // Reset countdown when interval changes
+    useEffect(() => {
+        setCountdown(refreshInterval / 1000);
+    }, [refreshInterval]);
 
     // Handling Polling
     useEffect(() => {
@@ -79,10 +83,7 @@ export default function LiveAuditLog() {
                         {INTERVALS.map((interval) => (
                             <button
                                 key={interval.value}
-                                onClick={() => {
-                                    setRefreshInterval(interval.value);
-                                    setCountdown(interval.value / 1000);
-                                }}
+                                onClick={() => setRefreshInterval(interval.value)}
                                 className={`px-2 py-1 text-xs rounded-sm transition-all ${refreshInterval === interval.value
                                         ? "bg-white text-primary shadow-sm font-medium"
                                         : "text-muted-foreground hover:text-foreground"
