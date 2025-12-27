@@ -30,11 +30,11 @@ export default async function Page({ params }: { params: Promise<{ recipeId: str
 	}
 
 	const macrosPerServing = {
-		calories: recipe.servings > 0 ? Math.round((recipe.calories || 0) / recipe.servings) : 0,
-		protein: recipe.servings > 0 ? Math.round(((recipe.protein || 0) / recipe.servings) * 10) / 10 : 0,
-		carbs: recipe.servings > 0 ? Math.round(((recipe.carbs || 0) / recipe.servings) * 10) / 10 : 0,
-		fat: recipe.servings > 0 ? Math.round(((recipe.fat || 0) / recipe.servings) * 10) / 10 : 0,
-		fiber: recipe.servings > 0 ? Math.round(((recipe.fiber || 0) / recipe.servings) * 10) / 10 : 0,
+		calories: recipe.nutrition?.caloriesPerServing || 0,
+		protein: recipe.nutrition?.proteinGrams || 0,
+		carbs: recipe.nutrition?.carbsGrams || 0,
+		fat: recipe.nutrition?.fatGrams || 0,
+		fiber: recipe.nutrition?.fiberGrams || 0,
 	};
 
 	return (

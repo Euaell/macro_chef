@@ -25,11 +25,13 @@ export interface Recipe {
     isPublic: boolean;
     isOwner?: boolean;
     isFavorited?: boolean;
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-    fiber?: number;
+    nutrition?: {
+        caloriesPerServing: number;
+        proteinGrams: number;
+        carbsGrams: number;
+        fatGrams: number;
+        fiberGrams?: number;
+    };
     tags?: string[];
     ingredients?: RecipeIngredient[];
     instructions?: string[];
@@ -54,10 +56,10 @@ export async function getPopularRecipes(): Promise<PopularRecipe[]> {
             _id: r.id,
             name: r.title,
             totalMacros: {
-                calories: r.calories || 0,
-                protein: r.protein || 0,
-                carbs: r.carbs || 0,
-                fat: r.fat || 0,
+                calories: r.nutrition?.caloriesPerServing || 0,
+                protein: r.nutrition?.proteinGrams || 0,
+                carbs: r.nutrition?.carbsGrams || 0,
+                fat: r.nutrition?.fatGrams || 0,
             },
         }));
     } catch (error) {
