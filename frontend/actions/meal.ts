@@ -26,6 +26,7 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
                 entryDate: date,
                 mealType,
                 servings,
+                name: (formData.get("name") as string) || "Unknown",
                 calories: isNaN(calories) ? null : calories,
                 proteinGrams: isNaN(protein) ? null : protein,
                 carbsGrams: isNaN(carbs) ? null : carbs,

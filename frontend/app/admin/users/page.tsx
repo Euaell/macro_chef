@@ -82,8 +82,9 @@ async function getUsers(searchParams: SearchParams) {
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
+  const params = await searchParams;
   const session = await auth.api.getSession({
     headers: await import("next/headers").then((mod) => mod.headers()),
   });
@@ -96,7 +97,7 @@ export default async function UsersPage({
     redirect("/");
   }
 
-  const { users: userList, totalCount, totalPages, currentPage } = await getUsers(searchParams);
+  const { users: userList, totalCount, totalPages, currentPage } = await getUsers(params);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -129,12 +130,12 @@ export default async function UsersPage({
             type="text"
             name="search"
             placeholder="Search by name or email..."
-            defaultValue={searchParams.search}
+            defaultValue={params.search}
             className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <select
             name="role"
-            defaultValue={searchParams.role || ""}
+            defaultValue={params.role || ""}
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">All Roles</option>
@@ -144,7 +145,7 @@ export default async function UsersPage({
           </select>
           <select
             name="banned"
-            defaultValue={searchParams.banned || ""}
+            defaultValue={params.banned || ""}
             className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">All Status</option>
@@ -203,13 +204,12 @@ export default async function UsersPage({
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === "admin"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          : user.role === "trainer"
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === "admin"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        : user.role === "trainer"
                           ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                           : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                      }`}
+                        }`}
                     >
                       {user.role}
                     </span>
@@ -261,7 +261,7 @@ export default async function UsersPage({
             {currentPage > 1 && (
               <Link
                 href={`/admin/users?${new URLSearchParams({
-                  ...searchParams,
+                  ...params,
                   page: (currentPage - 1).toString(),
                 }).toString()}`}
                 className="px-4 py-2 border rounded-lg hover:bg-accent"
@@ -272,7 +272,7 @@ export default async function UsersPage({
             {currentPage < totalPages && (
               <Link
                 href={`/admin/users?${new URLSearchParams({
-                  ...searchParams,
+                  ...params,
                   page: (currentPage + 1).toString(),
                 }).toString()}`}
                 className="px-4 py-2 border rounded-lg hover:bg-accent"

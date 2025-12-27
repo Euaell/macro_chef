@@ -68,8 +68,9 @@ async function getUser(userId: string) {
 export default async function UserDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth.api.getSession({
     headers: await import("next/headers").then((mod) => mod.headers()),
   });
@@ -82,7 +83,7 @@ export default async function UserDetailPage({
     redirect("/");
   }
 
-  const user = await getUser(params.id);
+  const user = await getUser(id);
 
   if (!user) {
     notFound();
@@ -163,11 +164,10 @@ export default async function UserDetailPage({
                         {session.ipAddress || "Unknown IP"}
                       </span>
                       <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          new Date(session.expiresAt) > new Date()
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                        }`}
+                        className={`text-xs px-2 py-1 rounded-full ${new Date(session.expiresAt) > new Date()
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                          }`}
                       >
                         {new Date(session.expiresAt) > new Date()
                           ? "Active"

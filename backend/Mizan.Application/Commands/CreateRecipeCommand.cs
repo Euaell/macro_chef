@@ -138,7 +138,22 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             .Select(i => i.FoodId!.Value)
             .ToList();
 
-        if (ingredientFoodIds.Any())
+        // Calculate nutrition from ingredients if not provided
+        if (request.Nutrition != null)
+        {
+            recipe.Nutrition = new RecipeNutrition
+            {
+                RecipeId = recipe.Id,
+                CaloriesPerServing = request.Nutrition.CaloriesPerServing,
+                ProteinGrams = request.Nutrition.ProteinGrams,
+                CarbsGrams = request.Nutrition.CarbsGrams,
+                FatGrams = request.Nutrition.FatGrams,
+                FiberGrams = request.Nutrition.FiberGrams,
+                SugarGrams = 0, // Not currently tracked by frontend
+                SodiumMg = 0 // Not currently tracked by frontend
+            };
+        }
+        else if (ingredientFoodIds.Any())
         {
             var foods = await _context.Foods
                 .Where(f => ingredientFoodIds.Contains(f.Id))
@@ -154,7 +169,7 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             {
                 if (foods.TryGetValue(ingredientDto.FoodId!.Value, out var food))
                 {
-                    var ratio = ingredientDto.Amount.Value / 100;
+                    var ratio = ingredientDto.Amount!.Value / 100;
                     totalCalories += (int)(food.CaloriesPer100g * ratio);
                     totalProtein += food.ProteinPer100g * ratio;
                     totalCarbs += food.CarbsPer100g * ratio;
@@ -177,18 +192,6 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 CarbsGrams = carbsPerServing,
                 FatGrams = fatPerServing,
                 FiberGrams = fiberPerServing
-            };
-        }
-        else if (request.Nutrition != null)
-        {
-            recipe.Nutrition = new RecipeNutrition
-            {
-                RecipeId = recipe.Id,
-                CaloriesPerServing = request.Nutrition.CaloriesPerServing,
-                ProteinGrams = request.Nutrition.ProteinGrams,
-                CarbsGrams = request.Nutrition.CarbsGrams,
-                FatGrams = request.Nutrition.FatGrams,
-                FiberGrams = request.Nutrition.FiberGrams
             };
         }
 
