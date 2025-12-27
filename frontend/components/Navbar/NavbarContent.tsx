@@ -1,6 +1,6 @@
 'use client';
 
-import User from "@/types/user";
+import type { User } from "@/lib/auth";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -99,7 +99,7 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 							href="/profile"
 							className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
 						>
-							<div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-sm font-medium">
+							<div className="w-8 h-8 rounded-full bg-linear-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-sm font-medium">
 								{user.email?.charAt(0).toUpperCase() || 'U'}
 							</div>
 						</Link>
@@ -120,7 +120,7 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 						</Link>
 						<Link
 							href="/register"
-							className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl hover:from-brand-600 hover:to-brand-700 shadow-lg shadow-brand-500/25 transition-all"
+							className="px-4 py-2 text-sm font-medium text-white bg-linear-to-r from-brand-500 to-brand-600 rounded-xl hover:from-brand-600 hover:to-brand-700 shadow-lg shadow-brand-500/25 transition-all"
 						>
 							Get Started
 						</Link>
@@ -175,7 +175,7 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 									onClick={closeMenu}
 									className="flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg"
 								>
-									<div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-sm font-medium">
+									<div className="w-8 h-8 rounded-full bg-linear-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-sm font-medium">
 										{user.email?.charAt(0).toUpperCase() || 'U'}
 									</div>
 									<span>Profile</span>
@@ -199,7 +199,7 @@ export default function NavbarContent({ user }: NavbarContentProps) {
 								<Link
 									href="/register"
 									onClick={closeMenu}
-									className="flex-1 px-4 py-2.5 text-sm font-medium text-center text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-xl hover:from-brand-600 hover:to-brand-700 transition-all"
+									className="flex-1 px-4 py-2.5 text-sm font-medium text-center text-white bg-linear-to-r from-brand-500 to-brand-600 rounded-xl hover:from-brand-600 hover:to-brand-700 transition-all"
 								>
 									Get Started
 								</Link>

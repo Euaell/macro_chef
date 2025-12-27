@@ -18,28 +18,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci || npm install
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test -- --run
+        run: bun install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: bun run build
         env:
-          DATABASE_URL: postgres://test:test@localhost:5432/test
-          BETTER_AUTH_SECRET: test_secret
-          BETTER_AUTH_URL: http://localhost:3000
+          DATABASE_URL: postgresql://mizan:mizan_test_password@localhost:5432/mizan_test
+          BETTER_AUTH_SECRET: test-secret-for-ci
+          API_URL: http://localhost:8080
+          NEXT_PUBLIC_API_URL: http://localhost:3000
 
   test-backend:
     name: Test Backend
