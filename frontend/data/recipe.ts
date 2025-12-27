@@ -72,12 +72,13 @@ export async function getPopularRecipes(): Promise<PopularRecipe[]> {
 }
 
 /**
- * Get all recipes with optional search term
+ * Get all recipes with optional filters
  */
-export async function getAllRecipes(searchTerm?: string, page: number = 1, limit: number = 20): Promise<{ recipes: Recipe[], totalCount: number, totalPages: number }> {
+export async function getAllRecipes(searchTerm?: string, page: number = 1, limit: number = 20, favoritesOnly: boolean = false): Promise<{ recipes: Recipe[], totalCount: number, totalPages: number }> {
     try {
         const params = new URLSearchParams();
         if (searchTerm) params.append("SearchTerm", searchTerm);
+        if (favoritesOnly) params.append("FavoritesOnly", "true");
         params.append("IncludePublic", "true");
         params.append("Page", page.toString());
         params.append("PageSize", limit.toString());
@@ -95,6 +96,14 @@ export async function getAllRecipes(searchTerm?: string, page: number = 1, limit
         console.error("Failed to get all recipes:", error);
         return { recipes: [], totalCount: 0, totalPages: 0 };
     }
+}
+
+/**
+ * Get favorite recipes count for the current user
+ */
+export async function getFavoriteRecipesCount(): Promise<number> {
+    const result = await getAllRecipes(undefined, 1, 1, true);
+    return result.totalCount;
 }
 
 /**

@@ -9,6 +9,7 @@ public record GetRecipesQuery : IRequest<GetRecipesResult>
     public string? SearchTerm { get; init; }
     public List<string>? Tags { get; init; }
     public bool IncludePublic { get; init; } = true;
+    public bool FavoritesOnly { get; init; } = false;
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
 }
@@ -66,13 +67,28 @@ public class GetRecipesQueryHandler : IRequestHandler<GetRecipesQuery, GetRecipe
         // Filter by ownership or public
         if (_currentUser.UserId.HasValue)
         {
-            query = query.Where(r =>
-                r.UserId == _currentUser.UserId ||
-                (request.IncludePublic && r.IsPublic));
+            if (request.FavoritesOnly)
+            {
+                query = query.Where(r => _context.FavoriteRecipes.Any(f => f.RecipeId == r.Id && f.UserId == _currentUser.UserId));
+            }
+            else
+            {
+                query = query.Where(r =>
+                    r.UserId == _currentUser.UserId ||
+                    (request.IncludePublic && r.IsPublic));
+            }
         }
         else
         {
-            query = query.Where(r => r.IsPublic);
+            if (request.FavoritesOnly)
+            {
+                // Unauthenticated users have no favorites
+                query = query.Where(r => false);
+            }
+            else
+            {
+                query = query.Where(r => r.IsPublic);
+            }
         }
 
         // Search by title or description

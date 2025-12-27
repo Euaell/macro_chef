@@ -8,11 +8,12 @@ import { FieldError } from "../FieldError";
 import Macros from "@/types/macro";
 
 interface AddMealFromRecipeProps {
+	recipeId: string;
 	name: string;
 	macros: Macros;
 }
 
-export default function AddMealFromRecipe({ name, macros }: AddMealFromRecipeProps) {
+export default function AddMealFromRecipe({ recipeId, name, macros }: AddMealFromRecipeProps) {
 	const [formState, action, isPending] = useActionState(addMeal, EMPTY_FORM_STATE);
 	const router = useRouter();
 
@@ -24,6 +25,7 @@ export default function AddMealFromRecipe({ name, macros }: AddMealFromRecipePro
 
 	return (
 		<form action={action} className="space-y-6">
+			<input type="hidden" name="recipeId" value={recipeId} />
 			{/* Basic Info Card */}
 			<div className="card p-6 space-y-5">
 				<h2 className="font-semibold text-slate-900 flex items-center gap-2">

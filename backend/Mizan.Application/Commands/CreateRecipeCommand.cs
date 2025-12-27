@@ -91,8 +91,10 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
         _logger.LogDebug("[CreateRecipe] Created recipe entity: Id={Id}, UserId={UserId}", recipe.Id, recipe.UserId);
 
         // Add ingredients
-        for (int i = 0; i < request.Ingredients.Count; i++)
+        if (request.Ingredients != null)
         {
+            for (int i = 0; i < request.Ingredients.Count; i++)
+            {
             var ingredientDto = request.Ingredients[i];
             recipe.Ingredients.Add(new RecipeIngredient
             {
@@ -105,10 +107,13 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
                 SortOrder = i
             });
         }
+    }
 
         // Add instructions
-        for (int i = 0; i < request.Instructions.Count; i++)
+        if (request.Instructions != null)
         {
+            for (int i = 0; i < request.Instructions.Count; i++)
+            {
             recipe.Instructions.Add(new RecipeInstruction
             {
                 Id = Guid.NewGuid(),
