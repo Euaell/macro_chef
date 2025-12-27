@@ -93,8 +93,10 @@ public class UpdateRecipeCommandHandler : IRequestHandler<UpdateRecipeCommand, U
 
         // Update Ingredients (Replace all)
         _context.RecipeIngredients.RemoveRange(recipe.Ingredients);
-        for (int i = 0; i < request.Ingredients.Count; i++)
+        if (request.Ingredients != null)
         {
+            for (int i = 0; i < request.Ingredients.Count; i++)
+            {
             var ingredientDto = request.Ingredients[i];
             recipe.Ingredients.Add(new RecipeIngredient
             {
@@ -107,11 +109,14 @@ public class UpdateRecipeCommandHandler : IRequestHandler<UpdateRecipeCommand, U
                 SortOrder = i
             });
         }
+    }
 
         // Update Instructions (Replace all)
         _context.RecipeInstructions.RemoveRange(recipe.Instructions);
-        for (int i = 0; i < request.Instructions.Count; i++)
+        if (request.Instructions != null)
         {
+            for (int i = 0; i < request.Instructions.Count; i++)
+            {
             recipe.Instructions.Add(new RecipeInstruction
             {
                 Id = Guid.NewGuid(),

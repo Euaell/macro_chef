@@ -19,6 +19,12 @@ export default async function Page({
 	const { recipes, totalPages, totalCount } = await getAllRecipes(undefined, page, 10);
 	const user = await getUserOptionalServer();
 
+	let favoriteCount = 0;
+	if (user) {
+		const { totalCount: favTotal } = await getAllRecipes(undefined, 1, 0, true);
+		favoriteCount = favTotal;
+	}
+
 	return (
 		<div className="space-y-8">
 			{/* Page Header */}
@@ -38,7 +44,7 @@ export default async function Page({
 			{/* Quick Collections */}
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 				{[
-					{ name: "Favorites", icon: "ri-heart-3-line", count: 0, color: "from-rose-400 to-rose-600" },
+					{ name: "Favorites", icon: "ri-heart-3-line", count: favoriteCount, color: "from-rose-400 to-rose-600" },
 					{ name: "My Recipes", icon: "ri-restaurant-line", count: totalCount, color: "from-brand-400 to-brand-600" },
 					{ name: "Recent", icon: "ri-history-line", count: Math.min(recipes.length, 5), color: "from-violet-400 to-violet-600" },
 				].map((collection) => (

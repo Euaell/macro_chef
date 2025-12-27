@@ -96,7 +96,7 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     };
 
     const handleAddToMealPlan = () => {
-        router.push(`/meals?recipeId=${recipeId}`);
+        router.push(`/meals/add/${recipeId}`);
     };
 
     return (

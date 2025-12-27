@@ -39,6 +39,7 @@ public class MealsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<ActionResult> DeleteMeal(Guid id)
     {
         var result = await _mediator.Send(new DeleteFoodDiaryEntryCommand { Id = id });
