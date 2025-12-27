@@ -1,3 +1,5 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Mizan.Api.Authentication;
@@ -118,6 +120,34 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+        var exception = exceptionHandlerFeature?.Error;
+
+        if (exception is ValidationException validationEx)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                errors = validationEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage })
+            });
+        }
+        else if (exception is UnauthorizedAccessException)
+        {
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsJsonAsync(new { error = "Unauthorized" });
+        }
+        else
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { error = "Internal server error" });
+        }
+    });
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

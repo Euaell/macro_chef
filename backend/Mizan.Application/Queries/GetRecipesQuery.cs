@@ -69,7 +69,10 @@ public class GetRecipesQueryHandler : IRequestHandler<GetRecipesQuery, GetRecipe
         {
             if (request.FavoritesOnly)
             {
-                query = query.Where(r => _context.FavoriteRecipes.Any(f => f.RecipeId == r.Id && f.UserId == _currentUser.UserId));
+                query = from r in query
+                        join f in _context.FavoriteRecipes on r.Id equals f.RecipeId
+                        where f.UserId == _currentUser.UserId
+                        select r;
             }
             else
             {

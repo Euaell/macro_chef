@@ -49,6 +49,18 @@ public class DeleteRecipeCommandHandler : IRequestHandler<DeleteRecipeCommand, D
             return new DeleteRecipeResult { Success = false, Message = "You do not have permission to delete this recipe" };
         }
 
+        var mealPlanUsage = await _context.MealPlanRecipes
+            .CountAsync(mpr => mpr.RecipeId == request.Id, cancellationToken);
+
+        if (mealPlanUsage > 0)
+        {
+            return new DeleteRecipeResult
+            {
+                Success = false,
+                Message = $"Cannot delete recipe. It is currently used in {mealPlanUsage} meal plan(s). Please remove it from all meal plans first or archive it instead."
+            };
+        }
+
         _context.Recipes.Remove(recipe);
         await _context.SaveChangesAsync(cancellationToken);
 

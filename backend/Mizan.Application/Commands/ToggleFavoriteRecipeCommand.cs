@@ -39,11 +39,11 @@ public class ToggleFavoriteRecipeCommandHandler : IRequestHandler<ToggleFavorite
         var existingFavorite = await _context.FavoriteRecipes
             .FirstOrDefaultAsync(f => f.UserId == userId && f.RecipeId == request.RecipeId, cancellationToken);
 
+        bool isFavorited;
         if (existingFavorite != null)
         {
             _context.FavoriteRecipes.Remove(existingFavorite);
-            await _context.SaveChangesAsync(cancellationToken);
-            return new ToggleFavoriteRecipeResult { IsFavorited = false, Message = "Removed from favorites" };
+            isFavorited = false;
         }
         else
         {
@@ -54,8 +54,24 @@ public class ToggleFavoriteRecipeCommandHandler : IRequestHandler<ToggleFavorite
                 CreatedAt = DateTime.UtcNow
             };
             _context.FavoriteRecipes.Add(favorite);
-            await _context.SaveChangesAsync(cancellationToken);
-            return new ToggleFavoriteRecipeResult { IsFavorited = true, Message = "Added to favorites" };
+            isFavorited = true;
         }
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            var state = await _context.FavoriteRecipes
+                .AnyAsync(f => f.UserId == userId && f.RecipeId == request.RecipeId, cancellationToken);
+            isFavorited = state;
+        }
+
+        return new ToggleFavoriteRecipeResult
+        {
+            IsFavorited = isFavorited,
+            Message = isFavorited ? "Added to favorites" : "Removed from favorites"
+        };
     }
 }

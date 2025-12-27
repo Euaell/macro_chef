@@ -290,6 +290,77 @@ Start here and read in order:
 
 ---
 
+### Strategic Planning and Roadmap
+
+#### 11. ROADMAP.md
+**Purpose:** Comprehensive strategic roadmap for advanced features (18-24 months)
+**Size:** ~20,000 words (1600+ lines)
+**Time to read:** 45-60 minutes (executive summary: 5 min)
+**When to read:**
+- Planning next development phases
+- Understanding product strategy and priorities
+- Evaluating feature business value
+- Capacity planning and budgeting
+- Setting team quarterly objectives (OKRs)
+
+**Contains:**
+- Executive summary with strategic priorities
+- Priority legend (P0 Critical → P3 Lower)
+- **P0: Trainer Feature Completion** (14 weeks, $84k)
+  - Meal plan assignment and management
+  - Progress monitoring dashboard
+  - Client goal setting and tracking
+  - Bulk operations and workflow automation
+  - Enhanced permission and access control
+- **P1: AI-Powered Insights** (18 weeks, $108k + $6k/year API)
+  - Personalized meal recommendations (GPT-4)
+  - AI-generated meal plans
+  - Nutrition insights and trend analysis
+  - Macronutrient optimization recommendations
+- **P2: Content Moderation** (7 weeks, $42k + $600/year API)
+  - Image content moderation (Azure Content Safety)
+  - Text content moderation (OpenAI)
+  - Automated review queue and appeals system
+- **P3: Advanced Features** (Variable timeline)
+  - Barcode scanning for food logging
+  - Fitness tracker integration (Fitbit, Apple Health, Google Fit)
+  - Recipe import from websites
+  - Social features and community
+  - Advanced analytics and reporting
+  - Mobile app development (React Native/Flutter)
+- Implementation timeline and dependencies
+- Technical requirements with code examples
+- Success metrics and KPIs
+- Risk assessment and mitigation strategies
+- Budget estimates (development, API costs, infrastructure)
+- Feature flags and safe rollout strategy
+- 18-24 month phased approach
+
+#### 12. ROADMAP_QUICK_REFERENCE.md
+**Purpose:** Quick-lookup guide to roadmap priorities and timelines
+**Size:** ~3,000 words
+**Time to read:** 5-10 minutes
+**When to read:**
+- Quickly checking feature priorities
+- Finding which phase a feature is in
+- Budget estimates and dependencies
+- Risk summary
+- Success metrics
+
+**Contains:**
+- Timeline visualization (Q1-Q4 2026+)
+- Quick navigation table for each priority (P0-P3)
+- Priority definitions
+- Key dependencies and blockers
+- Success metrics by phase
+- Budget overview (dev costs, annual operational costs)
+- Risk summary (high/medium/low)
+- Feature flags for safe rollout
+- Implementation checklist
+- Quick reference for common questions
+
+---
+
 ## Documentation by Audience
 
 ### New Developer (First Day)
@@ -391,8 +462,10 @@ git push origin docs/update-deployment-guide
 | SIGNALR_IMPLEMENTATION.md | ~350 | 3,000+ | Real-time features |
 | SECURITY.md | ~150 | 2,000+ | Security policy |
 | CHANGELOG.md | ~200 | 4,000+ | Version history |
+| ROADMAP.md | ~1,661 | 20,000+ | Strategic roadmap |
+| ROADMAP_QUICK_REFERENCE.md | ~330 | 3,000+ | Quick reference |
 | CLAUDE.md (root) | ~700 | 3,000+ | Dev guidelines |
-| **Total** | **~5,880** | **~56,000+** | Complete documentation |
+| **Total** | **~7,870** | **~79,000+** | Complete documentation |
 
 ---
 

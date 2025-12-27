@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import 'remixicon/fonts/remixicon.css';
+import { validateStartupConfig } from "@/lib/startup-validation";
+
+validateStartupConfig();
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +20,7 @@ export default function RootLayout(
 		<html lang="en">
 			<body className="antialiased min-h-screen flex flex-col">
 				<Navbar />
-				<main className="flex-grow">
+				<main className="grow">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 						{children}
 					</div>
@@ -28,7 +31,7 @@ export default function RootLayout(
 						<div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center text-center sm:text-left">
 							{/* Brand */}
 							<div className="flex items-center justify-center sm:justify-start gap-2">
-								<span className="text-lg font-bold bg-gradient-to-r from-brand-600 to-brand-700 bg-clip-text text-transparent">
+								<span className="text-lg font-bold bg-linear-to-r from-brand-600 to-brand-700 bg-clip-text text-transparent">
 									Mizan
 								</span>
 								<span className="text-slate-400">•</span>
