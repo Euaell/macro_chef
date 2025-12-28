@@ -217,19 +217,34 @@ app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHealthChecks("/health");
 
-if (app.Environment.IsDevelopment())
+bool disableMigrations = builder.Configuration.GetValue<bool>("DISABLE_MIGRATIONS_ON_STARTUP");
+
+if (!disableMigrations)
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<Mizan.Infrastructure.Data.MizanDbContext>();
     try
     {
-        dbContext.Database.Migrate();
-        Log.Information("Database migrations applied successfully");
+        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+        if (pendingMigrations.Any())
+        {
+            Log.Information("Applying {Count} pending migrations...", pendingMigrations.Count());
+            await dbContext.Database.MigrateAsync();
+            Log.Information("Database migrations applied successfully");
+        }
+        else
+        {
+            Log.Information("Database is already up to date");
+        }
     }
     catch (Exception ex)
     {
         Log.Error(ex, "Failed to apply database migrations");
     }
+}
+else
+{
+    Log.Information("Database migrations skipped due to DISABLE_MIGRATIONS_ON_STARTUP environment variable");
 }
 
 Log.Information("Mizan API starting on {Urls}", string.Join(", ", app.Urls));

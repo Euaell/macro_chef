@@ -34,6 +34,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Create non-root user
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 1001 -g root appuser && chown -R appuser /app
 USER appuser
 
