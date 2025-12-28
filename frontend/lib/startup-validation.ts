@@ -8,6 +8,9 @@ import "server-only";
  * it appears healthy but fails on first authenticated request.
  */
 export function validateStartupConfig(): void {
+  if (process.env.SKIP_ENV_VALIDATION === "true") {
+    return;
+  }
   const errors: string[] = [];
 
   if (!process.env.BFF_TRUSTED_SECRET) {
