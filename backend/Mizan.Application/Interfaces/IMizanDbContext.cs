@@ -39,6 +39,7 @@ public interface IMizanDbContext
     DbSet<UserAchievement> UserAchievements { get; }
     DbSet<Streak> Streaks { get; }
     DbSet<AiChatThread> AiChatThreads { get; }
+    DbSet<McpToken> McpTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

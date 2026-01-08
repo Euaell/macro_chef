@@ -60,6 +60,9 @@ public class MizanDbContext : DbContext, IMizanDbContext
     // AI
     public DbSet<AiChatThread> AiChatThreads => Set<AiChatThread>();
 
+    // MCP Integration
+    public DbSet<McpToken> McpTokens => Set<McpToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -562,6 +565,24 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.IpAddress).HasColumnName("ip_address").HasMaxLength(45);
             entity.Property(e => e.Timestamp).HasColumnName("timestamp").HasDefaultValueSql("NOW()");
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // McpToken configuration
+        modelBuilder.Entity<McpToken>(entity =>
+        {
+            entity.ToTable("mcp_tokens");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+            entity.Property(e => e.TokenHash).HasColumnName("token_hash").HasMaxLength(64).IsRequired();
+            entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+            entity.Property(e => e.LastUsedAt).HasColumnName("last_used_at");
+            entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.IsActive });
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
