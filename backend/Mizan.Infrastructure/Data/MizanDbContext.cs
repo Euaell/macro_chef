@@ -62,6 +62,7 @@ public class MizanDbContext : DbContext, IMizanDbContext
 
     // MCP Integration
     public DbSet<McpToken> McpTokens => Set<McpToken>();
+    public DbSet<McpUsageLog> McpUsageLogs => Set<McpUsageLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -582,6 +583,27 @@ public class MizanDbContext : DbContext, IMizanDbContext
             entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
             entity.HasIndex(e => e.TokenHash).IsUnique();
             entity.HasIndex(e => new { e.UserId, e.IsActive });
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // McpUsageLog configuration
+        modelBuilder.Entity<McpUsageLog>(entity =>
+        {
+            entity.ToTable("mcp_usage_logs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.McpTokenId).HasColumnName("mcp_token_id").IsRequired();
+            entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+            entity.Property(e => e.ToolName).HasColumnName("tool_name").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Parameters).HasColumnName("parameters").HasColumnType("jsonb");
+            entity.Property(e => e.Success).HasColumnName("success").IsRequired();
+            entity.Property(e => e.ErrorMessage).HasColumnName("error_message").HasMaxLength(1000);
+            entity.Property(e => e.ExecutionTimeMs).HasColumnName("execution_time_ms").IsRequired();
+            entity.Property(e => e.Timestamp).HasColumnName("timestamp").HasDefaultValueSql("NOW()");
+            entity.HasIndex(e => new { e.UserId, e.Timestamp });
+            entity.HasIndex(e => e.McpTokenId);
+            entity.HasIndex(e => e.ToolName);
+            entity.HasOne(e => e.McpToken).WithMany().HasForeignKey(e => e.McpTokenId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }

@@ -35,3 +35,41 @@ export interface ValidateTokenResult {
   userId: string;
   isValid: boolean;
 }
+
+export interface McpUsageAnalyticsResult {
+  overview: UsageOverview;
+  toolUsage: ToolUsageDto[];
+  tokenUsage: TokenUsageDto[];
+  dailyUsage: DailyUsageDto[];
+}
+
+export interface UsageOverview {
+  totalCalls: number;
+  successfulCalls: number;
+  failedCalls: number;
+  successRate: number;
+  averageExecutionTimeMs: number;
+  uniqueTokensUsed: number;
+}
+
+export interface ToolUsageDto {
+  toolName: string;
+  callCount: number;
+  successCount: number;
+  failureCount: number;
+  averageExecutionTimeMs: number;
+}
+
+export interface TokenUsageDto {
+  tokenId: string;
+  tokenName: string;
+  callCount: number;
+  lastUsed: string;
+}
+
+export interface DailyUsageDto {
+  date: string;
+  callCount: number;
+  successCount: number;
+  failureCount: number;
+}

@@ -80,4 +80,16 @@ public class McpTokensController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("analytics")]
+    [Authorize]
+    public async Task<ActionResult<McpUsageAnalyticsResult>> GetAnalytics([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+    {
+        var result = await _mediator.Send(new GetMcpUsageAnalyticsQuery
+        {
+            StartDate = startDate,
+            EndDate = endDate
+        });
+        return Ok(result);
+    }
 }

@@ -40,6 +40,7 @@ public interface IMizanDbContext
     DbSet<Streak> Streaks { get; }
     DbSet<AiChatThread> AiChatThreads { get; }
     DbSet<McpToken> McpTokens { get; }
+    DbSet<McpUsageLog> McpUsageLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

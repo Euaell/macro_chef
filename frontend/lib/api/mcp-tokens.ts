@@ -3,6 +3,7 @@ import type {
   CreateMcpTokenResult,
   GetMcpTokensResult,
   McpTokenDto,
+  McpUsageAnalyticsResult,
 } from "@/types/mcp";
 
 const API_BASE = "/api/bff";
@@ -74,6 +75,29 @@ export const mcpTokenApi = {
   async revokeToken(tokenId: string): Promise<void> {
     await fetchApi<void>(`/McpTokens/${tokenId}`, {
       method: "DELETE",
+    });
+  },
+
+  /**
+   * Get MCP usage analytics
+   */
+  async getAnalytics(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<McpUsageAnalyticsResult> {
+    const params = new URLSearchParams();
+    if (startDate) {
+      params.append("startDate", startDate.toISOString());
+    }
+    if (endDate) {
+      params.append("endDate", endDate.toISOString());
+    }
+
+    const queryString = params.toString();
+    const path = queryString ? `/McpTokens/analytics?${queryString}` : "/McpTokens/analytics";
+
+    return fetchApi<McpUsageAnalyticsResult>(path, {
+      method: "GET",
     });
   },
 };
