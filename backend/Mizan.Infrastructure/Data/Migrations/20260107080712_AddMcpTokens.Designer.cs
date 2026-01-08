@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mizan.Infrastructure.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Mizan.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MizanDbContext))]
-    partial class MizanDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260107080712_AddMcpTokens")]
+    partial class AddMcpTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -823,62 +826,6 @@ namespace Mizan.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "IsActive");
 
                     b.ToTable("mcp_tokens", (string)null);
-                });
-
-            modelBuilder.Entity("Mizan.Domain.Entities.McpUsageLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("error_message");
-
-                    b.Property<int>("ExecutionTimeMs")
-                        .HasColumnType("integer")
-                        .HasColumnName("execution_time_ms");
-
-                    b.Property<Guid>("McpTokenId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("mcp_token_id");
-
-                    b.Property<string>("Parameters")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("parameters");
-
-                    b.Property<bool>("Success")
-                        .HasColumnType("boolean")
-                        .HasColumnName("success");
-
-                    b.Property<DateTime>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("timestamp")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("ToolName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("tool_name");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("McpTokenId");
-
-                    b.HasIndex("ToolName");
-
-                    b.HasIndex("UserId", "Timestamp");
-
-                    b.ToTable("mcp_usage_logs", (string)null);
                 });
 
             modelBuilder.Entity("Mizan.Domain.Entities.MealPlan", b =>
@@ -1809,25 +1756,6 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Mizan.Domain.Entities.McpUsageLog", b =>
-                {
-                    b.HasOne("Mizan.Domain.Entities.McpToken", "McpToken")
-                        .WithMany()
-                        .HasForeignKey("McpTokenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Mizan.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("McpToken");
 
                     b.Navigation("User");
                 });
