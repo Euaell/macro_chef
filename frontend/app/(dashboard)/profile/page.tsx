@@ -364,6 +364,34 @@ export default function ProfilePage() {
 				</div>
 			)}
 
+			{/* Developer Settings */}
+			<div className="card p-6 border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50">
+				<div className="flex items-center gap-3 mb-4">
+					<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+						<i className="ri-code-s-slash-line text-xl text-white" />
+					</div>
+					<div>
+						<h2 className="font-semibold text-slate-900">Developer Settings</h2>
+						<p className="text-sm text-slate-600">API access and integrations</p>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 gap-3">
+					<Link href="/profile/mcp" className="card-hover p-4 bg-white group">
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
+								<i className="ri-openai-line text-lg text-white" />
+							</div>
+							<div className="flex-1">
+								<h3 className="font-medium text-slate-900">MCP Integration</h3>
+								<p className="text-xs text-slate-500">Model Context Protocol tokens & analytics</p>
+							</div>
+							<i className="ri-arrow-right-s-line text-lg text-slate-400 group-hover:text-purple-500 transition-colors" />
+						</div>
+					</Link>
+				</div>
+			</div>
+
 			{/* Account Settings */}
 			<div className="card p-6 space-y-4">
 				<h2 className="font-semibold text-slate-900 flex items-center gap-2">
