@@ -98,9 +98,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: mizan-backend
-    # NO PORT EXPOSURE - backend is only accessible via Docker network from frontend
-    expose:
-      - "8080"
+    # Exposed on 5000 for local development
+    ports:
+      - "5000:8080"
     volumes:
       - ./backend:/src
     environment:
@@ -116,11 +116,32 @@ services:
       # BFF Authentication (replaces JWT/BetterAuth)
       - Bff__TrustedSecret=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
       - Bff__AllowedOrigins__0=http://frontend:3000
+      - Bff__AllowedOrigins__1=http://localhost:3000
       - OpenAI__ApiKey=${OPENAI_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - mizan-network
+
+  # MCP Server (Model Context Protocol over SSE)
+  mcp:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.mcp
+    container_name: mizan-mcp
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=mizan;Username=mizan;Password=${DB_PASSWORD:-mizan_dev_password}
+    volumes:
+      - ./backend/Mizan.Mcp.Server/logs:/app/logs
+    depends_on:
+      postgres:
         condition: service_healthy
     networks:
       - mizan-network

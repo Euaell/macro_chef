@@ -15,6 +15,7 @@ public record ValidateTokenResult
 {
     public Guid UserId { get; init; }
     public bool IsValid { get; init; }
+    public Guid? TokenId { get; init; }
 }
 
 public class ValidateTokenCommandHandler : IRequestHandler<ValidateTokenCommand, ValidateTokenResult>
@@ -72,6 +73,7 @@ public class ValidateTokenCommandHandler : IRequestHandler<ValidateTokenCommand,
         return new ValidateTokenResult
         {
             UserId = mcpToken.UserId,
+            TokenId = mcpToken.Id,
             IsValid = true
         };
     }

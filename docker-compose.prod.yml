@@ -74,6 +74,33 @@ services:
         reservations:
           memory: 256M
 
+  mcp:
+    image: euaell/mizan-mcp:latest
+    container_name: mizan-mcp
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__PostgreSQL=${ConnectionStrings__PostgreSQL}
+    networks:
+      - proxy-net
+      - postgresql-db-n8n
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 256M
+
 networks:
   proxy-net:
     external: true

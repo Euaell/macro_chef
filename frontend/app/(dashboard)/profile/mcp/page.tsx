@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useMcpTokens, useMcpAnalytics } from "@/lib/hooks/useMcpTokens";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -18,26 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Copy,
-  Trash2,
-  Plus,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  TrendingUp,
-  Activity,
-  BarChart3,
-} from "lucide-react";
+import { Copy, Trash2, Plus, CheckCircle2, Activity, Clock, TrendingUp } from "lucide-react";
 import type { CreateMcpTokenResult } from "@/types/mcp";
 
 export default function McpPage() {
@@ -66,9 +45,7 @@ export default function McpPage() {
   };
 
   const handleRevokeToken = async (tokenId: string) => {
-    if (!confirm("Are you sure you want to revoke this token? This action cannot be undone.")) {
-      return;
-    }
+    if (!confirm("Revoke this token? Claude will no longer be able to connect.")) return;
     await revokeToken(tokenId);
   };
 
@@ -78,15 +55,14 @@ export default function McpPage() {
     setTimeout(() => setTokenCopied(false), 2000);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
 
   const mcpUrl = process.env.NEXT_PUBLIC_MCP_URL || "http://localhost:5001/mcp";
   const configSnippet = (token: string) => `{
@@ -106,12 +82,51 @@ export default function McpPage() {
 }`;
 
   return (
-    <div className="container max-w-6xl py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">MCP Integration</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your Model Context Protocol tokens and monitor usage
-        </p>
+    <div className="max-w-5xl mx-auto space-y-6 pb-10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-brand-600 font-semibold">Model Context Protocol</p>
+          <h1 className="text-3xl font-bold text-slate-900">MCP Integration</h1>
+          <p className="text-slate-500">
+            Generate secure tokens for Claude, manage access, and review usage analytics.
+          </p>
+        </div>
+
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <button className="btn-primary inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Generate Token
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Generate New MCP Token</DialogTitle>
+              <DialogDescription>
+                Create a token for Claude for Desktop or any MCP-compatible client.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Token Name</Label>
+                <Input
+                  id="name"
+                  placeholder="e.g., Home Laptop, Work Desktop"
+                  value={tokenName}
+                  onChange={(e) => setTokenName(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex justify-end gap-2">
+              <button className="btn-secondary" onClick={() => setCreateDialogOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={handleCreateToken} disabled={!tokenName.trim()}>
+                Generate
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {error && (
@@ -120,290 +135,230 @@ export default function McpPage() {
         </Alert>
       )}
 
-      {/* Token Created Success Dialog */}
       {createdToken && (
         <Dialog open={!!createdToken} onOpenChange={() => setCreatedToken(null)}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
-              <DialogTitle>Token Created Successfully</DialogTitle>
-              <DialogDescription>
-                Save this token now - it won&apos;t be shown again!
-              </DialogDescription>
+              <DialogTitle>Token Created</DialogTitle>
+              <DialogDescription>Copy this value now— it won&apos;t be shown again.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="bg-muted p-4 rounded-md flex items-center justify-between">
+              <div className="bg-slate-900 text-white rounded-xl p-4 flex items-center justify-between">
                 <code className="text-sm break-all">{createdToken.plaintextToken}</code>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
+                  className="btn-secondary bg-white/10 border-white/20 text-white hover:bg-white/20"
                   onClick={() => copyToken(createdToken.plaintextToken)}
                 >
-                  {tokenCopied ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
+                  {tokenCopied ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <Copy className="h-4 w-4" />}
+                </button>
               </div>
 
-              <div>
-                <h4 className="font-semibold mb-2">Claude for Desktop Configuration</h4>
-                <div className="text-sm text-muted-foreground mb-2">
-                  Add this to your <code>claude_desktop_config.json</code>:
+              <div className="card p-4">
+                <h4 className="font-semibold text-slate-900 mb-2">Claude for Desktop</h4>
+                <p className="text-sm text-slate-500 mb-2">Add this to your claude_desktop_config.json:</p>
+                <pre className="bg-slate-900 text-slate-50 rounded-lg p-4 text-xs overflow-x-auto">{configSnippet(createdToken.plaintextToken)}</pre>
+                <div className="text-sm text-slate-500 mt-3">
+                  <p>Config file locations:</p>
+                  <ul className="list-disc list-inside ml-4 space-y-1">
+                    <li>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
+                    <li>Windows: <code>%APPDATA%\\Claude\\claude_desktop_config.json</code></li>
+                  </ul>
                 </div>
-                <pre className="bg-muted p-4 rounded-md text-xs overflow-x-auto">
-                  {configSnippet(createdToken.plaintextToken)}
-                </pre>
-              </div>
-
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p>📍 Config file location:</p>
-                <ul className="list-disc list-inside ml-4">
-                  <li>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
-                  <li>Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
-                </ul>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => setCreatedToken(null)}>Done</Button>
+              <button className="btn-primary" onClick={() => setCreatedToken(null)}>
+                Done
+              </button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
 
-      <Tabs defaultValue="tokens" className="w-full">
-        <TabsList>
-          <TabsTrigger value="tokens">Tokens</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
+      <div className="card p-6">
+        <Tabs defaultValue="tokens" className="w-full">
+          <TabsList className="bg-slate-100 p-1 rounded-2xl inline-flex gap-1">
+            <TabsTrigger value="tokens" className="rounded-xl px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-slate-900">
+              Tokens
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow data-[state=active]:text-slate-900">
+              Analytics
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="tokens" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>MCP Tokens</CardTitle>
-                <CardDescription>
-                  Manage your Model Context Protocol authentication tokens
-                </CardDescription>
+          <TabsContent value="tokens" className="mt-4 space-y-4">
+            {loading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
               </div>
-              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Generate Token
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Generate New MCP Token</DialogTitle>
-                    <DialogDescription>
-                      Create a new token for Claude for Desktop or other MCP clients
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Token Name</Label>
-                      <Input
-                        id="name"
-                        placeholder="e.g., Home Laptop, Work Desktop"
-                        value={tokenName}
-                        onChange={(e) => setTokenName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateToken} disabled={!tokenName.trim()}>
-                      Generate
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              ) : tokens.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No tokens yet. Generate your first token to get started.
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Last Used</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+            ) : tokens.length === 0 ? (
+              <div className="text-center py-10 text-slate-500">
+                No tokens yet. Generate your first token to get started.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-left">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold text-slate-600">Name</th>
+                      <th className="px-4 py-3 font-semibold text-slate-600">Status</th>
+                      <th className="px-4 py-3 font-semibold text-slate-600">Created</th>
+                      <th className="px-4 py-3 font-semibold text-slate-600">Last Used</th>
+                      <th className="px-4 py-3 font-semibold text-right text-slate-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
                     {tokens.map((token) => (
-                      <TableRow key={token.id}>
-                        <TableCell className="font-medium">{token.name}</TableCell>
-                        <TableCell>
-                          <Badge variant={token.isActive ? "default" : "secondary"}>
+                      <tr key={token.id} className="hover:bg-slate-50/60">
+                        <td className="px-4 py-3 font-medium text-slate-900">{token.name}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                              token.isActive
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                : "bg-slate-100 text-slate-500 border border-slate-200"
+                            }`}
+                          >
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                token.isActive ? "bg-emerald-500" : "bg-slate-400"
+                              }`}
+                            />
                             {token.isActive ? "Active" : "Revoked"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(token.createdAt)}</TableCell>
-                        <TableCell>
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{formatDate(token.createdAt)}</td>
+                        <td className="px-4 py-3 text-slate-700">
                           {token.lastUsedAt ? formatDate(token.lastUsedAt) : "Never"}
-                        </TableCell>
-                        <TableCell className="text-right">
+                        </td>
+                        <td className="px-4 py-3 text-right">
                           {token.isActive && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
+                            <button
+                              className="btn-secondary inline-flex items-center gap-2 text-destructive"
                               onClick={() => handleRevokeToken(token.id)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                              <Trash2 className="h-4 w-4" />
+                              Revoke
+                            </button>
                           )}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          {analyticsLoading ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
-          ) : analytics ? (
-            <>
-              {/* Overview Cards */}
-              <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Calls</CardTitle>
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics.overview.totalCalls}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {analytics.overview.successRate.toFixed(1)}% success rate
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {analytics.overview.averageExecutionTimeMs}ms
-                    </div>
-                    <p className="text-xs text-muted-foreground">Per API call</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Tokens</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {analytics.overview.uniqueTokensUsed}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Tokens in use</p>
-                  </CardContent>
-                </Card>
+                  </tbody>
+                </table>
               </div>
+            )}
+          </TabsContent>
 
-              {/* Tool Usage */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tool Usage</CardTitle>
-                  <CardDescription>Most frequently used MCP tools</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Tool Name</TableHead>
-                        <TableHead className="text-right">Calls</TableHead>
-                        <TableHead className="text-right">Success</TableHead>
-                        <TableHead className="text-right">Failed</TableHead>
-                        <TableHead className="text-right">Avg Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+          <TabsContent value="analytics" className="mt-4 space-y-4">
+            {analyticsLoading ? (
+              <div className="grid gap-4 md:grid-cols-3">
+                <Skeleton className="h-32" />
+                <Skeleton className="h-32" />
+                <Skeleton className="h-32" />
+              </div>
+            ) : analytics ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <MetricCard
+                    title="Total Calls"
+                    value={analytics.overview.totalCalls}
+                    subtitle={`${analytics.overview.successRate.toFixed(1)}% success rate`}
+                    icon={<Activity className="h-5 w-5 text-brand-600" />}
+                  />
+                  <MetricCard
+                    title="Avg Response Time"
+                    value={`${analytics.overview.averageExecutionTimeMs} ms`}
+                    subtitle="Per MCP call"
+                    icon={<Clock className="h-5 w-5 text-brand-600" />}
+                  />
+                  <MetricCard
+                    title="Active Tokens"
+                    value={analytics.overview.uniqueTokensUsed}
+                    subtitle="Tokens in use"
+                    icon={<TrendingUp className="h-5 w-5 text-brand-600" />}
+                  />
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="card p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-slate-900">Tool Usage</h3>
+                      <span className="text-xs text-slate-500">Last 30 days</span>
+                    </div>
+                    <div className="divide-y divide-slate-100">
                       {analytics.toolUsage.map((tool) => (
-                        <TableRow key={tool.toolName}>
-                          <TableCell className="font-medium">{tool.toolName}</TableCell>
-                          <TableCell className="text-right">{tool.callCount}</TableCell>
-                          <TableCell className="text-right text-green-600">
-                            {tool.successCount}
-                          </TableCell>
-                          <TableCell className="text-right text-red-600">
-                            {tool.failureCount}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {tool.averageExecutionTimeMs}ms
-                          </TableCell>
-                        </TableRow>
+                        <div key={tool.toolName} className="py-3 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-slate-900">{tool.toolName}</p>
+                            <p className="text-xs text-slate-500">
+                              {tool.successCount} success / {tool.failureCount} failed
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-slate-900">{tool.callCount} calls</p>
+                            <p className="text-xs text-slate-500">{tool.averageExecutionTimeMs} ms avg</p>
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                    </div>
+                  </div>
 
-              {/* Token Usage */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Token Usage</CardTitle>
-                  <CardDescription>Activity by token</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Token Name</TableHead>
-                        <TableHead className="text-right">Calls</TableHead>
-                        <TableHead className="text-right">Last Used</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <div className="card p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-slate-900">Token Usage</h3>
+                      <span className="text-xs text-slate-500">Most recent activity</span>
+                    </div>
+                    <div className="divide-y divide-slate-100">
                       {analytics.tokenUsage.map((token) => (
-                        <TableRow key={token.tokenId}>
-                          <TableCell className="font-medium">{token.tokenName}</TableCell>
-                          <TableCell className="text-right">{token.callCount}</TableCell>
-                          <TableCell className="text-right">
-                            {formatDate(token.lastUsed)}
-                          </TableCell>
-                        </TableRow>
+                        <div key={token.tokenId} className="py-3 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-slate-900">{token.tokenName}</p>
+                            <p className="text-xs text-slate-500">{token.callCount} calls</p>
+                          </div>
+                          <p className="text-xs text-slate-500">{formatDate(token.lastUsed)}</p>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No analytics data available yet. Start using your MCP tokens to see insights.
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-10 text-slate-500">
+                No analytics data yet. Start using your MCP tokens to see insights.
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  icon,
+}: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className="card p-4 border border-slate-200">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-xs uppercase text-slate-500 font-semibold">{title}</p>
+          <p className="text-2xl font-bold text-slate-900">{value}</p>
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+        </div>
+        <div className="h-10 w-10 rounded-2xl bg-brand-50 text-brand-700 flex items-center justify-center">
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }
