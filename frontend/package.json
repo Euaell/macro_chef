@@ -40,6 +40,7 @@
 		"nodemailer": "^7.0.12",
 		"openai": "^6.15.0",
 		"pino": "^10.1.0",
+		"pino-pretty": "^11.3.0",
 		"postgres": "^3.4.8",
 		"react": "^19.2.3",
 		"react-day-picker": "^9.13.0",
@@ -67,7 +68,6 @@
 		"openapi-typescript": "^7.10.1",
 		"openapi-zod-client": "^1.18.3",
 		"postcss": "^8.5.6",
-		"pino-pretty": "^11.3.0",
 		"tailwindcss": "^4.1.18",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.16"
