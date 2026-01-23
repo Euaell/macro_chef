@@ -158,7 +158,7 @@ public class CreateRecipeCommandHandler : IRequestHandler<CreateRecipeCommand, C
             decimal totalFat = 0;
             decimal totalFiber = 0;
 
-            foreach (var ingredientDto in request.Ingredients.Where(i => i.FoodId.HasValue && i.Amount.HasValue))
+            foreach (var ingredientDto in (request.Ingredients ?? []).Where(i => i.FoodId.HasValue && i.Amount.HasValue))
             {
                 if (foods.TryGetValue(ingredientDto.FoodId!.Value, out var food))
                 {
