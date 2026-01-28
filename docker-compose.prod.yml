@@ -15,9 +15,11 @@ services:
       # Override specific environment variables that differ from .env defaults
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      # Internal Docker network origin
-      - Bff__AllowedOrigins__0=http://frontend:3000
-      - Cors__Origins__0=http://frontend:3000
+      # JWT/JWKS validation
+      - BetterAuth__Issuer=${BetterAuth__Issuer}
+      - BetterAuth__Audience=${BetterAuth__Audience}
+      - BetterAuth__JwksUrl=${BetterAuth__JwksUrl}
+      - Cors__Origins__0=${BETTER_AUTH_URL}
 
     networks:
       - proxy-net
@@ -47,7 +49,7 @@ services:
     environment:
       # Override specific environment variables that differ from .env defaults
       - NODE_ENV=production
-      - BACKEND_API_URL=http://backend:8080
+      - API_URL=http://backend:8080
       - BETTER_AUTH_TRUST_HOST=true
       - NEXT_TELEMETRY_DISABLED=1
 

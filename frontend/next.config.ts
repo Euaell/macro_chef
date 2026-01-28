@@ -42,8 +42,7 @@ const nextConfig: NextConfig = {
 		];
 	},
 
-	// BFF Architecture: All backend API calls go through /api/bff/*
-	// No direct rewrites to backend - the BFF proxy route handles forwarding
+	// JWT-only: frontend talks directly to backend via NEXT_PUBLIC_API_URL
 };
 
 export default nextConfig;

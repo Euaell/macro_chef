@@ -155,6 +155,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 if (status.IsBanned)
                 {
                     context.Fail("User banned");
+                    return;
                 }
             }
         };

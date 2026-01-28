@@ -22,7 +22,7 @@ export class BackendApiError extends Error {
 }
 
 /**
- * Server-side API client for calling the backend with trusted secret
+ * Server-side API client for calling the backend with JWT
  * MUST only be used in Next.js API routes or Server Components/Actions
  */
 export async function callBackendApi<T>(
@@ -38,7 +38,7 @@ export async function callBackendApi<T>(
     throw new BackendApiError(401, "Unauthorized", { error: "Not authenticated" });
   }
 
-  const backendUrl = process.env.BACKEND_API_URL || "http://backend:8080";
+  const backendUrl = process.env.API_URL || process.env.BACKEND_API_URL || "http://backend:8080";
   const token = await getServerApiToken(requestHeaders);
   if (requireAuth && !token) {
     bffLogger.warn("Missing API token for authenticated request", { path });

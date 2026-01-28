@@ -18,7 +18,7 @@ public class UserStatusService : IUserStatusService
 
     public async Task<UserAccessStatus> GetStatusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        if (_cache.TryGetValue(userId, out UserAccessStatus cached))
+        if (_cache.TryGetValue(userId, out var cachedObj) && cachedObj is UserAccessStatus cached)
         {
             return cached;
         }

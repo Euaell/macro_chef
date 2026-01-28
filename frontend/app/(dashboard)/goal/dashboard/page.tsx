@@ -25,7 +25,7 @@ export default function GoalDashboard() {
 
   async function fetchData() {
     try {
-      const result = await apiClient<GoalData>(`/api/bff/Goals/progress?days=${days}`);
+      const result = await apiClient<GoalData>(`/api/Goals/progress?days=${days}`);
       setData(result);
     } catch (error) {
       console.error("Failed to fetch goal data:", error);

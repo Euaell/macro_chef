@@ -23,8 +23,10 @@ public class ApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
         // Use real PostgreSQL database from connection string or environment variable
         // This works in both docker-compose and GitHub Actions environments
 
-        // Set environment variables for BFF configuration required by startup validation
-        Environment.SetEnvironmentVariable("Bff__TrustedSecret", "test-secret-for-integration-tests");
+        // Set environment variables required by JWT/JWKS startup configuration
+        Environment.SetEnvironmentVariable("BetterAuth__JwksUrl", "http://localhost:3000/api/auth/jwks");
+        Environment.SetEnvironmentVariable("BetterAuth__Issuer", "http://localhost:3000");
+        Environment.SetEnvironmentVariable("BetterAuth__Audience", "mizan-api");
 
         _factory = factory;
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/auth-client";
 import ConfirmationModal from "@/components/ConfirmationModal";
 
 interface RecipeActionsProps {
@@ -21,17 +22,9 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     const handleToggleFavorite = async () => {
         setIsToggling(true);
         try {
-            const response = await fetch(`/api/bff/Recipes/${recipeId}/favorite`, {
+            const data = await apiClient<{ isFavorited: boolean }>(`/api/Recipes/${recipeId}/favorite`, {
                 method: "POST",
             });
-
-
-            if (!response.ok) {
-                const text = await response.text();
-                throw new Error(`Failed to toggle favorite.\n` + (text ? `: ${text}` : ""));
-            }
-
-            const data = await response.json();
             setIsFavorited(data.isFavorited);
             router.refresh();
         } catch (error) {
@@ -47,20 +40,9 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
         setShowDeleteModal(false);
 
         try {
-            const response = await fetch(`/api/bff/Recipes/${recipeId}`, {
+            await apiClient(`/api/Recipes/${recipeId}`, {
                 method: "DELETE",
             });
-            if (!response.ok) {
-                const text = await response.text();
-                console.error('[Recipe Delete] Error response:', text);
-
-                try {
-                    const data = JSON.parse(text);
-                    throw new Error(data.message || "Failed to delete recipe");
-                } catch {
-                    throw new Error(`Failed to delete recipe: ${response.status}`);
-                }
-            }
             router.push("/recipes");
             router.refresh();
         } catch (error: any) {

@@ -40,7 +40,7 @@ services:
     networks:
       - mizan-network
 
-  # Next.js Frontend with Bun (BFF Layer - Development with hot reload)
+  # Next.js Frontend with Bun (Development with hot reload)
   frontend:
     build:
       context: ./frontend
@@ -60,16 +60,15 @@ services:
       # BetterAuth config
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev_secret_change_in_production}
       - BETTER_AUTH_URL=http://localhost:3000
-
-      # BFF Trusted Secret (shared with backend)
-      - BFF_TRUSTED_SECRET=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
+      - BETTER_AUTH_ISSUER=http://localhost:3000
+      - BETTER_AUTH_AUDIENCE=mizan-api
 
       # Backend API (internal network - server-side)
-      - BACKEND_API_URL=http://backend:8080
+      - API_URL=http://backend:8080
 
       # Public URLs
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - NEXT_PUBLIC_API_URL=http://localhost:3000
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
 
       # External services
       - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
@@ -92,7 +91,7 @@ services:
     networks:
       - mizan-network
 
-  # .NET Backend API (Internal Only - BFF Protected)
+  # .NET Backend API (JWT protected)
   backend:
     build:
       context: ./backend
@@ -113,10 +112,12 @@ services:
       # Redis
       - ConnectionStrings__Redis=redis:6379
 
-      # BFF Authentication (replaces JWT/BetterAuth)
-      - Bff__TrustedSecret=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
-      - Bff__AllowedOrigins__0=http://frontend:3000
-      - Bff__AllowedOrigins__1=http://localhost:3000
+      # JWT/JWKS Authentication
+      - BetterAuth__Issuer=http://localhost:3000
+      - BetterAuth__Audience=mizan-api
+      - BetterAuth__JwksUrl=http://frontend:3000/api/auth/jwks
+      - Cors__Origins__0=http://frontend:3000
+      - Cors__Origins__1=http://localhost:3000
       - OpenAI__ApiKey=${OPENAI_API_KEY:-}
     depends_on:
       postgres:
@@ -158,7 +159,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__PostgreSQL=Host=postgres;Database=mizan_test;Username=mizan;Password=${DB_PASSWORD:-mizan_dev_password}
       - ConnectionStrings__Redis=redis:6379
-      - Bff__TrustedSecret=${BFF_TRUSTED_SECRET:-dev_bff_secret_change_in_production}
+      - BetterAuth__Issuer=http://localhost:3000
+      - BetterAuth__Audience=mizan-api
+      - BetterAuth__JwksUrl=http://frontend:3000/api/auth/jwks
     command: dotnet test --logger "console;verbosity=normal"
     depends_on:
       postgres:
