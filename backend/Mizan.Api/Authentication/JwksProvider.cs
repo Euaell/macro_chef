@@ -39,7 +39,7 @@ public class JwksProvider : IJwksProvider
 
     public async Task<IReadOnlyCollection<SecurityKey>> GetSigningKeysAsync(CancellationToken cancellationToken = default)
     {
-        if (_cache.TryGetValue(CacheKey, out IReadOnlyCollection<SecurityKey> cached))
+        if (_cache.TryGetValue(CacheKey, out IReadOnlyCollection<SecurityKey>? cached) && cached is not null)
         {
             return cached;
         }
@@ -47,7 +47,7 @@ public class JwksProvider : IJwksProvider
         await _refreshLock.WaitAsync(cancellationToken);
         try
         {
-            if (_cache.TryGetValue(CacheKey, out cached))
+            if (_cache.TryGetValue(CacheKey, out cached) && cached is not null)
             {
                 return cached;
             }

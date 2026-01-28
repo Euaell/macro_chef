@@ -99,29 +99,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtIssuer,
             ValidateAudience = !string.IsNullOrWhiteSpace(jwtAudience),
             ValidAudience = jwtAudience,
-            ValidateIssuerSigningKey = true,
+            ValidateIssuerSigningKey = false,
             RequireSignedTokens = true,
+            ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(2),
             NameClaimType = "sub",
             RoleClaimType = "role",
-            ValidAlgorithms = new[] { SecurityAlgorithms.EcdsaSha256 }
-        };
-
-        options.TokenValidationParameters.IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
-        {
-            var provider = JwksProviderAccessor.Current;
-            if (provider == null)
-            {
-                return Array.Empty<SecurityKey>();
-            }
-
-            var keys = provider.GetSigningKeysAsync(CancellationToken.None).GetAwaiter().GetResult();
-            if (string.IsNullOrWhiteSpace(kid))
-            {
-                return keys;
-            }
-
-            return keys.Where(k => string.Equals(k.KeyId, kid, StringComparison.Ordinal));
+            ValidAlgorithms = new[] { "EdDSA" },
+            SignatureValidator = EdDsaJwtSignatureValidator.Validate
         };
 
         options.Events = new JwtBearerEvents

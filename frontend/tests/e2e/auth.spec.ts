@@ -5,6 +5,7 @@ import {
   closeDb,
   deleteUserByEmail,
   getUserByEmail,
+  getPasswordResetToken,
   setUserBanned,
   setUserVerified,
 } from "./utils/db";
@@ -60,6 +61,20 @@ async function getJwt(page: Page) {
   const data = await tokenResponse.json();
   expect(data.token).toBeTruthy();
   return data.token as string;
+}
+
+async function requestPasswordReset(page: Page, email: string) {
+  const response = await page.request.post("/api/auth/request-password-reset", {
+    data: { email },
+  });
+  expect(response.ok()).toBeTruthy();
+}
+
+async function resetPassword(page: Page, token: string, newPassword: string) {
+  const response = await page.request.post("/api/auth/reset-password", {
+    data: { token, newPassword },
+  });
+  expect(response.ok()).toBeTruthy();
 }
 
 test.describe.configure({ mode: "serial" });
@@ -140,6 +155,49 @@ test("backend rejects unverified user", async ({ page }) => {
       headers: { Authorization: `Bearer ${jwt}` },
     });
     expect(meRes.status()).toBe(401);
+  } finally {
+    await deleteUserByEmail(email);
+  }
+});
+
+test("password reset updates credentials", async ({ page }) => {
+  const email = uniqueEmail("reset");
+  const newPassword = "NewPassw0rd!456";
+
+  try {
+    await register(page, email, password);
+    await verifyEmail(page, email);
+
+    await login(page, email, password);
+    await getJwt(page);
+
+    await requestPasswordReset(page, email);
+    const token = await getPasswordResetToken(email);
+    expect(token).toBeTruthy();
+
+    await resetPassword(page, token!, newPassword);
+
+    await login(page, email, newPassword);
+    await getJwt(page);
+  } finally {
+    await deleteUserByEmail(email);
+  }
+});
+
+test("sign-out clears session token access", async ({ page }) => {
+  const email = uniqueEmail("signout");
+
+  try {
+    await register(page, email, password);
+    await verifyEmail(page, email);
+    await login(page, email, password);
+    await getJwt(page);
+
+    const signOutResponse = await page.request.post("/api/auth/sign-out");
+    expect(signOutResponse.ok()).toBeTruthy();
+
+    const tokenResponse = await page.request.get("/api/auth/token");
+    expect(tokenResponse.status()).toBe(401);
   } finally {
     await deleteUserByEmail(email);
   }

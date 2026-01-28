@@ -110,11 +110,6 @@ export const auth = betterAuth({
   },
   plugins: [
     jwt({
-      jwks: {
-        keyPairConfig: {
-          alg: "ES256",
-        },
-      },
       jwt: {
         issuer: process.env.BETTER_AUTH_ISSUER,
         audience: process.env.BETTER_AUTH_AUDIENCE,

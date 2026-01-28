@@ -27,6 +27,30 @@ export async function getUserByEmail(email: string) {
   return row ?? null;
 }
 
+export async function getPasswordResetToken(email: string) {
+  const user = await getUserByEmail(email);
+  if (!user) {
+    return null;
+  }
+
+  const [row] = await sql<{
+    identifier: string;
+  }[]>`
+    select identifier
+    from verification
+    where identifier like 'reset-password:%'
+      and value = ${user.id}
+    order by created_at desc
+    limit 1
+  `;
+
+  if (!row) {
+    return null;
+  }
+
+  return row.identifier.replace("reset-password:", "");
+}
+
 export async function setUserVerified(email: string, verified: boolean) {
   await sql`
     update users
