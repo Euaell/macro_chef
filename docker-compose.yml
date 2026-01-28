@@ -193,7 +193,7 @@ services:
         condition: service_started
       frontend:
         condition: service_started
-    command: bash -lc "for i in {1..120}; do if curl -sf http://frontend:3000 >/dev/null 2>&1 && curl -sf http://backend:8080/health >/dev/null 2>&1; then ready=1; break; fi; sleep 1; done; if [ -z \"$$ready\" ]; then echo 'services not ready' >&2; exit 1; fi; bun run test:e2e"
+    command: bash -lc "for i in {1..120}; do if curl -sf http://frontend:3000 >/dev/null 2>&1 && curl -sf http://backend:8080/health >/dev/null 2>&1; then ready=1; break; fi; sleep 1; done; if [ -z \"$$ready\" ]; then echo 'services not ready' >&2; exit 1; fi; bun run test:e2e -- --reporter=line"
     networks:
       - mizan-network
     profiles:

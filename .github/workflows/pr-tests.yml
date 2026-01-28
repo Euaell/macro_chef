@@ -143,6 +143,44 @@ jobs:
           API_URL: "http://localhost:8080"
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+
+      - name: Run tests
+        working-directory: frontend
+        env:
+          CI: "1"
+          DATABASE_URL: "postgresql://mizan:mizan_test_password@localhost:5432/mizan_test"
+          BETTER_AUTH_SECRET: "test-secret-for-ci-must-be-at-least-32-characters-long"
+          BETTER_AUTH_URL: "http://localhost:3000"
+          BETTER_AUTH_ISSUER: "http://localhost:3000"
+          BETTER_AUTH_AUDIENCE: "mizan-api"
+          NEXT_PUBLIC_API_URL: "http://localhost:5000"
+        run: bun run test -- --reporter=basic
+
   frontend-typecheck:
     name: Frontend Type Check
     runs-on: ubuntu-latest
@@ -172,3 +210,22 @@ jobs:
       - name: Type check
         working-directory: frontend
         run: bunx tsc --noEmit
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run E2E suite (docker-compose)
+        env:
+          DB_PASSWORD: "mizan_test_password"
+          BETTER_AUTH_SECRET: "test-secret-for-ci-must-be-at-least-32-characters-long"
+        run: docker compose --profile test up --build --abort-on-container-exit e2e
+
+      - name: Cleanup
+        if: always()
+        run: docker compose --profile test down -v
