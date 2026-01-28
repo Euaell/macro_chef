@@ -22,4 +22,4 @@ COPY . .
 RUN dotnet restore backend/Mizan.sln
 RUN bun install --frozen-lockfile --cwd frontend
 
-CMD ["bash", "-lc", "dotnet test backend/Mizan.Tests/Mizan.Tests.csproj --configuration Release --verbosity minimal --logger \"console;verbosity=minimal\" && bun run --cwd frontend test -- --reporter=basic && bun run --cwd frontend test:e2e -- --reporter=line"]
+CMD ["bash", "-lc", "dotnet test backend/Mizan.sln --configuration Release --verbosity minimal --logger \"console;verbosity=minimal\" && bun run --cwd frontend test -- --reporter=basic && bun run --cwd frontend test:e2e -- --reporter=line"]

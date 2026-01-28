@@ -75,7 +75,7 @@ jobs:
           BetterAuth__JwksUrl: "http://localhost:3000/api/auth/jwks"
           DOTNET_NOLOGO: "1"
           DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-        run: dotnet test --no-build --configuration Release --verbosity minimal --logger "console;verbosity=minimal"
+        run: dotnet test Mizan.sln --no-build --configuration Release --verbosity minimal --logger "console;verbosity=minimal"
 
   mcp-build:
     name: MCP Build
