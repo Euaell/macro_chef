@@ -18,8 +18,8 @@ namespace Mizan.Tests.Integration;
 
 public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private static readonly string[] TablesToTruncate =
-    [
+    private static readonly string[] TablesToTruncate = new[]
+    {
         "mcp_usage_logs",
         "mcp_tokens",
         "goal_progress",
@@ -36,7 +36,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         "households",
         "audit_logs",
         "users"
-    ];
+    };
 
     private readonly TestJwtIssuer _jwtIssuer;
     private readonly string _issuer;
