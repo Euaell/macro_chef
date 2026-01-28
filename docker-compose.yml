@@ -86,13 +86,7 @@ services:
       postgres:
         condition: service_healthy
       backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+        condition: service_started
     networks:
       - mizan-network
 
@@ -129,12 +123,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
     networks:
       - mizan-network
 
@@ -184,6 +172,8 @@ services:
     profiles:
       - test
 
+  # E2E testing (not used in CI - see .github/workflows/pr-tests.yml)
+  # This is kept for local E2E testing convenience
   e2e:
     build:
       context: ./frontend
@@ -201,10 +191,10 @@ services:
       postgres:
         condition: service_healthy
       backend:
-        condition: service_healthy
+        condition: service_started
       frontend:
-        condition: service_healthy
-    command: bun run test:e2e -- --reporter=line
+        condition: service_started
+    command: bash -lc "for i in {1..120}; do if curl -sf http://frontend:3000/api/health >/dev/null 2>&1 && curl -sf http://backend:8080/health >/dev/null 2>&1; then ready=1; break; fi; sleep 1; done; if [ -z \"$$ready\" ]; then echo 'services not ready' >&2; exit 1; fi; bun run test:e2e -- --reporter=line"
     networks:
       - mizan-network
     profiles:
