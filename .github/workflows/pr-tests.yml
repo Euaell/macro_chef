@@ -70,7 +70,12 @@ jobs:
         env:
           ConnectionStrings__PostgreSQL: "Host=localhost;Port=5432;Database=mizan_test;Username=mizan;Password=mizan_test_password"
           ConnectionStrings__Redis: "localhost:6379"
-        run: dotnet test --no-build --configuration Release --verbosity normal
+          BetterAuth__Issuer: "http://localhost:3000"
+          BetterAuth__Audience: "mizan-api"
+          BetterAuth__JwksUrl: "http://localhost:3000/api/auth/jwks"
+          DOTNET_NOLOGO: "1"
+          DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+        run: dotnet test --no-build --configuration Release --verbosity minimal --logger "console;verbosity=minimal"
 
   mcp-build:
     name: MCP Build
@@ -132,7 +137,9 @@ jobs:
         env:
           DATABASE_URL: "postgresql://mizan:mizan_test_password@localhost:5432/mizan_test"
           BETTER_AUTH_SECRET: "test-secret-for-ci-must-be-at-least-32-characters-long"
-          BFF_TRUSTED_SECRET: "test-bff-secret-for-ci-environment"
+          BETTER_AUTH_URL: "http://localhost:3000"
+          BETTER_AUTH_ISSUER: "http://localhost:3000"
+          BETTER_AUTH_AUDIENCE: "mizan-api"
           API_URL: "http://localhost:8080"
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
