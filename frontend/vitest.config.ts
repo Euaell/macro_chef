@@ -9,7 +9,7 @@ export default defineConfig({
 		globals: true,
 		setupFiles: ["./__tests__/setup.tsx"],
 		include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-		exclude: ["node_modules", ".next", "backend"],
+		exclude: ["node_modules", ".next", "backend", "tests/e2e/**"],
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json", "html"],

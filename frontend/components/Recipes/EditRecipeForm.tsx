@@ -6,6 +6,7 @@ import type { Ingredient } from "@/data/ingredient";
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/auth-client";
 import Modal from "@/components/Modal";
 import type { Recipe } from "@/data/recipe";
 
@@ -128,9 +129,9 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
         setSelectedIngredients(newIngredients);
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        setIsSubmitting(true)
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
 
         const recipeData = {
             id: recipe.id,
@@ -149,31 +150,19 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
             isPublic: true
         }
 
-        fetch(`/api/bff/Recipes/${recipe.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(recipeData),
-        })
-            .then(res => {
-                if (!res.ok) {
-                    return res.text().then(text => {
-                        console.error('[Recipe Update] Error response:', text);
-                        throw new Error(`Failed to update recipe: ${res.status}`);
-                    });
-                }
-                return res.json();
-            })
-            .then((data) => {
-                router.push(`/recipes/${recipe.id}`);
-                router.refresh();
-            })
-            .catch(err => {
-                console.error('[Recipe Update] Failed:', err);
-                alert('Failed to update recipe. Please try again.');
-            })
-            .finally(() => setIsSubmitting(false))
+        try {
+            await apiClient(`/api/Recipes/${recipe.id}`, {
+                method: "PUT",
+                body: JSON.stringify(recipeData),
+            });
+            router.push(`/recipes/${recipe.id}`);
+            router.refresh();
+        } catch (err) {
+            console.error('[Recipe Update] Failed:', err);
+            alert('Failed to update recipe. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (

@@ -7,6 +7,9 @@ WORKDIR /app
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
+# Copy source code
+COPY . .
+
 EXPOSE 3000
 
 ENV PORT=3000

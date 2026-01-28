@@ -1,6 +1,9 @@
 # Backend Development Dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:10.0
 
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /src
 
 ENV ASPNETCORE_ENVIRONMENT=Development
@@ -18,6 +21,9 @@ COPY ["Mizan.Tests/Mizan.Tests.csproj", "Mizan.Tests/"]
 # Clear NuGet cache and restore with no-cache to avoid layer caching issues
 RUN dotnet nuget locals all --clear && \
     dotnet restore "Mizan.Api/Mizan.Api.csproj" --no-cache
+
+# Copy source code
+COPY . .
 
 EXPOSE 8080
 

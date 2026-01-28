@@ -29,7 +29,7 @@ export default function LogProgress() {
     setLoading(true);
 
     try {
-      await apiClient("/api/bff/Goals/progress", {
+      await apiClient("/api/Goals/progress", {
         method: "POST",
         body: JSON.stringify({
           actualCalories: parseInt(formData.actualCalories),
