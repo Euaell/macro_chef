@@ -5,8 +5,17 @@ import type {
   McpTokenDto,
   McpUsageAnalyticsResult,
 } from "@/types/mcp";
+import { getApiToken } from "@/lib/auth-client";
 
-const API_BASE = "/api/bff";
+const API_BASE = () => {
+  const baseUrl = typeof window === "undefined"
+    ? process.env.API_URL
+    : process.env.NEXT_PUBLIC_API_URL;
+  if (!baseUrl) {
+    throw new Error("API base URL not configured");
+  }
+  return `${baseUrl.replace(/\/$/, "")}/api`;
+};
 
 export class McpTokenApiError extends Error {
   constructor(
@@ -22,10 +31,12 @@ async function fetchApi<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const token = await getApiToken();
+  const response = await fetch(`${API_BASE()}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });

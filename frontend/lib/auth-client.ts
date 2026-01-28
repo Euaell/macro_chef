@@ -32,11 +32,56 @@ export const {
   organization,
 } = authClient;
 
-// Get JWT token for API calls
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
+function decodeJwtExpiry(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload));
+    if (!decoded?.exp) return null;
+    return decoded.exp * 1000;
+  } catch {
+    return null;
+  }
+}
+
 export async function getApiToken(): Promise<string | null> {
-  // JWT/JWKS based tokens are no longer used. Calls will proceed without an auth token.
-  authLogger.info("API token request skipped (JWKS removed)");
-  return null;
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 30000) {
+    return cachedToken.token;
+  }
+
+  try {
+    const response = await fetch("/api/auth/token", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      authLogger.warn("Failed to fetch API token", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      return null;
+    }
+
+    const data = await response.json().catch(() => null);
+    const token = data?.token;
+    if (!token) {
+      authLogger.warn("API token missing in response");
+      return null;
+    }
+
+    const expiresAt = decodeJwtExpiry(token) ?? Date.now() + 10 * 60 * 1000;
+    cachedToken = { token, expiresAt };
+
+    return token;
+  } catch (error) {
+    authLogger.error("API token fetch failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 // Handle expired or invalid session
@@ -67,20 +112,18 @@ export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // For BFF routes (/api/bff/*), use relative URLs (no base URL)
-  // BFF routes are handled by Next.js frontend, not backend
-  const isBffRoute = endpoint.startsWith('/api/bff/')
-  const baseUrl = isBffRoute
-    ? ''
-    : ((typeof window === 'undefined' ? process.env.API_URL! : (typeof process !== 'undefined' && process.env["NEXT_PUBLIC_API_URL"]!)));
-  const apiUrl = baseUrl;
+  const normalizedEndpoint = endpoint.startsWith("/api/bff/")
+    ? `/api/${endpoint.slice("/api/bff/".length)}`
+    : endpoint;
+  const apiUrl = typeof window === "undefined"
+    ? process.env.API_URL!
+    : process.env["NEXT_PUBLIC_API_URL"]!;
 
   authLogger.debug("API request starting", {
-    endpoint,
+    endpoint: normalizedEndpoint,
     method: options.method || "GET",
-    apiUrl: isBffRoute ? 'relative' : apiUrl,
-    isBffRoute,
-    isServer: typeof window === 'undefined',
+    apiUrl,
+    isServer: typeof window === "undefined",
   });
 
   let headers: HeadersInit = {
@@ -88,27 +131,24 @@ export async function apiClient<T>(
     ...options.headers,
   };
 
-  // No auth token needed for BFF routes - session cookies are sent automatically
-  if (!isBffRoute) {
-    const token = await getApiToken();
-    if (token) {
-      headers = {
-        ...headers,
-        Authorization: `Bearer ${token}`,
-      };
-      authLogger.debug("Token attached to request");
-    } else {
-      authLogger.debug("No token for non-BFF request", { endpoint });
-    }
+  const token = await getApiToken();
+  if (token) {
+    headers = {
+      ...headers,
+      Authorization: `Bearer ${token}`,
+    };
+    authLogger.debug("Token attached to request");
+  } else {
+    authLogger.debug("No token for request", { endpoint: normalizedEndpoint });
   }
 
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${apiUrl}${endpoint}`, {
+    const response = await fetch(`${apiUrl}${normalizedEndpoint}`, {
       ...options,
       headers,
-      credentials: isBffRoute ? 'include' : options.credentials, // Include cookies for BFF routes
+      credentials: options.credentials,
     });
 
     const duration = Date.now() - startTime;

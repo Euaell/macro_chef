@@ -10,10 +10,6 @@ import "server-only";
 export function validateStartupConfig(): void {
   const errors: string[] = [];
 
-  if (!process.env.BFF_TRUSTED_SECRET) {
-    errors.push("BFF_TRUSTED_SECRET environment variable is required");
-  }
-
   if (!process.env.DATABASE_URL) {
     errors.push("DATABASE_URL environment variable is required");
   }

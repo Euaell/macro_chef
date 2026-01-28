@@ -1,11 +1,14 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Mizan.Api.Authentication;
 using Mizan.Api.Hubs;
 using Mizan.Api.Middleware;
 using Mizan.Application;
+using Mizan.Application.Interfaces;
 using Mizan.Infrastructure;
 using Serilog;
 using Serilog.Events;
@@ -49,21 +52,22 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Mizan API (BFF Backend)", Version = "v1" });
-    c.AddSecurityDefinition("BFF", new()
+    c.SwaggerDoc("v1", new() { Title = "Mizan API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new()
     {
-        Description = "BFF Trusted Secret (X-BFF-Secret) and User ID (X-User-Id) headers",
-        Name = "X-BFF-Secret",
+        Description = "JWT Bearer token",
+        Name = "Authorization",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "BFF"
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
     c.AddSecurityRequirement(new()
     {
         {
             new()
             {
-                Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "BFF" }
+                Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
@@ -77,13 +81,83 @@ builder.Services.AddFluentValidationRulesToSwagger();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// BFF Authentication - validates trusted secret from frontend
-var trustedSecret = builder.Configuration["Bff:TrustedSecret"] ?? throw new InvalidOperationException("BFF:TrustedSecret is required");
+var jwtIssuer = builder.Configuration["BetterAuth:Issuer"]
+    ?? builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["BetterAuth:Audience"]
+    ?? builder.Configuration["Jwt:Audience"];
 
-builder.Services.AddAuthentication("BffTrustedSource")
-    .AddScheme<BffAuthenticationSchemeOptions, BffAuthenticationHandler>("BffTrustedSource", options =>
+builder.Services.AddHttpClient<IJwksProvider, JwksProvider>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        options.TrustedSecret = trustedSecret;
+        options.MapInboundClaims = false;
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = !string.IsNullOrWhiteSpace(jwtIssuer),
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = !string.IsNullOrWhiteSpace(jwtAudience),
+            ValidAudience = jwtAudience,
+            ValidateIssuerSigningKey = true,
+            RequireSignedTokens = true,
+            ClockSkew = TimeSpan.FromMinutes(2),
+            NameClaimType = "sub",
+            RoleClaimType = "role",
+            ValidAlgorithms = new[] { SecurityAlgorithms.EcdsaSha256 }
+        };
+
+        options.TokenValidationParameters.IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
+        {
+            var provider = JwksProviderAccessor.Current;
+            if (provider == null)
+            {
+                return Array.Empty<SecurityKey>();
+            }
+
+            var keys = provider.GetSigningKeysAsync(CancellationToken.None).GetAwaiter().GetResult();
+            if (string.IsNullOrWhiteSpace(kid))
+            {
+                return keys;
+            }
+
+            return keys.Where(k => string.Equals(k.KeyId, kid, StringComparison.Ordinal));
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userIdValue = context.Principal?.FindFirst("sub")?.Value
+                    ?? context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdValue, out var userId))
+                {
+                    context.Fail("Invalid user id");
+                    return;
+                }
+
+                var userStatus = context.HttpContext.RequestServices
+                    .GetRequiredService<IUserStatusService>();
+                var status = await userStatus.GetStatusAsync(userId, context.HttpContext.RequestAborted);
+
+                if (!status.Exists)
+                {
+                    context.Fail("User not found");
+                    return;
+                }
+
+                if (!status.EmailVerified)
+                {
+                    context.Fail("Email not verified");
+                    return;
+                }
+
+                if (status.IsBanned)
+                {
+                    context.Fail("User banned");
+                }
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -145,6 +219,8 @@ builder.Services.AddHealthChecks()
     .AddRedis(redisConnectionString ?? "localhost");
 
 var app = builder.Build();
+
+JwksProviderAccessor.Set(app.Services.GetRequiredService<IJwksProvider>());
 
 if (app.Environment.IsDevelopment())
 {

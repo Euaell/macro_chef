@@ -93,6 +93,16 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
+export const jwks = pgTable("jwks", {
+  id: text("id").primaryKey(),
+  publicKey: text("public_key").notNull(),
+  privateKey: text("private_key").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  alg: varchar("alg", { length: 16 }),
+  crv: varchar("crv", { length: 16 }),
+});
+
 // ==================== Household (Organization) Tables ====================
 
 export const households = pgTable("households", {

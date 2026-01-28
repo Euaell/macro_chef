@@ -29,7 +29,8 @@ export async function callBackendApi<T>(
   path: string,
   options: BackendApiOptions = {}
 ): Promise<T> {
-  const session = await auth.api.getSession({ headers: await import("next/headers").then(m => m.headers()) });
+  const requestHeaders = await import("next/headers").then(m => m.headers());
+  const session = await auth.api.getSession({ headers: requestHeaders });
   const requireAuth = options.requireAuth !== false; // Default to true
 
   if (requireAuth && !session?.user?.id) {
@@ -38,11 +39,10 @@ export async function callBackendApi<T>(
   }
 
   const backendUrl = process.env.BACKEND_API_URL || "http://backend:8080";
-  const trustedSecret = process.env.BFF_TRUSTED_SECRET;
-
-  if (!trustedSecret) {
-    bffLogger.error("BFF_TRUSTED_SECRET not configured");
-    throw new Error("BFF_TRUSTED_SECRET not configured");
+  const token = await getServerApiToken(requestHeaders);
+  if (requireAuth && !token) {
+    bffLogger.warn("Missing API token for authenticated request", { path });
+    throw new BackendApiError(401, "Unauthorized", { error: "Missing token" });
   }
 
   const url = `${backendUrl}${path}`;
@@ -58,10 +58,7 @@ export async function callBackendApi<T>(
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "X-BFF-Secret": trustedSecret,
-    ...(session?.user?.id && { "X-User-Id": session.user.id }),
-    ...(session?.user?.email && { "X-User-Email": session.user.email }),
-    ...((session?.user as any)?.role && { "X-User-Role": (session?.user as any).role }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -133,4 +130,45 @@ function safeJsonParse(text: string): any | undefined {
   } catch {
     return undefined;
   }
+}
+
+async function getServerApiToken(headers: Headers): Promise<string | null> {
+  const baseUrl = process.env.BETTER_AUTH_URL
+    || buildBaseUrlFromHeaders(headers);
+  if (!baseUrl) {
+    bffLogger.error("Unable to determine BetterAuth base URL");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}/api/auth/token`, {
+      method: "GET",
+      headers: {
+        cookie: headers.get("cookie") ?? "",
+      },
+    });
+
+    if (!response.ok) {
+      bffLogger.warn("Failed to fetch server API token", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      return null;
+    }
+
+    const data = await response.json().catch(() => null);
+    return data?.token ?? null;
+  } catch (error) {
+    bffLogger.error("Server API token fetch failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+function buildBaseUrlFromHeaders(headers: Headers): string | null {
+  const host = headers.get("x-forwarded-host") ?? headers.get("host");
+  if (!host) return null;
+  const protocol = headers.get("x-forwarded-proto") ?? "http";
+  return `${protocol}://${host}`;
 }
