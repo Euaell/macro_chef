@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && apt-get install -y --no-install-recommends curl ca-certificates unzip \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
@@ -22,4 +22,4 @@ COPY . .
 RUN dotnet restore backend/Mizan.sln
 RUN bun install --frozen-lockfile --cwd frontend
 
-CMD ["bash", "-lc", "dotnet test backend/Mizan.sln --configuration Release --verbosity minimal --logger \"console;verbosity=minimal\" && bun run --cwd frontend test -- --reporter=basic && bun run --cwd frontend test:e2e -- --reporter=line"]
+CMD ["bash", "-lc", "dotnet test backend/Mizan.sln --configuration Release --verbosity minimal --logger \"console;verbosity=minimal\" && bun run --cwd frontend test -- --reporter=dot && bun run --cwd frontend test:e2e -- --reporter=line"]

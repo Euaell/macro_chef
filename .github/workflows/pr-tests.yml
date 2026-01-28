@@ -179,7 +179,7 @@ jobs:
           BETTER_AUTH_ISSUER: "http://localhost:3000"
           BETTER_AUTH_AUDIENCE: "mizan-api"
           NEXT_PUBLIC_API_URL: "http://localhost:5000"
-        run: bun run test -- --reporter=basic
+        run: bun run test -- --reporter=dot
 
   frontend-typecheck:
     name: Frontend Type Check
