@@ -12,15 +12,20 @@ import {
 
 loadEnv();
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required for E2E auth tests.`);
+  }
+  return value;
+}
+
 const backendUrl =
   process.env.PLAYWRIGHT_BACKEND_URL ||
   process.env.E2E_BACKEND_URL ||
   "http://localhost:5000";
 
-const authSecret = process.env.BETTER_AUTH_SECRET;
-if (!authSecret) {
-  throw new Error("BETTER_AUTH_SECRET is required for E2E auth tests.");
-}
+const authSecret = requireEnv("BETTER_AUTH_SECRET");
 
 const password = "Passw0rd!123";
 
