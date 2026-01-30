@@ -1,5 +1,8 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { coachSearchService, CoachSearchResult } from "@/lib/services/signalr-coach-search";
+import { toast } from "sonner";
 
 export function useCoachSearch() {
   const [results, setResults] = useState<CoachSearchResult[]>([]);
@@ -20,9 +23,11 @@ export function useCoachSearch() {
         });
 
         coachSearchService.onCoachRequestReceived((coachId) => {
-          // TODO: handle incoming coach request notification
+          // Feature not yet implemented
           console.log("Coach request received:", coachId);
-          alert("not implemented yet");
+          toast.info("Coach Request Feature", {
+            description: "This feature is coming soon! You'll be able to receive and respond to coach requests."
+          });
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to connect");
