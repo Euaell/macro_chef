@@ -144,9 +144,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 }
             }
         };
+    })
+    .AddScheme<ApiKeyAuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationSchemeOptions.DefaultScheme, options =>
+    {
+        options.ApiKey = builder.Configuration["Mcp:ServiceApiKey"] ?? throw new InvalidOperationException("Mcp:ServiceApiKey is not configured");
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Default policy requires authenticated user (JWT or API Key)
+    options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme, ApiKeyAuthenticationSchemeOptions.DefaultScheme)
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
 
