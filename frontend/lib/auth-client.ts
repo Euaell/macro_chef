@@ -7,8 +7,14 @@ import { logger } from "@/lib/logger";
 
 const authLogger = logger.createModuleLogger("auth-client");
 
+const betterAuthUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
+
+if (!betterAuthUrl) {
+  throw new Error("NEXT_PUBLIC_APP_URL or NEXT_PUBLIC_BETTER_AUTH_URL must be defined");
+}
+
 export const authClient = createAuthClient({
-  baseURL: (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) ? process.env.NEXT_PUBLIC_APP_URL : (() => { throw new Error("BETTER_AUTH_URL is not defined"); })(),
+  baseURL: betterAuthUrl,
   plugins: [
     organizationClient(),
     adminClient({

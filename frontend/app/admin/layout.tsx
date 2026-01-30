@@ -12,10 +12,10 @@ export default async function AdminLayout({
         redirect("/login");
     }
 
-    // Optionally add admin role check here
-    // if (user.role !== "admin") {
-    // 	redirect("/");
-    // }
+    // Enforce admin role verification
+    if (user.role !== "admin") {
+        redirect("/");
+    }
 
     return <>{children}</>;
 }
