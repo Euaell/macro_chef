@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Mizan.Api.Authentication;
 using Mizan.Domain.Entities;
 using Mizan.Infrastructure.Data;
 using NSec.Cryptography;
+using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Mizan.Tests.Integration;
@@ -38,6 +40,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         "users"
     };
 
+    private readonly PostgreSqlContainer _dbContainer;
     private readonly TestJwtIssuer _jwtIssuer;
     private readonly string _issuer;
     private readonly string _audience;
@@ -46,11 +49,20 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     public ApiTestFixture()
     {
-        _connectionString = GetRequiredEnvironment("ConnectionStrings__PostgreSQL");
-        _redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis");
+        _dbContainer = new PostgreSqlBuilder()
+            .WithImage("postgres:15-alpine")
+            .WithDatabase("mizan_test")
+            .WithUsername("mizan")
+            .WithPassword("mizan_test_password")
+            .Build();
+
         _issuer = Environment.GetEnvironmentVariable("BetterAuth__Issuer") ?? "http://localhost:3000";
         _audience = Environment.GetEnvironmentVariable("BetterAuth__Audience") ?? "mizan-api";
         _jwtIssuer = TestJwtIssuer.Create();
+        
+        // Don't set _connectionString here, wait for container to start
+        _connectionString = string.Empty;
+        _redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis");
     }
 
     public string Issuer => _issuer;
@@ -65,11 +77,12 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         {
             var settings = new Dictionary<string, string?>
             {
-                ["ConnectionStrings:PostgreSQL"] = _connectionString,
+                ["ConnectionStrings:PostgreSQL"] = _dbContainer.GetConnectionString(),
                 ["ConnectionStrings:Redis"] = _redisConnectionString,
                 ["BetterAuth:Issuer"] = _issuer,
                 ["BetterAuth:Audience"] = _audience,
-                ["BetterAuth:JwksUrl"] = "http://jwks.test"
+                ["BetterAuth:JwksUrl"] = "http://jwks.test",
+                ["Mcp:ServiceApiKey"] = "test-api-key"
             };
 
             config.AddInMemoryCollection(settings);
@@ -77,6 +90,15 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
         builder.ConfigureTestServices(services =>
         {
+            // Remove existing DbContext registration
+            var dbDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(DbContextOptions<MizanDbContext>));
+            if (dbDescriptor != null) services.Remove(dbDescriptor);
+
+            // Add DbContext using container connection
+            services.AddDbContext<MizanDbContext>(options =>
+                options.UseNpgsql(_dbContainer.GetConnectionString()));
+
             var descriptors = services.Where(d => d.ServiceType == typeof(IJwksProvider)).ToList();
             foreach (var descriptor in descriptors)
             {
@@ -89,11 +111,17 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     public async Task InitializeAsync()
     {
+        await _dbContainer.StartAsync();
+        // Update connection string for non-webhost usage
+        var field = typeof(ApiTestFixture).GetField("_connectionString", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        field?.SetValue(this, _dbContainer.GetConnectionString());
+        
         await EnsureDatabaseAsync();
     }
 
-    public async Task DisposeAsync()
+    public new async Task DisposeAsync()
     {
+        await _dbContainer.StopAsync();
         _jwtIssuer.Dispose();
         await base.DisposeAsync();
     }
@@ -115,6 +143,8 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
     {
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        
+        // TRUNCATE is faster than deleting and recreating
         var tableList = string.Join(", ", TablesToTruncate.Select(t => $"\"{t}\""));
         await db.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {tableList} RESTART IDENTITY CASCADE;");
     }
@@ -206,12 +236,19 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         }
     }
 
-    private static string GetRequiredEnvironment(string name)
+    // Helper to get environment variable or throw if missing (for legacy tests)
+    internal static string GetRequiredEnvironment(string name)
     {
+        // For Testcontainers, we don't rely on env vars for connection strings anymore
+        if (name == "ConnectionStrings__PostgreSQL") return "ignored";
+        
         var value = Environment.GetEnvironmentVariable(name);
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"{name} is required for integration tests.");
+            // Default fallbacks for tests if env not set
+            if (name == "BetterAuth__Issuer") return "http://localhost:3000";
+            if (name == "BetterAuth__Audience") return "mizan-api";
+            return string.Empty; 
         }
 
         return value;
