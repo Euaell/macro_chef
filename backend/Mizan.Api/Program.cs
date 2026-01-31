@@ -106,8 +106,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = "sub",
             RoleClaimType = "role",
             ValidAlgorithms = new[] { "EdDSA" },
-            SignatureValidator = EdDsaJwtSignatureValidator.Validate
+            // Removed custom SignatureValidator to let JwtBearer use default handler logic
+            // We will inject a custom key provider or handle it differently if needed, 
+            // but for now, the custom validator is causing type mismatch (JwtSecurityToken vs JsonWebToken).
+            // Actually, we can force the use of JwtSecurityTokenHandler by setting TokenHandlerType
+            // OR fix the validator to work with JsonWebTokenHandler.
+            // Simplest fix: force old handler if we want to keep returning JwtSecurityToken.
         };
+        // Force the use of JwtSecurityTokenHandler instead of JsonWebTokenHandler
+        options.TokenHandlers.Clear();
+        options.TokenHandlers.Add(new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler());
+        options.TokenValidationParameters.SignatureValidator = EdDsaJwtSignatureValidator.Validate;
 
         options.Events = new JwtBearerEvents
         {
