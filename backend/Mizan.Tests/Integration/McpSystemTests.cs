@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using McpServer::Mizan.Mcp.Server.Models;
 using McpServer::Mizan.Mcp.Server.Services;
 using Xunit;
@@ -22,6 +23,23 @@ public class McpSystemTests : IClassFixture<ApiTestFixture>, IClassFixture<WebAp
     {
         _apiFixture = apiFixture;
         _mcpFactory = mcpFactory;
+    }
+
+
+    // Helper to fix TestServer handler behavior where RequestMessage is null on response
+    private sealed class EnsureRequestMessageHandler : DelegatingHandler
+    {
+        public EnsureRequestMessageHandler(HttpMessageHandler inner) { InnerHandler = inner; }
+        
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = await base.SendAsync(request, cancellationToken);
+            if (response != null && response.RequestMessage == null)
+            {
+                response.RequestMessage = request;
+            }
+            return response;
+        }
     }
 
     [Fact]
@@ -55,11 +73,15 @@ public class McpSystemTests : IClassFixture<ApiTestFixture>, IClassFixture<WebAp
 
             builder.ConfigureTestServices(services =>
             {
-                // CRITICAL: Override the typed HttpClient for IBackendClient to use in-memory API server
+                // CRITICAL: Remove the default registration first to ensure our configuration takes precedence
+                // and to avoid any "last one wins" ambiguity with typed clients.
+                services.RemoveAll<IBackendClient>();
+                
+                // Override the typed HttpClient for IBackendClient to use in-memory API server
                 // The MCP Server's BackendClient receives HttpClient via typed client injection,
                 // so we need to configure the typed client, not a named one.
                 services.AddHttpClient<IBackendClient, BackendClient>()
-                    .ConfigurePrimaryHttpMessageHandler(() => _apiFixture.Server.CreateHandler());
+                    .ConfigurePrimaryHttpMessageHandler(() => new EnsureRequestMessageHandler(_apiFixture.Server.CreateHandler()));
             });
         }).CreateClient();
 
