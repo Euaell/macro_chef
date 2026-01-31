@@ -55,18 +55,11 @@ public class McpSystemTests : IClassFixture<ApiTestFixture>, IClassFixture<WebAp
 
             builder.ConfigureTestServices(services =>
             {
-                // CRITICAL: We must override the HttpClient named "BackendClient" specifically.
-                // We create a custom handler that delegates to the API Fixture's handler.
-                // This allows the MCP server to make HTTP calls that are intercepted by the in-memory API server.
-                
-                services.AddHttpClient("BackendClient", client => 
-                {
-                    client.BaseAddress = new Uri("http://localhost:5000"); // Must match TestJwtIssuer audience/issuer logic if checked
-                })
-                .ConfigurePrimaryHttpMessageHandler(() => _apiFixture.Server.CreateHandler());
-                
-                // Also override the implementation to ensure it picks up the right client configuration
-                // though the constructor injection should work if the named client is registered correctly.
+                // CRITICAL: Override the typed HttpClient for IBackendClient to use in-memory API server
+                // The MCP Server's BackendClient receives HttpClient via typed client injection,
+                // so we need to configure the typed client, not a named one.
+                services.AddHttpClient<IBackendClient, BackendClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _apiFixture.Server.CreateHandler());
             });
         }).CreateClient();
 
