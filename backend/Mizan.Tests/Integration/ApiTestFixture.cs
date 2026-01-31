@@ -40,7 +40,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         "users"
     };
 
-    private readonly PostgreSqlContainer _dbContainer;
+    private readonly PostgreSqlContainer? _dbContainer;
     private readonly TestJwtIssuer _jwtIssuer;
     private readonly string _issuer;
     private readonly string _audience;
@@ -49,19 +49,33 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     public ApiTestFixture()
     {
-        _dbContainer = new PostgreSqlBuilder()
-            .WithImage("postgres:15-alpine")
-            .WithDatabase("mizan_test")
-            .WithUsername("mizan")
-            .WithPassword("mizan_test_password")
-            .Build();
+        // Try multiple environment variable formats
+        var existingConnString = Environment.GetEnvironmentVariable("TEST_DB_CONNECTION") 
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__PostgreSQL")
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings:PostgreSQL");
+
+        if (!string.IsNullOrWhiteSpace(existingConnString))
+        {
+            Console.WriteLine($"[ApiTestFixture] Using existing DB connection: {existingConnString}");
+            _connectionString = existingConnString;
+            _dbContainer = null;
+        }
+        else
+        {
+            Console.WriteLine("[ApiTestFixture] No existing DB connection found. Initializing Testcontainers...");
+            _dbContainer = new PostgreSqlBuilder()
+                .WithImage("postgres:15-alpine")
+                .WithDatabase("mizan_test")
+                .WithUsername("mizan")
+                .WithPassword("mizan_test_password")
+                .Build();
+            _connectionString = string.Empty; // Will be set in InitializeAsync
+        }
 
         _issuer = Environment.GetEnvironmentVariable("BetterAuth__Issuer") ?? "http://localhost:3000";
         _audience = Environment.GetEnvironmentVariable("BetterAuth__Audience") ?? "mizan-api";
         _jwtIssuer = TestJwtIssuer.Create();
         
-        // Don't set _connectionString here, wait for container to start
-        _connectionString = string.Empty;
         _redisConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Redis");
     }
 
@@ -75,9 +89,13 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
         builder.ConfigureAppConfiguration((context, config) =>
         {
+            var connString = !string.IsNullOrEmpty(_connectionString) 
+                ? _connectionString 
+                : _dbContainer?.GetConnectionString() ?? throw new InvalidOperationException("No DB connection string available");
+
             var settings = new Dictionary<string, string?>
             {
-                ["ConnectionStrings:PostgreSQL"] = _dbContainer.GetConnectionString(),
+                ["ConnectionStrings:PostgreSQL"] = connString,
                 ["ConnectionStrings:Redis"] = _redisConnectionString,
                 ["BetterAuth:Issuer"] = _issuer,
                 ["BetterAuth:Audience"] = _audience,
@@ -95,9 +113,13 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
                 d => d.ServiceType == typeof(DbContextOptions<MizanDbContext>));
             if (dbDescriptor != null) services.Remove(dbDescriptor);
 
+            var connString = !string.IsNullOrEmpty(_connectionString) 
+                ? _connectionString 
+                : _dbContainer?.GetConnectionString() ?? throw new InvalidOperationException("No DB connection string available");
+
             // Add DbContext using container connection
             services.AddDbContext<MizanDbContext>(options =>
-                options.UseNpgsql(_dbContainer.GetConnectionString()));
+                options.UseNpgsql(connString));
 
             var descriptors = services.Where(d => d.ServiceType == typeof(IJwksProvider)).ToList();
             foreach (var descriptor in descriptors)
@@ -111,17 +133,23 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
     public async Task InitializeAsync()
     {
-        await _dbContainer.StartAsync();
-        // Update connection string for non-webhost usage
-        var field = typeof(ApiTestFixture).GetField("_connectionString", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        field?.SetValue(this, _dbContainer.GetConnectionString());
+        if (_dbContainer != null)
+        {
+            await _dbContainer.StartAsync();
+            // Update connection string for non-webhost usage
+            var field = typeof(ApiTestFixture).GetField("_connectionString", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            field?.SetValue(this, _dbContainer.GetConnectionString());
+        }
         
         await EnsureDatabaseAsync();
     }
 
     public new async Task DisposeAsync()
     {
-        await _dbContainer.StopAsync();
+        if (_dbContainer != null)
+        {
+            await _dbContainer.StopAsync();
+        }
         _jwtIssuer.Dispose();
         await base.DisposeAsync();
     }

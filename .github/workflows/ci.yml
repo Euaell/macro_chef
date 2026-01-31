@@ -48,6 +48,7 @@ jobs:
     - name: Test
       env:
         ConnectionStrings__PostgreSQL: "Host=localhost;Port=5432;Database=mizan_test;Username=mizan;Password=mizan_test_password"
+        TEST_DB_CONNECTION: "Host=localhost;Port=5432;Database=mizan_test;Username=mizan;Password=mizan_test_password"
         ConnectionStrings__Redis: "localhost:6379"
         BetterAuth__Issuer: "http://localhost:3000"
         BetterAuth__Audience: "mizan-api"
