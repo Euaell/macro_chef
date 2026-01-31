@@ -81,6 +81,8 @@ jobs:
       working-directory: frontend
       env:
         NEXT_PUBLIC_API_URL: "http://localhost:5000"
+        DATABASE_URL: "postgresql://mizan:mizan_test_password@localhost:5432/mizan_test" # Required for build time validation
+        BETTER_AUTH_SECRET: "very-long-secret-key-for-better-auth-testing-at-least-32-chars" # Required for build time validation
       run: bun run build
 
   e2e-test:
