@@ -2,12 +2,12 @@ extern alias McpServer;
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http;
 using McpServer::Mizan.Mcp.Server.Models;
 using McpServer::Mizan.Mcp.Server.Services;
 using Xunit;
@@ -73,6 +73,9 @@ public class McpSystemTests : IClassFixture<ApiTestFixture>, IClassFixture<WebAp
 
             builder.ConfigureTestServices(services =>
             {
+                // Remove all logging filters to prevent NRE in LogRequestEnd when TestServer returns incomplete response
+                services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
+
                 // CRITICAL: Remove the default registration first to ensure our configuration takes precedence
                 // and to avoid any "last one wins" ambiguity with typed clients.
                 services.RemoveAll<IBackendClient>();
