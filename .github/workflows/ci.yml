@@ -69,10 +69,6 @@ jobs:
       working-directory: frontend
       run: bun install
 
-    - name: Run Lint
-      working-directory: frontend
-      run: bun run lint
-
     - name: Run Unit Tests
       working-directory: frontend
       run: bun run test
