@@ -20,11 +20,45 @@ export default async function MealPlanPage() {
 	const startDate = startOfWeek.toISOString().split('T')[0];
 	const endDate = endOfWeek.toISOString().split('T')[0];
 
-	try {
-		const mealPlans = await getWeeklyMealPlans(startDate, endDate);
+	let mealPlans: Awaited<ReturnType<typeof getWeeklyMealPlans>> = [];
+	let loadError: string | null = null;
 
+	try {
+		mealPlans = await getWeeklyMealPlans(startDate, endDate);
+	} catch (error) {
+		mealLogger.error("Failed to load meal plans", {
+			error: error instanceof Error ? error.message : String(error),
+			userID: user.id,
+		});
+		loadError = "Failed to load meal plans";
+	}
+
+	if (loadError) {
 		return (
 			<div className="space-y-6">
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+					<div>
+						<h1 className="text-2xl font-bold text-slate-900">Meal Planning</h1>
+						<p className="text-slate-500 mt-1">Plan your meals for the week ahead</p>
+					</div>
+					<Link href="/recipes" className="btn-primary">
+						<i className="ri-book-open-line" />
+						Browse Recipes
+					</Link>
+				</div>
+
+				<div className="card p-6">
+					<div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 text-red-600">
+						<i className="ri-error-warning-line text-xl" />
+						<p>An error occurred loading your meal plans. Please try again later.</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-6">
 				{/* Page Header */}
 				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 					<div>
@@ -103,34 +137,6 @@ export default async function MealPlanPage() {
 						</div>
 					)}
 				</div>
-			</div>
-		);
-	} catch (error) {
-
-		mealLogger.error("Failed to load meal plans", {
-			error: error instanceof Error ? error.message : String(error),
-			userID: user.id,
-		});
-		return (
-			<div className="space-y-6">
-				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-					<div>
-						<h1 className="text-2xl font-bold text-slate-900">Meal Planning</h1>
-						<p className="text-slate-500 mt-1">Plan your meals for the week ahead</p>
-					</div>
-					<Link href="/recipes" className="btn-primary">
-						<i className="ri-book-open-line" />
-						Browse Recipes
-					</Link>
-				</div>
-
-				<div className="card p-6">
-					<div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 text-red-600">
-						<i className="ri-error-warning-line text-xl" />
-						<p>An error occurred loading your meal plans. Please try again later.</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
+		</div>
+	);
 }

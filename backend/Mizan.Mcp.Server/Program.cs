@@ -4,7 +4,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddControllers();
-builder.Services.AddHttpClient<IBackendClient, BackendClient>();
+builder.Services.AddTransient<EnsureRequestMessageHandler>();
+builder.Services.AddHttpClient<IBackendClient, BackendClient>()
+	.AddHttpMessageHandler<EnsureRequestMessageHandler>();
 builder.Services.AddScoped<McpToolHandler>();
 
 // Add logging
