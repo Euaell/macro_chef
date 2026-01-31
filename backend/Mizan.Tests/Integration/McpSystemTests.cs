@@ -15,7 +15,7 @@ using Xunit;
 namespace Mizan.Tests.Integration;
 
 [Collection("ApiIntegration")]
-public class McpSystemTests : IClassFixture<ApiTestFixture>, IClassFixture<WebApplicationFactory<McpServer::Program>>
+public class McpSystemTests : IClassFixture<WebApplicationFactory<McpServer::Program>>
 {
     private readonly ApiTestFixture _apiFixture;
     private readonly WebApplicationFactory<McpServer::Program> _mcpFactory;
