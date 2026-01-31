@@ -57,18 +57,15 @@ public class ValidateTokenCommandHandler : IRequestHandler<ValidateTokenCommand,
         }
 
         // Update last used timestamp (fire-and-forget)
-        _ = Task.Run(async () =>
+        try
         {
-            try
-            {
-                mcpToken.LastUsedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync(CancellationToken.None);
-            }
-            catch
-            {
-                // Ignore errors in background update
-            }
-        }, cancellationToken);
+            mcpToken.LastUsedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            // Ignore errors in update
+        }
 
         return new ValidateTokenResult
         {

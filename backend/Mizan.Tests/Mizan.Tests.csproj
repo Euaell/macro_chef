@@ -25,6 +25,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Mizan.Api\Mizan.Api.csproj" />
+    <ProjectReference Include="..\Mizan.Mcp.Server\Mizan.Mcp.Server.csproj">
+        <Aliases>McpServer</Aliases>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

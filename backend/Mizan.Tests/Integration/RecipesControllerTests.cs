@@ -85,6 +85,13 @@ public class RecipesControllerTests
         };
 
         var updateResponse = await client.PutAsJsonAsync($"/api/Recipes/{created.Id}", updateCommand);
+        
+        if (updateResponse.StatusCode != HttpStatusCode.OK)
+        {
+            var error = await updateResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Update Failed: {updateResponse.StatusCode} - {error}");
+        }
+
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var searchResponse = await client.GetAsync("/api/Recipes?searchTerm=updated");

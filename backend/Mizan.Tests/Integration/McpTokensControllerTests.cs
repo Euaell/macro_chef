@@ -27,7 +27,7 @@ public class McpTokensControllerTests
         using var client = _fixture.CreateAuthenticatedClient(userId, email);
 
         var createResponse = await client.PostAsJsonAsync("/api/McpTokens", new { Name = "cli" });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created); // 201 Created
 
         var created = await createResponse.Content.ReadFromJsonAsync<CreateMcpTokenResponse>();
         created.Should().NotBeNull();
@@ -68,7 +68,7 @@ public class McpTokensControllerTests
         using var client = _fixture.CreateAuthenticatedClient(userId, email);
 
         var createResponse = await client.PostAsJsonAsync("/api/McpTokens", new { Name = "analytics" });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created); // 201 Created
 
         var created = await createResponse.Content.ReadFromJsonAsync<CreateMcpTokenResponse>();
         created.Should().NotBeNull();

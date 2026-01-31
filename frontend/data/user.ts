@@ -46,7 +46,7 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
 
 /**
  * Resend verification email
- * Note: This is handled by BetterAuth's built-in verification flow
+ * Uses BetterAuth's verification API to send a new verification email
  */
 export async function resendUserVerificationEmail(
     prevState: FormState,
@@ -56,17 +56,39 @@ export async function resendUserVerificationEmail(
         const email = formData.get("email") as string;
 
         if (!email) {
-            return createErrorState("Email is required");
+            return createErrorState("Email is required", [
+                { field: "email", message: "Please enter your email address" }
+            ]);
         }
 
-        // TODO: implement using betterAuth 
-        userLogger.info("Verification email resend - handled by BetterAuth", { email });
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return createErrorState("Invalid email format", [
+                { field: "email", message: "Please enter a valid email address" }
+            ]);
+        }
 
-        return createSuccessState("Verification email sent!");
+        // Use BetterAuth's sendVerificationEmail API
+        await auth.api.sendVerificationEmail({
+            body: {
+                email: email.toLowerCase(),
+            },
+        });
+
+        userLogger.info("Verification email resent successfully", { email });
+
+        return createSuccessState(
+            "If an account exists with this email, a verification link has been sent. Please check your inbox and spam folder."
+        );
     } catch (error) {
         userLogger.error("Failed to resend verification email", {
             error: error instanceof Error ? error.message : String(error),
         });
-        return createErrorState("Failed to send verification email");
+        
+        // Return generic success to prevent email enumeration
+        return createSuccessState(
+            "If an account exists with this email, a verification link has been sent. Please check your inbox and spam folder."
+        );
     }
 }
