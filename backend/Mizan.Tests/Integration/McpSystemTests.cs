@@ -27,22 +27,6 @@ public class McpSystemTests : IClassFixture<WebApplicationFactory<McpServer::Pro
     }
 
 
-    // Helper to fix TestServer handler behavior where RequestMessage is null on response
-    private sealed class EnsureRequestMessageHandler : DelegatingHandler
-    {
-        public EnsureRequestMessageHandler(HttpMessageHandler inner) { InnerHandler = inner; }
-        
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            var response = await base.SendAsync(request, cancellationToken);
-            if (response != null && response.RequestMessage == null)
-            {
-                response.RequestMessage = request;
-            }
-            return response;
-        }
-    }
-
     [Fact]
     public async Task CompleteSystemFlow_CreateToken_UseMcpTool_ReturnsData()
     {
@@ -74,18 +58,23 @@ public class McpSystemTests : IClassFixture<WebApplicationFactory<McpServer::Pro
 
             builder.ConfigureTestServices(services =>
             {
-                // Remove all logging filters to prevent NRE in LogRequestEnd when TestServer returns incomplete response
-                services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
-
-                // CRITICAL: Remove the default registration first to ensure our configuration takes precedence
-                // and to avoid any "last one wins" ambiguity with typed clients.
+                // CRITICAL: Remove the default registration first
                 services.RemoveAll<IBackendClient>();
                 
-                // Override the typed HttpClient for IBackendClient to use in-memory API server
-                // The MCP Server's BackendClient receives HttpClient via typed client injection,
-                // so we need to configure the typed client, not a named one.
-                services.AddHttpClient<IBackendClient, BackendClient>()
-                    .ConfigurePrimaryHttpMessageHandler(() => new EnsureRequestMessageHandler(_apiFixture.Server.CreateHandler()));
+                // Manually register IBackendClient to bypass IHttpClientFactory and its default logging handlers.
+                // This prevents the NullReferenceException in LogRequestEnd because TestServer's handler
+                // returns responses with RequestMessage == null, which crashes the default logger.
+                services.AddScoped<IBackendClient>(sp =>
+                {
+                    var config = sp.GetRequiredService<IConfiguration>();
+                    var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<BackendClient>>();
+                    
+                    // Get the handler directly from the TestServer (Backend API)
+                    var handler = _apiFixture.Server.CreateHandler();
+                    
+                    var client = new HttpClient(handler);
+                    return new BackendClient(client, config, logger);
+                });
             });
         }).CreateClient();
 
