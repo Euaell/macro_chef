@@ -1,9 +1,7 @@
+# syntax=docker/dockerfile:1
+
 # Backend Development Dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:10.0
-
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /src
 
 ENV ASPNETCORE_ENVIRONMENT=Development
@@ -16,11 +14,10 @@ COPY ["Mizan.Api/Mizan.Api.csproj", "Mizan.Api/"]
 COPY ["Mizan.Application/Mizan.Application.csproj", "Mizan.Application/"]
 COPY ["Mizan.Domain/Mizan.Domain.csproj", "Mizan.Domain/"]
 COPY ["Mizan.Infrastructure/Mizan.Infrastructure.csproj", "Mizan.Infrastructure/"]
-COPY ["Mizan.Tests/Mizan.Tests.csproj", "Mizan.Tests/"]
 
-# Clear NuGet cache and restore with no-cache to avoid layer caching issues
-RUN dotnet nuget locals all --clear && \
-    dotnet restore "Mizan.Api/Mizan.Api.csproj" --no-cache
+# Restore with BuildKit cache
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet restore "Mizan.Api/Mizan.Api.csproj"
 
 # Copy source code
 COPY . .

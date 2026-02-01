@@ -26,9 +26,9 @@ services:
       - postgresql-db-n8n
 
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "cat < /dev/null > /dev/tcp/127.0.0.1/8080 || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
 
@@ -62,9 +62,9 @@ services:
       - postgresql-db-n8n
 
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD-SHELL", "cat < /dev/null > /dev/tcp/127.0.0.1/3000 || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
 
@@ -90,9 +90,9 @@ services:
       - proxy-net
       - postgresql-db-n8n
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/health"]
+      test: ["CMD-SHELL", "cat < /dev/null > /dev/tcp/127.0.0.1/5001 || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
     deploy:
@@ -125,6 +125,5 @@ networks:
 #
 # Infrastructure:
 # 1. Adjust network names to match your infrastructure (proxy-net, postgresql-db-n8n)
-# 2. Backend health check uses wget (bundled in Dockerfile.prod)
-# 3. Frontend health check uses wget (bundled in Dockerfile.prod)
-# 4. Resource limits prevent containers from consuming all host resources
+# 2. Health checks use simple TCP socket tests (no external dependencies)
+# 3. Resource limits prevent containers from consuming all host resources
