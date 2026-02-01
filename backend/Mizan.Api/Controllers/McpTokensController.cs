@@ -24,7 +24,7 @@ public class McpTokensController : ControllerBase
         try
         {
             var result = await _mediator.Send(command);
-            return Ok(result);
+            return CreatedAtAction(nameof(GetMyTokens), null, result);
         }
         catch (ArgumentException ex)
         {

@@ -5,11 +5,19 @@ import path from "path";
 export default defineConfig({
 	plugins: [react()],
 	test: {
-		environment: "jsdom",
+		environment: "happy-dom",
 		globals: true,
 		setupFiles: ["./__tests__/setup.tsx"],
 		include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-		exclude: ["node_modules", ".next", "backend", "tests/e2e/**"],
+		exclude: [
+			"node_modules",
+			".next",
+			"backend",
+			"dist",
+			"build",
+			"tests/**",
+			"test/**",
+		],
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json", "html"],
@@ -19,8 +27,11 @@ export default defineConfig({
 				"backend",
 				"**/*.d.ts",
 				"**/*.config.*",
+				"tests/**",
+				"test/**",
 			],
 		},
+		logHeapUsage: true,
 	},
 	resolve: {
 		alias: {
