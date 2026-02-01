@@ -346,6 +346,7 @@ public sealed class TestJwtIssuer : IDisposable
         {
             ["sub"] = userId.ToString(),
             ["email"] = email,
+            ["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] = role,
             ["role"] = role,
             ["iss"] = issuer,
             ["aud"] = audience,

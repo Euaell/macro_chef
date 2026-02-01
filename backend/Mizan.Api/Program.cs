@@ -14,6 +14,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using StackExchange.Redis;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +48,6 @@ builder.Host.UseSerilog();
 
 Log.Information("Starting Mizan API - Environment: {Environment}", environment);
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -74,10 +74,8 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Add FluentValidation rules to Swagger/OpenAPI schema
 builder.Services.AddFluentValidationRulesToSwagger();
 
-// Application & Infrastructure
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -91,7 +89,7 @@ builder.Services.AddHttpClient<IJwksProvider, JwksProvider>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.MapInboundClaims = false;
+        options.MapInboundClaims = true;
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -103,17 +101,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             RequireSignedTokens = true,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(2),
-            NameClaimType = "sub",
-            RoleClaimType = "role",
+            NameClaimType = ClaimTypes.NameIdentifier,
+            RoleClaimType = ClaimTypes.Role,
             ValidAlgorithms = new[] { "EdDSA" },
-            // Removed custom SignatureValidator to let JwtBearer use default handler logic
-            // We will inject a custom key provider or handle it differently if needed, 
-            // but for now, the custom validator is causing type mismatch (JwtSecurityToken vs JsonWebToken).
-            // Actually, we can force the use of JwtSecurityTokenHandler by setting TokenHandlerType
-            // OR fix the validator to work with JsonWebTokenHandler.
-            // Simplest fix: force old handler if we want to keep returning JwtSecurityToken.
         };
-        // Force the use of JwtSecurityTokenHandler instead of JsonWebTokenHandler
         options.TokenHandlers.Clear();
         options.TokenHandlers.Add(new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler());
         options.TokenValidationParameters.SignatureValidator = EdDsaJwtSignatureValidator.Validate;
@@ -161,7 +152,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    // Default policy requires authenticated user (JWT or API Key)
     options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
         .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme, ApiKeyAuthenticationSchemeOptions.DefaultScheme)
         .RequireAuthenticatedUser()
@@ -204,7 +194,6 @@ if (!string.IsNullOrEmpty(redisConnectionString))
     Log.Information("SignalR configured with Redis backplane");
 }
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -219,7 +208,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Health checks
 builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("PostgreSQL")!)
     .AddRedis(redisConnectionString ?? "localhost");
@@ -234,6 +222,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 app.UseSerilogRequestLogging(options =>

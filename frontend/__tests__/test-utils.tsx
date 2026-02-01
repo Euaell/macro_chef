@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 

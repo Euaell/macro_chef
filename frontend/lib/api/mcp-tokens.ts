@@ -6,6 +6,7 @@ import type {
   McpUsageAnalyticsResult,
 } from "@/types/mcp";
 import { getApiToken } from "@/lib/auth-client";
+import { logger } from "@/lib/logger";
 
 const API_BASE = () => {
   const baseUrl = typeof window === "undefined"
@@ -16,6 +17,8 @@ const API_BASE = () => {
   }
   return `${baseUrl.replace(/\/$/, "")}/api`;
 };
+
+const mcpTokenLogger = logger.createModuleLogger("mcp-token-api");
 
 export class McpTokenApiError extends Error {
   constructor(
@@ -31,67 +34,94 @@ async function fetchApi<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = await getApiToken();
-  const response = await fetch(`${API_BASE()}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const startTime = Date.now();
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new McpTokenApiError(
-      response.status,
-      error.error || response.statusText,
-      error
-    );
+  try {
+    const token = await getApiToken();
+    const response = await fetch(`${API_BASE()}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+
+    const duration = Date.now() - startTime;
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      mcpTokenLogger.error("MCP API request failed", {
+        path,
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+      });
+      throw new McpTokenApiError(
+        response.status,
+        error.error || response.statusText,
+        error
+      );
+    }
+
+    mcpTokenLogger.debug("MCP API request successful", {
+      path,
+      status: response.status,
+      duration,
+    });
+
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return response.json();
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    if (error instanceof McpTokenApiError) {
+      throw error;
+    }
+
+    mcpTokenLogger.error("MCP API request exception", {
+      path,
+      error: error instanceof Error ? error.message : String(error),
+      duration,
+    });
+
+    throw error;
   }
-
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  return response.json();
 }
 
 export const mcpTokenApi = {
-  /**
-   * Create a new MCP token
-   */
   async createToken(
     command: CreateMcpTokenCommand
   ): Promise<CreateMcpTokenResult> {
-    return fetchApi<CreateMcpTokenResult>("/McpTokens", {
+    mcpTokenLogger.info("Creating MCP token", { name: command.name });
+    const result = await fetchApi<CreateMcpTokenResult>("/McpTokens", {
       method: "POST",
       body: JSON.stringify(command),
     });
+    mcpTokenLogger.info("MCP token created successfully", { tokenId: result.id });
+    return result;
   },
 
-  /**
-   * Get all MCP tokens for the current user
-   */
   async getMyTokens(): Promise<McpTokenDto[]> {
+    mcpTokenLogger.debug("Fetching user MCP tokens");
     const result = await fetchApi<GetMcpTokensResult>("/McpTokens", {
       method: "GET",
     });
+    mcpTokenLogger.debug("Retrieved user MCP tokens", { count: result.tokens.length });
     return result.tokens;
   },
 
-  /**
-   * Revoke an MCP token
-   */
   async revokeToken(tokenId: string): Promise<void> {
+    mcpTokenLogger.info("Revoking MCP token", { tokenId });
     await fetchApi<void>(`/McpTokens/${tokenId}`, {
       method: "DELETE",
     });
+    mcpTokenLogger.info("MCP token revoked successfully", { tokenId });
   },
 
-  /**
-   * Get MCP usage analytics
-   */
   async getAnalytics(
     startDate?: Date,
     endDate?: Date
@@ -107,8 +137,11 @@ export const mcpTokenApi = {
     const queryString = params.toString();
     const path = queryString ? `/McpTokens/analytics?${queryString}` : "/McpTokens/analytics";
 
-    return fetchApi<McpUsageAnalyticsResult>(path, {
+    mcpTokenLogger.debug("Fetching MCP usage analytics", { startDate, endDate });
+    const result = await fetchApi<McpUsageAnalyticsResult>(path, {
       method: "GET",
     });
+    mcpTokenLogger.debug("Retrieved MCP usage analytics");
+    return result;
   },
 };
