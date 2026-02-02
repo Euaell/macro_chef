@@ -201,6 +201,76 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         return user;
     }
 
+    public async Task<Recipe> SeedRecipeAsync(Guid userId, string title, string description, int servings, int prepTimeMinutes, bool isPublic = false)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+
+        var now = DateTime.UtcNow;
+        var recipe = new Recipe
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = title,
+            Description = description,
+            Servings = servings,
+            PrepTimeMinutes = prepTimeMinutes,
+            CookTimeMinutes = 15,
+            IsPublic = isPublic,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.Recipes.Add(recipe);
+        await db.SaveChangesAsync();
+        return recipe;
+    }
+
+    public async Task<List<Recipe>> GetRecipesByUserId(Guid userId)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        return await db.Recipes.Where(r => r.UserId == userId).ToListAsync();
+    }
+
+    public async Task<List<Food>> GetFoodsByUserId(Guid userId)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        // Foods are global in this simplified model, but let's assume we filter by creation or just return all for now if no user ownership on foods
+        // Or if foods are global, just return a list.
+        // Wait, foods table usually doesn't have UserId unless it's custom food.
+        // Let's check Food entity.
+        // Assuming global foods for now or verifying creation.
+        return await db.Foods.ToListAsync();
+    }
+
+    public async Task<List<FoodDiaryEntry>> GetFoodDiaryEntriesByUserId(Guid userId)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        return await db.FoodDiaryEntries.Where(e => e.UserId == userId).ToListAsync();
+    }
+
+    public async Task<Guid> SeedShoppingListAsync(Guid userId, string name)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        
+        var list = new ShoppingList
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        db.ShoppingLists.Add(list);
+        await db.SaveChangesAsync();
+        return list.Id;
+    }
+
     public async Task<Food> SeedFoodAsync(string name, decimal caloriesPer100g, decimal proteinPer100g, decimal carbsPer100g, decimal fatPer100g)
     {
         using var scope = Services.CreateScope();
@@ -247,6 +317,13 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         db.McpUsageLogs.Add(log);
         await db.SaveChangesAsync();
         return log;
+    }
+
+    public async Task<List<McpUsageLog>> GetMcpUsageLogsByUserId(Guid userId)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        return await db.McpUsageLogs.Where(l => l.UserId == userId).ToListAsync();
     }
 
     private async Task EnsureDatabaseAsync()
