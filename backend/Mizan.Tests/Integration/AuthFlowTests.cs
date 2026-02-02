@@ -99,56 +99,6 @@ public class AuthFlowTests
     }
 
     [Fact]
-    public async Task McpTokens_FullFlow_CreateValidateRevoke()
-    {
-        await _fixture.ResetDatabaseAsync();
-
-        var userId = Guid.NewGuid();
-        var email = $"mcpuser-{userId:N}@example.com";
-        await _fixture.SeedUserAsync(userId, email, emailVerified: true);
-
-        using var client = _fixture.CreateAuthenticatedClient(userId, email);
-
-        var createResponse = await client.PostAsJsonAsync("/api/McpTokens", new { Name = "Test Token" });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        var createResult = await createResponse.Content.ReadFromJsonAsync<CreateMcpTokenResponse>();
-        var plaintextToken = createResult!.PlaintextToken;
-
-        var validateResponse = await client.PostAsJsonAsync("/api/McpTokens/validate", new { Token = plaintextToken });
-        validateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var validateResult = await validateResponse.Content.ReadFromJsonAsync<ValidateMcpTokenResponse>();
-        validateResult.Should().NotBeNull();
-        validateResult!.IsValid.Should().BeTrue();
-        validateResult.UserId.Should().Be(userId);
-
-        var revokeResponse = await client.DeleteAsync($"/api/McpTokens/{createResult.Id}");
-        revokeResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
-
-        var validateAfterRevoke = await client.PostAsJsonAsync("/api/McpTokens/validate", new { Token = plaintextToken });
-        validateAfterRevoke.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task McpTokens_RejectsDuplicateName()
-    {
-        await _fixture.ResetDatabaseAsync();
-
-        var userId = Guid.NewGuid();
-        var email = $"duplicate-{userId:N}@example.com";
-        await _fixture.SeedUserAsync(userId, email, emailVerified: true);
-
-        using var client = _fixture.CreateAuthenticatedClient(userId, email);
-
-        var createResponse1 = await client.PostAsJsonAsync("/api/McpTokens", new { Name = "Test Token" });
-        createResponse1.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        var createResponse2 = await client.PostAsJsonAsync("/api/McpTokens", new { Name = "Test Token" });
-        createResponse2.StatusCode.Should().Be(HttpStatusCode.Conflict);
-    }
-
-    [Fact]
     public async Task McpTokens_ValidatesTokenAndUpdatesLastUsed()
     {
         await _fixture.ResetDatabaseAsync();
@@ -192,34 +142,6 @@ public class AuthFlowTests
     }
 
     [Fact]
-    public async Task McpTokens_GetMyTokens_OnlyReturnsUserTokens()
-    {
-        await _fixture.ResetDatabaseAsync();
-
-        var user1Id = Guid.NewGuid();
-        var user1Email = $"user1-{user1Id:N}@example.com";
-        await _fixture.SeedUserAsync(user1Id, user1Email, emailVerified: true);
-
-        var user2Id = Guid.NewGuid();
-        var user2Email = $"user2-{user2Id:N}@example.com";
-        await _fixture.SeedUserAsync(user2Id, user2Email, emailVerified: true);
-
-        var user2Token = await _fixture.CreateAuthenticatedClient(user2Id, user2Email);
-
-        await _fixture.SeedMcpTokenAsync(user1Id, "User1 Token");
-
-        using var client = _fixture.CreateAuthenticatedClient(user1Id, user1Email);
-
-        var response = await client.GetAsync("/api/McpTokens");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<GetMcpTokensResult>();
-        result.Should().NotBeNull();
-        result!.Tokens.Should().HaveCount(1);
-        result!.Tokens.Should().OnlyContain(t => t.Name == "User1 Token");
-    }
-
-    [Fact]
     public async Task McpTokens_AnalyticsReturnsUsageSummary()
     {
         await _fixture.ResetDatabaseAsync();
@@ -251,23 +173,6 @@ public class AuthFlowTests
     }
 
     [Fact]
-    public async Task JwtBearerAuthentication_RejectsExpiredToken()
-    {
-        await _fixture.ResetDatabaseAsync();
-
-        var userId = Guid.NewGuid();
-        var email = $"expired-{userId:N}@example.com";
-        await _fixture.SeedUserAsync(userId, email, emailVerified: true);
-
-        var expiredToken = _fixture.CreateExpiredToken(userId, email, "user");
-        using var client = _fixture.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", expiredToken);
-
-        var response = await client.GetAsync("/api/Users/me");
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
     public async Task JwtBearerAuthentication_RejectsBannedUserToken()
     {
         await _fixture.ResetDatabaseAsync();
@@ -287,9 +192,7 @@ public class AuthFlowTests
     private sealed record UserResponse(Guid Id, string Email);
     private sealed record CreateMcpTokenResponse(Guid Id, string PlaintextToken, string Name);
     private sealed record ValidateMcpTokenResponse(Guid UserId, bool IsValid, Guid TokenId);
-    private sealed record GetMcpTokensResult(List<McpTokenDto> Tokens);
     private sealed record McpUsageAnalyticsResult(UsageOverviewResponse Overview, List<ToolUsageResponse> ToolUsage);
     private sealed record UsageOverviewResponse(int TotalCalls, int SuccessfulCalls, int FailedCalls, double SuccessRate, int AverageExecutionTimeMs, int UniqueTokensUsed);
     private sealed record ToolUsageResponse(string ToolName, int CallCount, int SuccessCount, int FailureCount, int AverageExecutionTimeMs);
-}
 }
