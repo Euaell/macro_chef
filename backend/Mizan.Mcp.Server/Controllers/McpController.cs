@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Mcp.Server.Models;
@@ -41,20 +42,20 @@ public class McpController : ControllerBase
             return;
         }
 
-        var userId = await _backend.ValidateTokenAsync(token);
-        if (userId == null)
+        var validation = await _backend.ValidateTokenAsync(token);
+        if (validation == null)
         {
             Response.StatusCode = 401;
             return;
         }
 
         // 2. Setup SSE
-        Response.Headers.Add("Content-Type", "text/event-stream");
-        Response.Headers.Add("Cache-Control", "no-cache");
-        Response.Headers.Add("Connection", "keep-alive");
+        Response.Headers.Append("Content-Type", "text/event-stream");
+        Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("Connection", "keep-alive");
 
         var sessionId = Guid.NewGuid().ToString();
-        _logger.LogInformation("SSE Connected: {SessionId} User: {UserId}", sessionId, userId);
+        _logger.LogInformation("SSE Connected: {SessionId} User: {UserId}", sessionId, validation.UserId);
 
         // Send endpoint URL event
         var endpointEvent = new
@@ -91,8 +92,11 @@ public class McpController : ControllerBase
         // To keep it simple: WE REQUIRE AUTH HEADER ON MESSAGES TOO.
         
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-        var userId = await _backend.ValidateTokenAsync(token);
-        if (userId == null) return Unauthorized();
+        var validation = await _backend.ValidateTokenAsync(token);
+        if (validation == null) return Unauthorized();
+
+        var userId = validation.UserId;
+        var tokenId = validation.TokenId;
 
         _logger.LogInformation("Received method: {Method}", request.Method);
 
@@ -123,16 +127,29 @@ public class McpController : ControllerBase
                     if (request.Params == null) throw new Exception("Params missing");
                     var name = request.Params.Value.GetProperty("name").GetString();
                     var args = request.Params.Value.GetProperty("arguments");
-                    var toolResult = await _toolHandler.ExecuteToolAsync(userId.Value, name!, args);
-                    
-                    result = new
+                    var stopwatch = Stopwatch.StartNew();
+
+                    try
                     {
-                        content = new[]
+                        var toolResult = await _toolHandler.ExecuteToolAsync(userId, name!, args);
+                        var elapsedMs = (int)stopwatch.ElapsedMilliseconds;
+                        await _backend.LogUsageAsync(tokenId, userId, name!, args.GetRawText(), true, null, elapsedMs);
+
+                        result = new
                         {
-                            new { type = "text", text = JsonSerializer.Serialize(toolResult) }
-                        }
-                    };
-                    break;
+                            content = new[]
+                            {
+                                new { type = "text", text = JsonSerializer.Serialize(toolResult) }
+                            }
+                        };
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        var elapsedMs = (int)stopwatch.ElapsedMilliseconds;
+                        await _backend.LogUsageAsync(tokenId, userId, name ?? "unknown", args.GetRawText(), false, ex.Message, elapsedMs);
+                        throw;
+                    }
 
                 default:
                     throw new Exception("Method not found");

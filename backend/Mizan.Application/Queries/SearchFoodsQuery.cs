@@ -8,7 +8,7 @@ namespace Mizan.Application.Queries;
 
 public record SearchFoodsQuery : IRequest<PagedResult<FoodDto>>, IPagedQuery, ISortableQuery
 {
-    public string SearchTerm { get; init; } = string.Empty;
+    public string? SearchTerm { get; init; }
     public string? Barcode { get; init; }
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;

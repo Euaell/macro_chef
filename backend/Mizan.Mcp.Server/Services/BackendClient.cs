@@ -5,9 +5,12 @@ namespace Mizan.Mcp.Server.Services;
 
 public interface IBackendClient
 {
-    Task<Guid?> ValidateTokenAsync(string token);
+    Task<McpTokenValidation?> ValidateTokenAsync(string token);
     Task<string> CallApiAsync(Guid userId, string method, string endpoint, object? data = null);
+    Task LogUsageAsync(Guid mcpTokenId, Guid userId, string toolName, string? parameters, bool success, string? errorMessage, int executionTimeMs);
 }
+
+public sealed record McpTokenValidation(Guid UserId, Guid TokenId);
 
 public class BackendClient : IBackendClient
 {
@@ -21,9 +24,12 @@ public class BackendClient : IBackendClient
         _httpClient.BaseAddress = new Uri(configuration["MizanApiUrl"] ?? "http://localhost:5000");
         _apiKey = configuration["ServiceApiKey"] ?? throw new InvalidOperationException("ServiceApiKey not configured");
         _logger = logger;
+
+        _httpClient.DefaultRequestHeaders.Remove("X-Api-Key");
+        _httpClient.DefaultRequestHeaders.Add("X-Api-Key", _apiKey);
     }
 
-    public async Task<Guid?> ValidateTokenAsync(string token)
+    public async Task<McpTokenValidation?> ValidateTokenAsync(string token)
     {
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -48,7 +54,7 @@ public class BackendClient : IBackendClient
             }
 
             var content = await response.Content.ReadFromJsonAsync<ValidateTokenResponse>();
-            return content?.IsValid == true ? content.UserId : null;
+            return content?.IsValid == true ? new McpTokenValidation(content.UserId, content.TokenId) : null;
         }
         catch (Exception ex)
         {
@@ -57,12 +63,33 @@ public class BackendClient : IBackendClient
         }
     }
 
+    public async Task LogUsageAsync(Guid mcpTokenId, Guid userId, string toolName, string? parameters, bool success, string? errorMessage, int executionTimeMs)
+    {
+        var payload = new
+        {
+            McpTokenId = mcpTokenId,
+            ToolName = toolName,
+            Parameters = parameters,
+            Success = success,
+            ErrorMessage = errorMessage,
+            ExecutionTimeMs = executionTimeMs
+        };
+
+        try
+        {
+            await CallApiAsync(userId, "POST", "/api/McpTokens/usage", payload);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to log MCP usage for tool {Tool}", toolName);
+        }
+    }
+
     public async Task<string> CallApiAsync(Guid userId, string method, string endpoint, object? data = null)
     {
         var request = new HttpRequestMessage(new HttpMethod(method), endpoint);
         
         // Service Auth Headers
-        request.Headers.Add("X-Api-Key", _apiKey);
         request.Headers.Add("X-Impersonate-User", userId.ToString());
 
         if (data != null)
@@ -86,5 +113,6 @@ public class BackendClient : IBackendClient
     {
         public Guid UserId { get; set; }
         public bool IsValid { get; set; }
+        public Guid TokenId { get; set; }
     }
 }
