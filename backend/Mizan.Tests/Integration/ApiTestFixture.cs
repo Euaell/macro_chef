@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Mizan.Api.Authentication;
 using Mizan.Domain.Entities;
@@ -129,6 +130,17 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
             services.AddSingleton<IJwksProvider>(new TestJwksProvider(_jwtIssuer.Jwk));
         });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        
+        // Set the JWKS provider accessor for EdDSA signature validation
+        var jwksProvider = host.Services.GetRequiredService<IJwksProvider>();
+        JwksProviderAccessor.Set(jwksProvider);
+        
+        return host;
     }
 
     public async Task InitializeAsync()
