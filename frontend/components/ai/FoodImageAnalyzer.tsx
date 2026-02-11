@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { apiClient } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 
 interface RecognizedFood {
 	name: string;
@@ -75,9 +75,9 @@ export function FoodImageAnalyzer() {
 
 	const handleLogFood = async (food: RecognizedFood) => {
 		try {
-			await apiClient("/api/nutrition/log", {
+			await clientApi("/api/nutrition/log", {
 				method: "POST",
-				body: JSON.stringify({
+				body: {
 					foodName: food.name,
 					servings: food.portionGrams / 100,
 					calories: food.calories,
@@ -86,7 +86,7 @@ export function FoodImageAnalyzer() {
 					fatGrams: food.fat,
 					mealType: getMealType(),
 					entryDate: new Date().toISOString().split("T")[0],
-				}),
+				},
 			});
 
 			// Show success feedback
@@ -235,6 +235,6 @@ export function FoodImageAnalyzer() {
 }
 
 async function getToken(): Promise<string> {
-	const { getApiToken } = await import("@/lib/auth-client");
+	const { getApiToken } = await import("@/lib/api");
 	return (await getApiToken()) || "";
 }

@@ -8,7 +8,7 @@ import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 import Modal from "@/components/Modal";
 
 type SelectedIngredient = {
@@ -152,9 +152,9 @@ export default function Page() {
 
 
 		try {
-			await apiClient('/api/Recipes', {
+			await clientApi('/api/Recipes', {
 				method: 'POST',
-				body: JSON.stringify(recipeData),
+				body: recipeData,
 			});
 			router.push('/recipes');
 		} catch (err) {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useSession, apiClient } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -23,8 +24,7 @@ export default function TrainerRequestsPage() {
 	useEffect(() => {
 		const fetchRequests = async () => {
 			try {
-				const response = await apiClient("/api/Trainers/my-requests") as Response;
-				const data = await response.json() as TrainerRequest[];
+				const data = await clientApi<TrainerRequest[]>("/api/Trainers/my-requests");
 				setRequests(data);
 			} catch (error) {
 				console.error("Failed to fetch requests:", error);

@@ -1,6 +1,6 @@
 "use server";
 
-import { callBackendApi } from "@/lib/backend-api-client";
+import { serverApi } from "@/lib/api";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 
 import { logger } from "@/lib/logger";
@@ -22,7 +22,7 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
         const carbs = parseFloat(formData.get("carbs") as string);
         const fat = parseFloat(formData.get("fat") as string);
 
-        await callBackendApi("/api/Meals", {
+        await serverApi("/api/Meals", {
             method: "POST",
             body: {
                 recipeId: recipeId || null,
@@ -57,7 +57,7 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
  */
 export async function deleteMeal(id: string): Promise<{ success: boolean; message?: string }> {
     try {
-        await callBackendApi(`/api/Meals/${id}`, {
+        await serverApi(`/api/Meals/${id}`, {
             method: "DELETE",
         });
         return { success: true };

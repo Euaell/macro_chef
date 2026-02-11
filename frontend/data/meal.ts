@@ -1,6 +1,6 @@
 "use server";
 
-import { callBackendApi } from "@/lib/backend-api-client";
+import { serverApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 const mealLogger = logger.createModuleLogger("meal-data");
@@ -36,7 +36,7 @@ export interface FoodDiaryResult {
 export async function getTodayMeal(): Promise<MealEntry[]> {
     try {
         const today = new Date().toISOString().split("T")[0];
-        const result = await callBackendApi<FoodDiaryResult>(`/api/Meals?date=${today}`);
+        const result = await serverApi<FoodDiaryResult>(`/api/Meals?date=${today}`);
         return result.entries || [];
     } catch (error) {
         mealLogger.error("Failed to get today's meals", { error });
@@ -49,7 +49,7 @@ export async function getTodayMeal(): Promise<MealEntry[]> {
  */
 export async function getMeal(date: string): Promise<MealEntry[]> {
     try {
-        const result = await callBackendApi<FoodDiaryResult>(`/api/Meals?date=${date}`);
+        const result = await serverApi<FoodDiaryResult>(`/api/Meals?date=${date}`);
         return result.entries || [];
     } catch (error) {
         mealLogger.error("Failed to get meals for date", { error, date });
@@ -63,7 +63,7 @@ export async function getMeal(date: string): Promise<MealEntry[]> {
 export async function getDailyTotals(date?: string): Promise<FoodDiaryResult["totals"] | null> {
     try {
         const queryDate = date || new Date().toISOString().split("T")[0];
-        const result = await callBackendApi<FoodDiaryResult>(`/api/Meals?date=${queryDate}`);
+        const result = await serverApi<FoodDiaryResult>(`/api/Meals?date=${queryDate}`);
         return result.totals;
     } catch (error) {
         mealLogger.error("Failed to get daily totals", { error, date: date || "today" });

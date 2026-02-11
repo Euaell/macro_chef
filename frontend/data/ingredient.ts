@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { callBackendApi } from "@/lib/backend-api-client";
+import { serverApi } from "@/lib/api";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 import { logger } from "@/lib/logger";
 
@@ -37,7 +37,7 @@ export async function getAllIngredient(
         params.set("PageSize", String(limit));
         if (searchTerm) params.set("SearchTerm", searchTerm);
 
-        const result = await callBackendApi<{ foods: Ingredient[], totalCount: number }>(`/api/Foods/search?${params.toString()}`);
+        const result = await serverApi<{ foods: Ingredient[], totalCount: number }>(`/api/Foods/search?${params.toString()}`);
         let foods = result.foods || [];
 
         // Sort if requested (if backend doesn't handle it yet)
@@ -72,7 +72,7 @@ export async function getAllIngredient(
  */
 export async function getIngredientById(id: string): Promise<Ingredient | null> {
     try {
-        const result = await callBackendApi<Ingredient>(`/api/Foods/${id}`);
+        const result = await serverApi<Ingredient>(`/api/Foods/${id}`);
         return result;
     } catch (error) {
         ingredientLogger.error("Failed to get ingredient by ID", { error, ingredientId: id });
@@ -94,7 +94,7 @@ export async function addIngredientData(data: {
     fat: number;
     fiber?: number;
 }): Promise<void> {
-    await callBackendApi("/api/Foods", {
+    await serverApi("/api/Foods", {
         method: "POST",
         body: {
             name: data.name,
@@ -130,7 +130,7 @@ export async function addIngredient(prevState: FormState, formData: FormData): P
         const fiber = parseFloat(formData.get("fiber") as string);
         const isVerified = formData.get("isVerified") === "true";
 
-        await callBackendApi("/api/Foods", {
+        await serverApi("/api/Foods", {
             method: "POST",
             body: {
                 name,
@@ -170,7 +170,7 @@ export async function updateIngredient(prevState: FormState, formData: FormData)
         const fiber = parseFloat(formData.get("fiber") as string);
         const isVerified = formData.get("isVerified") === "true";
 
-        await callBackendApi(`/api/Foods/${id}`, {
+        await serverApi(`/api/Foods/${id}`, {
             method: "PUT",
             body: {
                 id,
@@ -200,7 +200,7 @@ export async function updateIngredient(prevState: FormState, formData: FormData)
  */
 export async function deleteIngredient(id: string): Promise<{ success: boolean; message?: string }> {
     try {
-        await callBackendApi(`/api/Foods/${id}`, {
+        await serverApi(`/api/Foods/${id}`, {
             method: "DELETE",
         }).then(() => {
 

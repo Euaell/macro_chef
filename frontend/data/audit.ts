@@ -1,4 +1,4 @@
-import { callBackendApi } from "@/lib/backend-api-client";
+import { serverApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 const auditLogger = logger.createModuleLogger("audit-client");
@@ -40,7 +40,7 @@ export async function getAuditLogs(params: {
         if (params.page) queryParams.append("Page", params.page.toString());
         if (params.pageSize) queryParams.append("PageSize", (params.pageSize || 20).toString());
 
-        const result = await callBackendApi<GetAuditLogsResult>(`/api/AuditLogs?${queryParams.toString()}`, {
+        const result = await serverApi<GetAuditLogsResult>(`/api/AuditLogs?${queryParams.toString()}`, {
             method: "GET",
         });
 

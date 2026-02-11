@@ -1,6 +1,7 @@
 "use client";
 
-import { useSession, signOut, apiClient } from "@/lib/auth-client";
+import { useSession, signOut } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -43,12 +44,12 @@ export default function ProfilePage() {
 	const handleUpdateProfile = async () => {
 		setIsUpdating(true);
 		try {
-			await apiClient("/api/Users/me", {
+			await clientApi("/api/Users/me", {
 				method: "PUT",
-				body: JSON.stringify({
+				body: {
 					name: name || null,
 					image: image || null,
-				}),
+				},
 			});
 			setShowEditModal(false);
 			window.location.reload();
@@ -97,12 +98,12 @@ export default function ProfilePage() {
 							onSuccess={async (result: any) => {
 								const imageUrl = result.info.secure_url;
 								try {
-									await apiClient("/api/Users/me", {
+									await clientApi("/api/Users/me", {
 										method: "PUT",
-										body: JSON.stringify({
+										body: {
 											name: user.name || null,
 											image: imageUrl,
-										}),
+										},
 									});
 									window.location.reload();
 								} catch (error) {
