@@ -19,12 +19,29 @@ export interface BodyMeasurement {
     notes?: string | null;
 }
 
-export async function getBodyMeasurements(): Promise<BodyMeasurement[]> {
+export interface BodyMeasurementListResult {
+    bodyMeasurements: BodyMeasurement[];
+    totalCount: number;
+    totalPages: number;
+}
+
+export async function getBodyMeasurements(page: number = 1, pageSize: number = 20, sortBy?: string, sortOrder?: string): Promise<BodyMeasurementListResult> {
     try {
-        return await serverApi<BodyMeasurement[]>("/api/BodyMeasurements");
+        const params = new URLSearchParams();
+        params.append("Page", page.toString());
+        params.append("PageSize", pageSize.toString());
+        if (sortBy) params.append("SortBy", sortBy);
+        if (sortOrder) params.append("SortOrder", sortOrder);
+
+        const result = await serverApi<{ items: BodyMeasurement[], totalCount: number, page: number, pageSize: number, totalPages: number }>(`/api/BodyMeasurements?${params}`);
+        return {
+            bodyMeasurements: result.items || [],
+            totalCount: result.totalCount || 0,
+            totalPages: result.totalPages || 0
+        };
     } catch (error) {
         bmLogger.error("Failed to get body measurements", { error });
-        return [];
+        return { bodyMeasurements: [], totalCount: 0, totalPages: 0 };
     }
 }
 

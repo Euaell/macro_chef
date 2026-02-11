@@ -34,8 +34,8 @@ export default function ShoppingListPage() {
   const loadShoppingLists = async () => {
     try {
       setLoading(true);
-      const data = await clientApi<{ shoppingLists: ShoppingList[] }>('/api/ShoppingLists');
-      setShoppingLists(data.shoppingLists || []);
+      const data = await clientApi<{ items: ShoppingList[] }>('/api/ShoppingLists');
+      setShoppingLists(data.items || []);
     } catch (err) {
       setError('Failed to load shopping lists');
       console.error('Error loading shopping lists:', err);

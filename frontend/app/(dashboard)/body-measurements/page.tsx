@@ -1,12 +1,22 @@
 import { getBodyMeasurements } from "@/data/bodyMeasurement";
 import { getUserServer } from "@/helper/session";
 import AddMeasurementForm from "./AddMeasurementForm";
+import SortableHeader from "@/components/SortableHeader";
+import Pagination from "@/components/Pagination";
+import { parseListParams, buildListUrl } from "@/lib/utils/list-params";
 
 export const dynamic = 'force-dynamic';
 
-export default async function BodyMeasurementsPage() {
+export default async function BodyMeasurementsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
     await getUserServer();
-    const measurements = await getBodyMeasurements();
+    const params = await searchParams;
+    const { page, sortBy, sortOrder } = parseListParams(params, { sortBy: 'Date', sortOrder: 'desc' });
+    const { bodyMeasurements: measurements, totalCount, totalPages } = await getBodyMeasurements(page, 20, sortBy ?? undefined, sortOrder);
+    const baseUrl = buildListUrl('/body-measurements', {});
 
     const latest = measurements.length > 0 ? measurements[0] : null;
 
@@ -72,8 +82,8 @@ export default async function BodyMeasurementsPage() {
                         <table className="w-full">
                             <thead className="border-b border-slate-200">
                                 <tr>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Date</th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Weight</th>
+                                    <SortableHeader sortKey="Date" currentSort={sortBy} currentOrder={sortOrder} baseUrl={baseUrl} className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Date</SortableHeader>
+                                    <SortableHeader sortKey="WeightKg" currentSort={sortBy} currentOrder={sortOrder} baseUrl={baseUrl} className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Weight</SortableHeader>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Body Fat</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Muscle</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Waist</th>
@@ -116,6 +126,16 @@ export default async function BodyMeasurementsPage() {
                     </div>
                 )}
             </div>
+
+            {totalPages > 1 && (
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    totalCount={totalCount}
+                    pageSize={20}
+                    baseUrl={baseUrl}
+                />
+            )}
         </div>
     );
 }

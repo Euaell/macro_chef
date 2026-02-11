@@ -28,6 +28,7 @@ export interface Ingredient {
 export async function getAllIngredient(
     searchTerm?: string,
     sortBy?: string,
+    sortOrder?: string,
     page: number = 1,
     limit: number = 20
 ): Promise<{ ingredients: Ingredient[], totalCount: number, totalPages: number }> {
@@ -36,30 +37,15 @@ export async function getAllIngredient(
         params.set("Page", String(page));
         params.set("PageSize", String(limit));
         if (searchTerm) params.set("SearchTerm", searchTerm);
+        if (sortBy) params.set("SortBy", sortBy);
+        if (sortOrder) params.set("SortOrder", sortOrder);
 
-        const result = await serverApi<{ foods: Ingredient[], totalCount: number }>(`/api/Foods/search?${params.toString()}`);
-        let foods = result.foods || [];
-
-        // Sort if requested (if backend doesn't handle it yet)
-        if (sortBy) {
-            const sortField = sortBy as keyof Ingredient;
-            foods = [...foods].sort((a, b) => {
-                const aVal = a[sortField];
-                const bVal = b[sortField];
-                if (typeof aVal === "number" && typeof bVal === "number") {
-                    return bVal - aVal;
-                }
-                return String(aVal).localeCompare(String(bVal));
-            });
-        }
-
-        const totalCount = result.totalCount || 0;
-        const totalPages = Math.ceil(totalCount / limit);
+        const result = await serverApi<{ items: Ingredient[], totalCount: number, page: number, pageSize: number, totalPages: number }>(`/api/Foods/search?${params.toString()}`);
 
         return {
-            ingredients: foods,
-            totalCount,
-            totalPages
+            ingredients: result.items || [],
+            totalCount: result.totalCount || 0,
+            totalPages: result.totalPages || 0
         };
     } catch (error) {
         ingredientLogger.error("Failed to get all ingredients", { error });
