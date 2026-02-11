@@ -1,46 +1,91 @@
 "use server";
+
+import { serverApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 const mealPlanLogger = logger.createModuleLogger("meal-plan-data");
 
-export interface MealPlanEntry {
+export interface MealPlanRecipe {
     id: string;
     recipeId: string;
-    recipeTitle: string;
+    recipeTitle?: string;
     date: string;
     mealType: string;
     servings: number;
 }
 
-export interface WeeklyMealPlan {
+export interface MealPlan {
     id: string;
     name: string;
     startDate: string;
     endDate: string;
-    meals: MealPlanEntry[];
+    recipes: MealPlanRecipe[];
 }
 
-/**
- * TODO: Meal plans from the backend API
- */
+export interface MealPlanListResult {
+    mealPlans: MealPlan[];
+    totalCount: number;
+}
 
-
-export async function getWeeklyMealPlans(startDate: string, endDate: string): Promise<WeeklyMealPlan[]> {
+export async function getMealPlans(): Promise<MealPlan[]> {
     try {
-        mealPlanLogger.info("getWeeklyMealPlans called, but endpoint not yet implemented in backend", { startDate, endDate });
-        return [];
+        const result = await serverApi<MealPlanListResult>("/api/MealPlans");
+        return result.mealPlans || [];
     } catch (error) {
-        mealPlanLogger.error("Failed to get weekly meal plans", { error, startDate, endDate });
+        mealPlanLogger.error("Failed to get meal plans", { error });
         return [];
     }
 }
 
-export async function deleteMealPlan(mealPlanId: string): Promise<boolean> {
+export async function getMealPlanById(id: string): Promise<MealPlan | null> {
     try {
-        mealPlanLogger.info("deleteMealPlan called, but endpoint not yet implemented in backend", { mealPlanId });
-        return false;
+        return await serverApi<MealPlan>(`/api/MealPlans/${id}`);
     } catch (error) {
-        mealPlanLogger.error("Failed to delete meal plan", { error, mealPlanId });
+        mealPlanLogger.error("Failed to get meal plan", { error, id });
+        return null;
+    }
+}
+
+export async function createMealPlan(data: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    recipes?: { recipeId: string; date: string; mealType: string; servings: number }[];
+}): Promise<{ id: string; success: boolean } | null> {
+    try {
+        const result = await serverApi<{ id: string; name: string; recipeCount: number }>("/api/MealPlans", {
+            method: "POST",
+            body: data,
+        });
+        return { id: result.id, success: true };
+    } catch (error) {
+        mealPlanLogger.error("Failed to create meal plan", { error });
+        return null;
+    }
+}
+
+export async function addRecipeToMealPlan(
+    mealPlanId: string,
+    data: { recipeId: string; date: string; mealType: string; servings: number }
+): Promise<boolean> {
+    try {
+        await serverApi(`/api/MealPlans/${mealPlanId}/recipes`, {
+            method: "POST",
+            body: data,
+        });
+        return true;
+    } catch (error) {
+        mealPlanLogger.error("Failed to add recipe to meal plan", { error, mealPlanId });
+        return false;
+    }
+}
+
+export async function deleteMealPlan(id: string): Promise<boolean> {
+    try {
+        await serverApi(`/api/MealPlans/${id}`, { method: "DELETE" });
+        return true;
+    } catch (error) {
+        mealPlanLogger.error("Failed to delete meal plan", { error, id });
         return false;
     }
 }

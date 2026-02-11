@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { CldUploadWidget } from "next-cloudinary";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
 	const { data: session, isPending } = useSession();
@@ -55,7 +56,7 @@ export default function ProfilePage() {
 			window.location.reload();
 		} catch (error) {
 			console.error("Failed to update profile:", error);
-			alert("Failed to update profile");
+			toast.error("Failed to update profile");
 		} finally {
 			setIsUpdating(false);
 		}
@@ -217,6 +218,45 @@ export default function ProfilePage() {
 						<div className="flex-1">
 							<h3 className="font-semibold text-slate-900">Foods</h3>
 							<p className="text-sm text-slate-500">Browse food database</p>
+						</div>
+						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
+					</div>
+				</Link>
+
+				<Link href="/body-measurements" className="card-hover p-5 group">
+					<div className="flex items-center gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+							<i className="ri-body-scan-line text-xl text-white" />
+						</div>
+						<div className="flex-1">
+							<h3 className="font-semibold text-slate-900">Body Measurements</h3>
+							<p className="text-sm text-slate-500">Track your progress</p>
+						</div>
+						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
+					</div>
+				</Link>
+
+				<Link href="/achievements" className="card-hover p-5 group">
+					<div className="flex items-center gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+							<i className="ri-trophy-line text-xl text-white" />
+						</div>
+						<div className="flex-1">
+							<h3 className="font-semibold text-slate-900">Achievements</h3>
+							<p className="text-sm text-slate-500">Badges & streaks</p>
+						</div>
+						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
+					</div>
+				</Link>
+
+				<Link href="/workouts" className="card-hover p-5 group">
+					<div className="flex items-center gap-4">
+						<div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+							<i className="ri-run-line text-xl text-white" />
+						</div>
+						<div className="flex-1">
+							<h3 className="font-semibold text-slate-900">Workouts</h3>
+							<p className="text-sm text-slate-500">Log your training</p>
 						</div>
 						<i className="ri-arrow-right-s-line text-xl text-slate-400 group-hover:text-brand-500 transition-colors" />
 					</div>

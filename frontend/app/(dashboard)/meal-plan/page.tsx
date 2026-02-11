@@ -1,6 +1,6 @@
 import { getUserServer } from "@/helper/session";
 import Link from "next/link";
-import { getWeeklyMealPlans } from "@/data/mealPlan";
+import { getMealPlans } from "@/data/mealPlan";
 
 import { logger } from "@/lib/logger";
 const mealLogger = logger.createModuleLogger("meal-plan-page");
@@ -8,23 +8,13 @@ const mealLogger = logger.createModuleLogger("meal-plan-page");
 export const dynamic = 'force-dynamic';
 
 export default async function MealPlanPage() {
-	const user = await getUserServer(); // Verify user is authenticated
+	const user = await getUserServer();
 
-	// Get this week's date range
-	const today = new Date();
-	const startOfWeek = new Date(today);
-	startOfWeek.setDate(today.getDate() - today.getDay());
-	const endOfWeek = new Date(startOfWeek);
-	endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-	const startDate = startOfWeek.toISOString().split('T')[0];
-	const endDate = endOfWeek.toISOString().split('T')[0];
-
-	let mealPlans: Awaited<ReturnType<typeof getWeeklyMealPlans>> = [];
+	let mealPlans: Awaited<ReturnType<typeof getMealPlans>> = [];
 	let loadError: string | null = null;
 
 	try {
-		mealPlans = await getWeeklyMealPlans(startDate, endDate);
+		mealPlans = await getMealPlans();
 	} catch (error) {
 		mealLogger.error("Failed to load meal plans", {
 			error: error instanceof Error ? error.message : String(error),
@@ -81,9 +71,9 @@ export default async function MealPlanPage() {
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					{[
 						{ label: "Meal Plans", value: mealPlans.length, icon: "ri-calendar-check-line", color: "from-brand-400 to-brand-600" },
-						{ label: "This Week", value: mealPlans.filter(p => p.meals?.length > 0).length, icon: "ri-calendar-line", color: "from-accent-400 to-accent-600" },
-						{ label: "Total Meals", value: mealPlans.reduce((acc, p) => acc + (p.meals?.length || 0), 0), icon: "ri-restaurant-line", color: "from-violet-400 to-violet-600" },
-						{ label: "Recipes", value: new Set(mealPlans.flatMap(p => p.meals?.map(m => m.recipeId) || [])).size, icon: "ri-book-3-line", color: "from-orange-400 to-orange-600" },
+						{ label: "This Week", value: mealPlans.filter(p => p.recipes?.length > 0).length, icon: "ri-calendar-line", color: "from-accent-400 to-accent-600" },
+						{ label: "Total Meals", value: mealPlans.reduce((acc, p) => acc + (p.recipes?.length || 0), 0), icon: "ri-restaurant-line", color: "from-violet-400 to-violet-600" },
+						{ label: "Recipes", value: new Set(mealPlans.flatMap(p => p.recipes?.map(m => m.recipeId) || [])).size, icon: "ri-book-3-line", color: "from-orange-400 to-orange-600" },
 					].map((stat) => (
 						<div key={stat.label} className="card p-4">
 							<div className="flex items-center gap-3">
@@ -117,7 +107,7 @@ export default async function MealPlanPage() {
 											</p>
 										</div>
 										<span className="text-sm text-slate-600">
-											{plan.meals?.length || 0} meals
+											{plan.recipes?.length || 0} meals
 										</span>
 									</div>
 								</div>

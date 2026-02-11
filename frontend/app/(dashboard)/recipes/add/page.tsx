@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter } from "next/navigation";
 import { clientApi } from "@/lib/api";
 import Modal from "@/components/Modal";
+import { toast } from "sonner";
 
 type SelectedIngredient = {
 	ingredient: Ingredient | null;
@@ -159,7 +160,7 @@ export default function Page() {
 			router.push('/recipes');
 		} catch (err) {
 			console.error('[Recipe Create] Failed:', err);
-			alert('Failed to create recipe. Please try again.');
+			toast.error('Failed to create recipe. Please try again.');
 		} finally {
 			setIsSubmitting(false);
 		}
