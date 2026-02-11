@@ -66,11 +66,17 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
                 new Claim("sub", userId.ToString()),
                 new Claim("type", "service_impersonation"),
                 new Claim(ClaimTypes.Role, status.Role),
-                new Claim("role", status.Role)
+                new Claim("role", status.Role),
+                // Add standard role claim for Identity
+                new Claim("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", status.Role)
             };
 
             var identity = new ClaimsIdentity(claims, Scheme.Name, ClaimTypes.NameIdentifier, ClaimTypes.Role);
             var principal = new ClaimsPrincipal(identity);
+            
+            _logger.LogInformation("ApiKey Impersonation Success. User: {UserId}, Role: {Role}, Claims: {Claims}", 
+                userId, status.Role, string.Join(", ", claims.Select(c => $"{c.Type}={c.Value}")));
+
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
             return AuthenticateResult.Success(ticket);
