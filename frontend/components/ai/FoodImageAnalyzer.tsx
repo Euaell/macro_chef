@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { clientApi } from "@/lib/api.client";
+import { toast } from "sonner";
 
 interface RecognizedFood {
 	name: string;
@@ -235,6 +236,6 @@ export function FoodImageAnalyzer() {
 }
 
 async function getToken(): Promise<string> {
-	const { getApiToken } = await import("@/lib/api");
+	const { getApiToken } = await import("@/lib/api.client");
 	return (await getApiToken()) || "";
 }
