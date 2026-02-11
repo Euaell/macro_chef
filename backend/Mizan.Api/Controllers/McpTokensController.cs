@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Mizan.Application.Commands;
+using Mizan.Application.Common;
 using Mizan.Application.Queries;
 
 namespace Mizan.Api.Controllers;
@@ -42,9 +43,9 @@ public class McpTokensController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<GetMcpTokensResult>> GetMyTokens()
+    public async Task<ActionResult<PagedResult<McpTokenDto>>> GetMyTokens([FromQuery] GetMcpTokensQuery query)
     {
-        var result = await _mediator.Send(new GetMcpTokensQuery());
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 
