@@ -5,6 +5,7 @@ import { clientApi } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface TrainerRequest {
 	relationshipId: string;
@@ -130,7 +131,7 @@ export default function TrainerRequestsPage() {
 									<button
 										className="btn-secondary"
 										onClick={() => {
-											alert("Cancel request functionality coming soon");
+											toast.info("Cancel request functionality coming soon");
 										}}
 									>
 										<i className="ri-close-line" />

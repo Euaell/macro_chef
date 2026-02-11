@@ -4,6 +4,7 @@ import { useState } from "react";
 import { clientApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LogProgress() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function LogProgress() {
       router.push("/goal/dashboard");
     } catch (error) {
       console.error("Failed to log progress:", error);
-      alert("Failed to log progress. Please try again.");
+      toast.error("Failed to log progress. Please try again.");
     } finally {
       setLoading(false);
     }

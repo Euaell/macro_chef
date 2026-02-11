@@ -5,6 +5,7 @@ import { clientApi } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface TrainerPublic {
 	id: string;
@@ -47,10 +48,10 @@ export default function TrainersPage() {
 				method: "POST",
 				body: { trainerId },
 			});
-			alert("Trainer request sent successfully!");
+			toast.success("Trainer request sent successfully!");
 		} catch (error) {
 			console.error("Failed to send request:", error);
-			alert("Failed to send trainer request");
+			toast.error("Failed to send trainer request");
 		} finally {
 			setRequestingTrainerId(null);
 		}

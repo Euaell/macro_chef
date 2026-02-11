@@ -4,7 +4,7 @@ type ClassValue = string | number | boolean | undefined | null | ClassValue[] | 
 
 function toVal(mix: ClassValue): string {
   let str = ""
-  
+
   if (typeof mix === "string" || typeof mix === "number") {
     str += mix
   } else if (typeof mix === "object" && mix !== null) {
@@ -27,7 +27,7 @@ function toVal(mix: ClassValue): string {
       }
     }
   }
-  
+
   return str
 }
 
@@ -43,29 +43,28 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(str)
 }
 
-interface CVAConfig {
-  base?: string
+interface CVAOptions {
   variants?: Record<string, Record<string, string>>
   defaultVariants?: Record<string, string>
 }
 
-export function cva(config: CVAConfig) {
-  return function (props?: Record<string, string | undefined>) {
+export function cva(base: string, options?: CVAOptions) {
+  return function (props?: Record<string, string | undefined> & { className?: string }) {
     const classes: string[] = []
-    
-    if (config.base) {
-      classes.push(config.base)
-    }
-    
-    if (config.variants) {
-      for (const [variantKey, variantOptions] of Object.entries(config.variants)) {
-        const variantValue = props?.[variantKey] || config.defaultVariants?.[variantKey]
+
+    if (base) classes.push(base)
+
+    if (options?.variants) {
+      for (const [variantKey, variantOptions] of Object.entries(options.variants)) {
+        const variantValue = props?.[variantKey] || options.defaultVariants?.[variantKey]
         if (variantValue && variantOptions[variantValue]) {
           classes.push(variantOptions[variantValue])
         }
       }
     }
-    
-    return classes.join(" ")
+
+    if (props?.className) classes.push(props.className)
+
+    return twMerge(classes.join(" "))
   }
 }

@@ -1,6 +1,5 @@
 type LogLevel = "fatal" | "error" | "warn" | "info" | "debug" | "trace";
 
-const isServer = typeof window === "undefined";
 const isProd = process.env.NODE_ENV === "production";
 const level: LogLevel = (process.env.LOG_LEVEL as LogLevel) || (isProd ? "info" : "debug");
 
@@ -13,13 +12,13 @@ const levelPriority: Record<LogLevel, number> = {
   fatal: 5,
 };
 
-const redactionPaths = [
+const redactionKeys = [
   "password",
   "token",
   "secret",
   "authorization",
   "cookie",
-  "apiKey",
+  "apikey",
   "api_key",
   "bearer",
 ];
@@ -27,7 +26,7 @@ const redactionPaths = [
 function redact(obj: Record<string, unknown>): Record<string, unknown> {
   const redacted: Record<string, unknown> = {};
   for (const key in obj) {
-    if (redactionPaths.some((p) => key.toLowerCase().includes(p))) {
+    if (redactionKeys.some((p) => key.toLowerCase().includes(p))) {
       redacted[key] = "[REDACTED]";
     } else if (typeof obj[key] === "object" && obj[key] !== null) {
       redacted[key] = redact(obj[key] as Record<string, unknown>);
@@ -38,102 +37,80 @@ function redact(obj: Record<string, unknown>): Record<string, unknown> {
   return redacted;
 }
 
-function formatMessage(
-  level: LogLevel,
+function emit(
+  lvl: LogLevel,
   msg: string,
   meta?: Record<string, unknown>,
-  moduleName?: string
-): string {
+  moduleName?: string,
+) {
   const timestamp = new Date().toISOString();
-  const levelStr = level.toUpperCase().padStart(5);
-  const moduleStr = moduleName ? `[${moduleName}] ` : "";
 
   if (isProd) {
-    return JSON.stringify({
+    const payload = JSON.stringify({
       timestamp,
-      level,
-      msg,
+      level: lvl,
       module: moduleName,
+      msg,
       ...redact(meta || {}),
     });
+    if (lvl === "error" || lvl === "fatal") console.error(payload);
+    else if (lvl === "warn") console.warn(payload);
+    else console.log(payload);
+    return;
   }
 
-  const metaStr = meta && Object.keys(meta).length > 0
-    ? " " + JSON.stringify(redact(meta), null, 0).replace(/\n/g, " ")
-    : "";
+  const levelStr = lvl.toUpperCase().padStart(5);
+  const moduleStr = moduleName ? `[${moduleName}] ` : "";
+  const metaStr =
+    meta && Object.keys(meta).length > 0
+      ? " " + JSON.stringify(redact(meta), null, 0)
+      : "";
+  const formatted = `[${timestamp}] ${levelStr} ${moduleStr}${msg}${metaStr}`;
 
-  return `[${timestamp}] ${levelStr} ${moduleStr}${msg}${metaStr}`;
+  if (lvl === "error" || lvl === "fatal") console.error(formatted);
+  else if (lvl === "warn") console.warn(formatted);
+  else if (lvl === "debug" || lvl === "trace") console.debug(formatted);
+  else console.info(formatted);
 }
 
-class Logger {
-  private level: LogLevel;
-
-  constructor(level: LogLevel = "info") {
-    this.level = level;
-  }
-
-  private shouldLog(level: LogLevel): boolean {
-    return levelPriority[level] >= levelPriority[this.level];
-  }
-
-  private log(level: LogLevel, msg: string, meta?: Record<string, unknown>) {
-    if (!this.shouldLog(level)) return;
-
-    const formatted = formatMessage(level, msg, meta);
-
-    switch (level) {
-      case "trace":
-      case "debug":
-        console.debug(formatted);
-        break;
-      case "info":
-        console.info(formatted);
-        break;
-      case "warn":
-        console.warn(formatted);
-        break;
-      case "error":
-      case "fatal":
-        console.error(formatted);
-        break;
-    }
-  }
-
-  createModuleLogger(module: string) {
-    return {
-      trace: (msg: string, meta?: Record<string, unknown>) =>
-        this.log("trace", msg, { ...meta, module }),
-      debug: (msg: string, meta?: Record<string, unknown>) =>
-        this.log("debug", msg, { ...meta, module }),
-      info: (msg: string, meta?: Record<string, unknown>) =>
-        this.log("info", msg, { ...meta, module }),
-      warn: (msg: string, meta?: Record<string, unknown>) =>
-        this.log("warn", msg, { ...meta, module }),
-      error: (msg: string, meta?: Record<string, unknown>) =>
-        this.log("error", msg, { ...meta, module }),
-      fatal: (msg: string, meta?: Record<string, unknown>) =>
-        this.log("fatal", msg, { ...meta, module }),
-    };
-  }
-
-  trace(msg: string, meta?: Record<string, unknown>) {
-    this.log("trace", msg, meta);
-  }
-  debug(msg: string, meta?: Record<string, unknown>) {
-    this.log("debug", msg, meta);
-  }
-  info(msg: string, meta?: Record<string, unknown>) {
-    this.log("info", msg, meta);
-  }
-  warn(msg: string, meta?: Record<string, unknown>) {
-    this.log("warn", msg, meta);
-  }
-  error(msg: string, meta?: Record<string, unknown>) {
-    this.log("error", msg, meta);
-  }
-  fatal(msg: string, meta?: Record<string, unknown>) {
-    this.log("fatal", msg, meta);
-  }
+function shouldLog(lvl: LogLevel): boolean {
+  return levelPriority[lvl] >= levelPriority[level];
 }
 
-export const logger = new Logger(level);
+type LogFn = (msg: string, meta?: Record<string, unknown>) => void;
+
+interface ModuleLogger {
+  trace: LogFn;
+  debug: LogFn;
+  info: LogFn;
+  warn: LogFn;
+  error: LogFn;
+  fatal: LogFn;
+}
+
+function makeLogFn(lvl: LogLevel, moduleName?: string): LogFn {
+  return (msg, meta) => {
+    if (shouldLog(lvl)) emit(lvl, msg, meta, moduleName);
+  };
+}
+
+function createModuleLogger(moduleName: string): ModuleLogger {
+  return {
+    trace: makeLogFn("trace", moduleName),
+    debug: makeLogFn("debug", moduleName),
+    info: makeLogFn("info", moduleName),
+    warn: makeLogFn("warn", moduleName),
+    error: makeLogFn("error", moduleName),
+    fatal: makeLogFn("fatal", moduleName),
+  };
+}
+
+export const logger = {
+  trace: makeLogFn("trace"),
+  debug: makeLogFn("debug"),
+  info: makeLogFn("info"),
+  warn: makeLogFn("warn"),
+  error: makeLogFn("error"),
+  fatal: makeLogFn("fatal"),
+  createModuleLogger,
+};
