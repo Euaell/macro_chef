@@ -47,11 +47,6 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         return Task.CompletedTask;
     }
 
-    public async Task InitializeAsync()
-    {
-        await _apiFixture.ResetDatabaseAsync();
-    }
-
     #region SSE Connection Tests
 
     [Fact]
@@ -1404,5 +1399,6 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         public int Code { get; set; }
         public string Message { get; set; } = string.Empty;
     }
+
+    #endregion
 }
-#endregion
