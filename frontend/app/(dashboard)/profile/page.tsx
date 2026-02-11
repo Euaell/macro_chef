@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "@/lib/auth-client";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -109,7 +109,7 @@ export default function ProfilePage() {
 									window.location.reload();
 								} catch (error) {
 									console.error("Failed to upload image:", error);
-									alert("Failed to upload image");
+									toast.error("Failed to upload image");
 								}
 							}}
 						>

@@ -6,7 +6,7 @@ import type { Ingredient } from "@/data/ingredient";
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 import Modal from "@/components/Modal";
 import type { Recipe } from "@/data/recipe";
 
@@ -159,7 +159,7 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
             router.refresh();
         } catch (err) {
             console.error('[Recipe Update] Failed:', err);
-            alert('Failed to update recipe. Please try again.');
+            toast.error('Failed to update recipe. Please try again.');
         } finally {
             setIsSubmitting(false);
         }

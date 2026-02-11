@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { clientApi } from '@/lib/api';
+import { clientApi } from '@/lib/api.client';
 
 interface ShoppingListItem {
   id: string;

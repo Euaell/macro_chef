@@ -2,7 +2,7 @@
 
 import OverviewPieChart from "./PieChart";
 import { useEffect, useState } from "react";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 import Loading from "../Loading";
 
 interface Goal {

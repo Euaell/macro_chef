@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { serverApi } from "@/lib/api";
+import { serverApi } from "@/lib/api.server";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 import { logger } from "@/lib/logger";
 

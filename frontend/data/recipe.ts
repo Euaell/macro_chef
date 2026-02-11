@@ -1,6 +1,6 @@
 "use server";
 
-import { serverApi } from "@/lib/api";
+import { serverApi } from "@/lib/api.server";
 import type { components } from "@/types/api.generated";
 import { logger } from "@/lib/logger";
 

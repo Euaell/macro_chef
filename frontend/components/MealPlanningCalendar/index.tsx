@@ -100,7 +100,7 @@ export default function MealPlanningCalendar({
 				router.refresh();
 			} catch (error) {
 				console.error('Failed to delete meal plan:', error);
-				alert('Failed to delete meal plan');
+				toast.error('Failed to delete meal plan');
 			} finally {
 				setDeleting(false);
 			}

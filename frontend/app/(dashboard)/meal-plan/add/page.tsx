@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { format, parse } from 'date-fns';
-import { clientApi } from '@/lib/api';
+import { clientApi } from '@/lib/api.client';
 
 type SimplifiedRecipe = {
   id: string;

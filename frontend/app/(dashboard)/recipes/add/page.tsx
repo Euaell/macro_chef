@@ -8,7 +8,7 @@ import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 import Modal from "@/components/Modal";
 import { toast } from "sonner";
 

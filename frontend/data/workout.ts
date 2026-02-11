@@ -1,6 +1,6 @@
 "use server";
 
-import { serverApi } from "@/lib/api";
+import { serverApi } from "@/lib/api.server";
 import { logger } from "@/lib/logger";
 
 const workoutLogger = logger.createModuleLogger("workout-data");

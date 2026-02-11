@@ -1,6 +1,6 @@
 "use server";
 
-import { serverApi } from "@/lib/api";
+import { serverApi } from "@/lib/api.server";
 import { logger } from "@/lib/logger";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
