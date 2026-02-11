@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Mizan.Application.Common;
+using Mizan.Application.Queries;
 using Xunit;
 
 namespace Mizan.Tests.Integration;
@@ -37,9 +39,9 @@ public class McpTokensControllerTests
         var listResponse = await client.GetAsync("/api/McpTokens");
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var list = await listResponse.Content.ReadFromJsonAsync<GetMcpTokensResponse>();
+        var list = await listResponse.Content.ReadFromJsonAsync<PagedResult<McpTokenDto>>();
         list.Should().NotBeNull();
-        list!.Tokens.Should().Contain(t => t.Id == created.Id);
+        list!.Items.Should().Contain(t => t.Id == created.Id);
 
         var validateResponse = await client.PostAsJsonAsync("/api/McpTokens/validate", new { Token = created.PlaintextToken });
         validateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -86,8 +88,6 @@ public class McpTokensControllerTests
     }
 
     private sealed record CreateMcpTokenResponse(Guid Id, string PlaintextToken, string Name);
-    private sealed record GetMcpTokensResponse(List<McpTokenResponse> Tokens);
-    private sealed record McpTokenResponse(Guid Id, string Name, bool IsActive);
     private sealed record ValidateTokenResponse(Guid UserId, bool IsValid, Guid? TokenId);
     private sealed record McpUsageAnalyticsResponse(UsageOverviewResponse Overview, List<ToolUsageResponse> ToolUsage);
     private sealed record UsageOverviewResponse(int TotalCalls, int SuccessfulCalls, int FailedCalls, double SuccessRate, int AverageExecutionTimeMs, int UniqueTokensUsed);
