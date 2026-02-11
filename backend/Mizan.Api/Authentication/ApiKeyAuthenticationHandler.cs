@@ -64,7 +64,9 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
             {
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim("sub", userId.ToString()),
-                new Claim("type", "service_impersonation")
+                new Claim("type", "service_impersonation"),
+                new Claim(ClaimTypes.Role, status.Role),
+                new Claim("role", status.Role)
             };
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);

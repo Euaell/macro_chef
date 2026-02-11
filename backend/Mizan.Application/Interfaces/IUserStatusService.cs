@@ -1,6 +1,6 @@
 namespace Mizan.Application.Interfaces;
 
-public record UserAccessStatus(bool Exists, bool EmailVerified, bool IsBanned)
+public record UserAccessStatus(bool Exists, bool EmailVerified, bool IsBanned, string Role = "user")
 {
     public bool IsAllowed => Exists && EmailVerified && !IsBanned;
 }
