@@ -4,6 +4,7 @@ import { useSession, authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function ProfileSettingsPage() {
   const { data: session, isPending } = useSession();

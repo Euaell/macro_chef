@@ -158,29 +158,33 @@
 }
 
 /* Button Base Styles */
-.btn {
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-accent {
   @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-primary {
-  @apply btn bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 focus:ring-brand-500 shadow-lg shadow-brand-500/25 hover:shadow-xl hover:shadow-brand-500/30;
+  @apply bg-gradient-to-r from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700 focus:ring-brand-500 shadow-lg shadow-brand-500/25 hover:shadow-xl hover:shadow-brand-500/30;
 }
 
 .btn-secondary {
-  @apply btn bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-slate-500;
+  @apply bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-slate-500;
 }
 
 .btn-accent {
-  @apply btn bg-gradient-to-r from-accent-500 to-accent-600 text-white hover:from-accent-600 hover:to-accent-700 focus:ring-accent-500 shadow-lg shadow-accent-500/25;
+  @apply bg-gradient-to-r from-accent-500 to-accent-600 text-white hover:from-accent-600 hover:to-accent-700 focus:ring-accent-500 shadow-lg shadow-accent-500/25;
 }
 
 /* Card Styles */
-.card {
+.card,
+.card-hover {
   @apply bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden transition-all duration-300;
 }
 
 .card-hover {
-  @apply card hover:shadow-lg hover:border-slate-200 hover:-translate-y-0.5;
+  @apply hover:shadow-lg hover:border-slate-200 hover:-translate-y-0.5;
 }
 
 /* Input Styles */
