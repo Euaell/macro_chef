@@ -1,79 +1,139 @@
-import pino, { Logger as PinoLogger, LoggerOptions } from "pino";
-
 type LogLevel = "fatal" | "error" | "warn" | "info" | "debug" | "trace";
 
 const isServer = typeof window === "undefined";
 const isProd = process.env.NODE_ENV === "production";
 const level: LogLevel = (process.env.LOG_LEVEL as LogLevel) || (isProd ? "info" : "debug");
 
-const redactionPaths = [
-  "*.password",
-  "*.token",
-  "*.secret",
-  "*.authorization",
-  "*.cookie",
-  "*.apiKey",
-  "*.api_key",
-  "*.bearer",
-  "headers.cookie",
-];
-
-const baseOptions: LoggerOptions = {
-  level,
-  redact: { paths: redactionPaths, censor: "[REDACTED]" },
+const levelPriority: Record<LogLevel, number> = {
+  trace: 0,
+  debug: 1,
+  info: 2,
+  warn: 3,
+  error: 4,
+  fatal: 5,
 };
 
-const loggerInstance: PinoLogger = (() => {
-  if (isServer) {
-    // Pretty-print only in local/dev; JSON in prod to feed centralized logging.
-    const transport = isProd
-      ? undefined
-      : {
-          target: "pino-pretty",
-          options: { colorize: true, translateTime: "SYS:standard", singleLine: true },
-        };
+const redactionPaths = [
+  "password",
+  "token",
+  "secret",
+  "authorization",
+  "cookie",
+  "apiKey",
+  "api_key",
+  "bearer",
+];
 
-    return pino({ ...baseOptions, transport });
+function redact(obj: Record<string, unknown>): Record<string, unknown> {
+  const redacted: Record<string, unknown> = {};
+  for (const key in obj) {
+    if (redactionPaths.some((p) => key.toLowerCase().includes(p))) {
+      redacted[key] = "[REDACTED]";
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      redacted[key] = redact(obj[key] as Record<string, unknown>);
+    } else {
+      redacted[key] = obj[key];
+    }
+  }
+  return redacted;
+}
+
+function formatMessage(
+  level: LogLevel,
+  msg: string,
+  meta?: Record<string, unknown>,
+  moduleName?: string
+): string {
+  const timestamp = new Date().toISOString();
+  const levelStr = level.toUpperCase().padStart(5);
+  const moduleStr = moduleName ? `[${moduleName}] ` : "";
+
+  if (isProd) {
+    return JSON.stringify({
+      timestamp,
+      level,
+      msg,
+      module: moduleName,
+      ...redact(meta || {}),
+    });
   }
 
-  // Browser: avoid base pid/hostname noise, emit objects for console grouping.
-  return pino({
-    ...baseOptions,
-    base: undefined,
-    browser: { asObject: true },
-  });
-})();
+  const metaStr = meta && Object.keys(meta).length > 0
+    ? " " + JSON.stringify(redact(meta), null, 0).replace(/\n/g, " ")
+    : "";
+
+  return `[${timestamp}] ${levelStr} ${moduleStr}${msg}${metaStr}`;
+}
 
 class Logger {
-  private root: PinoLogger;
+  private level: LogLevel;
 
-  constructor(root: PinoLogger) {
-    this.root = root;
+  constructor(level: LogLevel = "info") {
+    this.level = level;
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return levelPriority[level] >= levelPriority[this.level];
+  }
+
+  private log(level: LogLevel, msg: string, meta?: Record<string, unknown>) {
+    if (!this.shouldLog(level)) return;
+
+    const formatted = formatMessage(level, msg, meta);
+
+    switch (level) {
+      case "trace":
+      case "debug":
+        console.debug(formatted);
+        break;
+      case "info":
+        console.info(formatted);
+        break;
+      case "warn":
+        console.warn(formatted);
+        break;
+      case "error":
+      case "fatal":
+        console.error(formatted);
+        break;
+    }
   }
 
   createModuleLogger(module: string) {
-    const child = this.root.child({ module });
-    const call = (level: LogLevel, msg: string, meta?: Record<string, unknown>) => {
-      // Pino signature is (obj, msg?), so put metadata first to avoid TS overload ambiguity.
-      child[level](meta ?? {}, msg);
-    };
-
     return {
-      trace: (msg: string, meta?: Record<string, unknown>) => call("trace", msg, meta),
-      debug: (msg: string, meta?: Record<string, unknown>) => call("debug", msg, meta),
-      info: (msg: string, meta?: Record<string, unknown>) => call("info", msg, meta),
-      warn: (msg: string, meta?: Record<string, unknown>) => call("warn", msg, meta),
-      error: (msg: string, meta?: Record<string, unknown>) => call("error", msg, meta),
-      fatal: (msg: string, meta?: Record<string, unknown>) => call("fatal", msg, meta),
+      trace: (msg: string, meta?: Record<string, unknown>) =>
+        this.log("trace", msg, { ...meta, module }),
+      debug: (msg: string, meta?: Record<string, unknown>) =>
+        this.log("debug", msg, { ...meta, module }),
+      info: (msg: string, meta?: Record<string, unknown>) =>
+        this.log("info", msg, { ...meta, module }),
+      warn: (msg: string, meta?: Record<string, unknown>) =>
+        this.log("warn", msg, { ...meta, module }),
+      error: (msg: string, meta?: Record<string, unknown>) =>
+        this.log("error", msg, { ...meta, module }),
+      fatal: (msg: string, meta?: Record<string, unknown>) =>
+        this.log("fatal", msg, { ...meta, module }),
     };
   }
 
-  // Fallback root-level logging (rarely used directly)
-  debug(msg: string, meta?: any) { this.root.debug(meta || {}, msg); }
-  info(msg: string, meta?: any) { this.root.info(meta || {}, msg); }
-  warn(msg: string, meta?: any) { this.root.warn(meta || {}, msg); }
-  error(msg: string, meta?: any) { this.root.error(meta || {}, msg); }
-  fatal(msg: string, meta?: any) { this.root.fatal(meta || {}, msg); }
+  trace(msg: string, meta?: Record<string, unknown>) {
+    this.log("trace", msg, meta);
+  }
+  debug(msg: string, meta?: Record<string, unknown>) {
+    this.log("debug", msg, meta);
+  }
+  info(msg: string, meta?: Record<string, unknown>) {
+    this.log("info", msg, meta);
+  }
+  warn(msg: string, meta?: Record<string, unknown>) {
+    this.log("warn", msg, meta);
+  }
+  error(msg: string, meta?: Record<string, unknown>) {
+    this.log("error", msg, meta);
+  }
+  fatal(msg: string, meta?: Record<string, unknown>) {
+    this.log("fatal", msg, meta);
+  }
 }
 
-export const logger = new Logger(loggerInstance);
+export const logger = new Logger(level);
