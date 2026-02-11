@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cn, cva } from "@/lib/utils"
 
-import { cn } from "@/lib/utils"
+type VariantProps<T> = T extends (props: infer P) => string ? P : never
 
 const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
