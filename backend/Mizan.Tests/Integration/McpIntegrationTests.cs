@@ -5,9 +5,12 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using McpServer::Mizan.Mcp.Server.Services;
 using Mizan.Application.Commands;
-using Mizan.Domain.Entities; // Added for Food, Recipe
+using Mizan.Domain.Entities;
 using Xunit;
 
 namespace Mizan.Tests.Integration;
@@ -24,14 +27,29 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         _mcpFactory = mcpFactory;
         _apiFixture = apiFixture;
 
-        // Configure MCP server to use the API fixture's client for backend calls
         _mcpFactory = mcpFactory.WithWebHostBuilder(builder =>
         {
+            builder.ConfigureAppConfiguration((ctx, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "MizanApiUrl", "http://localhost:5000" },
+                    { "ServiceApiKey", "test-api-key" }
+                });
+            });
+
             builder.ConfigureTestServices(services =>
             {
-                // Override the HttpClient for BackendClient to point to our in-memory API
-                services.AddHttpClient<McpServer::Mizan.Mcp.Server.Services.IBackendClient, McpServer::Mizan.Mcp.Server.Services.BackendClient>()
-                    .ConfigurePrimaryHttpMessageHandler(() => _apiFixture.Server.CreateHandler());
+                services.RemoveAll<IBackendClient>();
+
+                services.AddScoped<IBackendClient>(sp =>
+                {
+                    var config = sp.GetRequiredService<IConfiguration>();
+                    var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<BackendClient>>();
+                    var handler = _apiFixture.Server.CreateHandler();
+                    var client = new HttpClient(handler);
+                    return new BackendClient(client, config, logger);
+                });
             });
         });
 
