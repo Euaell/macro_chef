@@ -69,7 +69,7 @@ public class FoodsControllerTests
 
         var searchResult = await searchResponse.Content.ReadFromJsonAsync<SearchFoodsResponse>();
         searchResult.Should().NotBeNull();
-        searchResult!.Foods.Should().Contain(f => f.Name == "Updated Food");
+        searchResult!.Items.Should().Contain(f => f.Name == "Updated Food");
 
         var deleteResponse = await client.DeleteAsync($"/api/Foods/{created.Id}");
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -104,5 +104,5 @@ public class FoodsControllerTests
 
     private sealed record CreateFoodResponse(Guid Id, bool Success);
     private sealed record FoodResponse(Guid Id, string Name);
-    private sealed record SearchFoodsResponse(List<FoodResponse> Foods, int TotalCount);
+    private sealed record SearchFoodsResponse(List<FoodResponse> Items, int TotalCount);
 }
