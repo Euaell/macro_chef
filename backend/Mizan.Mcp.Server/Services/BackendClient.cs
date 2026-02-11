@@ -90,6 +90,7 @@ public class BackendClient : IBackendClient
         var request = new HttpRequestMessage(new HttpMethod(method), endpoint);
         
         // Service Auth Headers
+        request.Headers.TryAddWithoutValidation("X-Api-Key", _apiKey);
         request.Headers.Add("X-Impersonate-User", userId.ToString());
 
         if (data != null)

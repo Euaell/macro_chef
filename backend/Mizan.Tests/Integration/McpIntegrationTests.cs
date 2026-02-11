@@ -386,7 +386,7 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         var error = jsonResponse.Error;
         error.Should().NotBeNull();
         error.Code.Should().Be(-32603);
-        error.Message.Should().Contain("required");
+        error.Message.Should().Contain("must not be empty");
     }
 
     [Fact]
@@ -1064,9 +1064,17 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         await _apiFixture.SeedUserAsync(userId, "integration@example.com", emailVerified: true);
         var token = await CreateMcpTokenAsync(userId);
 
+        var food = await _apiFixture.SeedFoodAsync("Usage Food", 120, 10, 15, 5);
+
         _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var request = CreateJsonRpcCallRequest("tools/call", "log_meal", new { servings = 1, foodId = Guid.NewGuid().ToString() });
+        var request = CreateJsonRpcCallRequest("tools/call", "log_meal", new
+        {
+            date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            mealType = "SNACK",
+            servings = 1,
+            foodId = food.Id
+        });
 
         var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
 
