@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from "sonner";
 import { PerDayMealsAggregate } from '@/types/meal';
 import { format, addDays, startOfWeek, endOfWeek, addWeeks, subWeeks, isToday, isWithinInterval } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
