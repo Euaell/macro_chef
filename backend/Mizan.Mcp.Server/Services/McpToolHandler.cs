@@ -143,41 +143,49 @@ public class McpToolHandler
     {
         _logger.LogInformation("Executing tool {Tool} for user {User}", toolName, userId);
 
+        var normalizedArgs = args;
+        if (normalizedArgs.ValueKind == JsonValueKind.Null || normalizedArgs.ValueKind == JsonValueKind.Undefined)
+        {
+            using var emptyDoc = JsonDocument.Parse("{}");
+            normalizedArgs = emptyDoc.RootElement.Clone();
+        }
+
         switch (toolName)
         {
             case "list_ingredients":
-                var search = args.TryGetProperty("search", out var s) ? s.GetString() : null;
-                var limit = args.TryGetProperty("limit", out var l) ? l.GetInt32() : 20;
-                var page = args.TryGetProperty("page", out var p) ? p.GetInt32() : 1;
-                var sortBy = args.TryGetProperty("sortBy", out var sb) ? sb.GetString() : null;
-                var sortOrder = args.TryGetProperty("sortOrder", out var so) ? so.GetString() : null;
-                var qs = $"/api/Foods/search?searchTerm={search}&pageSize={limit}&page={page}";
+                var search = normalizedArgs.TryGetProperty("search", out var s) ? s.GetString() : null;
+                var limit = normalizedArgs.TryGetProperty("limit", out var l) ? l.GetInt32() : 20;
+                var page = normalizedArgs.TryGetProperty("page", out var p) ? p.GetInt32() : 1;
+                var sortBy = normalizedArgs.TryGetProperty("sortBy", out var sb) ? sb.GetString() : null;
+                var sortOrder = normalizedArgs.TryGetProperty("sortOrder", out var so) ? so.GetString() : null;
+                var qs = $"/api/Foods/search?pageSize={limit}&page={page}";
+                if (!string.IsNullOrWhiteSpace(search)) qs += $"&searchTerm={Uri.EscapeDataString(search)}";
                 if (!string.IsNullOrEmpty(sortBy)) qs += $"&sortBy={sortBy}";
                 if (!string.IsNullOrEmpty(sortOrder)) qs += $"&sortOrder={sortOrder}";
                 return await _backend.CallApiAsync(userId, "GET", qs);
 
             case "add_ingredient":
-                var createFoodCmd = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
-                return await _backend.CallApiAsync(userId, "POST", "/api/Foods", createFoodCmd);
+                return await _backend.CallApiAsync(userId, "POST", "/api/Foods", normalizedArgs);
 
             case "get_shopping_list":
-                var slPage = args.TryGetProperty("page", out var slp) ? slp.GetInt32() : 1;
-                var slLimit = args.TryGetProperty("limit", out var sll) ? sll.GetInt32() : 20;
+                var slPage = normalizedArgs.TryGetProperty("page", out var slp) ? slp.GetInt32() : 1;
+                var slLimit = normalizedArgs.TryGetProperty("limit", out var sll) ? sll.GetInt32() : 20;
                 return await _backend.CallApiAsync(userId, "GET", $"/api/ShoppingLists?page={slPage}&pageSize={slLimit}");
 
             case "get_nutrition_tracking":
-                var date = args.TryGetProperty("date", out var d) ? d.GetString() : DateTime.UtcNow.ToString("yyyy-MM-dd");
+                var date = normalizedArgs.TryGetProperty("date", out var d) ? d.GetString() : DateTime.UtcNow.ToString("yyyy-MM-dd");
                 return await _backend.CallApiAsync(userId, "GET", $"/api/Nutrition/daily?date={date}");
 
             case "list_recipes":
-                var rSearch = args.TryGetProperty("search", out var rs) ? rs.GetString() : null;
-                var rPage = args.TryGetProperty("page", out var rp) ? rp.GetInt32() : 1;
-                var rLimit = args.TryGetProperty("limit", out var rl) ? rl.GetInt32() : 20;
-                var rSortBy = args.TryGetProperty("sortBy", out var rsb) ? rsb.GetString() : null;
-                var rSortOrder = args.TryGetProperty("sortOrder", out var rso) ? rso.GetString() : null;
-                var rTags = args.TryGetProperty("tags", out var rt) ? rt.GetString() : null;
-                var rFavOnly = args.TryGetProperty("favoritesOnly", out var rf) && rf.GetBoolean();
-                var rqs = $"/api/Recipes?searchTerm={rSearch}&page={rPage}&pageSize={rLimit}&favoritesOnly={rFavOnly}";
+                var rSearch = normalizedArgs.TryGetProperty("search", out var rs) ? rs.GetString() : null;
+                var rPage = normalizedArgs.TryGetProperty("page", out var rp) ? rp.GetInt32() : 1;
+                var rLimit = normalizedArgs.TryGetProperty("limit", out var rl) ? rl.GetInt32() : 20;
+                var rSortBy = normalizedArgs.TryGetProperty("sortBy", out var rsb) ? rsb.GetString() : null;
+                var rSortOrder = normalizedArgs.TryGetProperty("sortOrder", out var rso) ? rso.GetString() : null;
+                var rTags = normalizedArgs.TryGetProperty("tags", out var rt) ? rt.GetString() : null;
+                var rFavOnly = normalizedArgs.TryGetProperty("favoritesOnly", out var rf) && rf.GetBoolean();
+                var rqs = $"/api/Recipes?page={rPage}&pageSize={rLimit}&favoritesOnly={rFavOnly}";
+                if (!string.IsNullOrWhiteSpace(rSearch)) rqs += $"&searchTerm={Uri.EscapeDataString(rSearch)}";
                 if (!string.IsNullOrEmpty(rSortBy)) rqs += $"&sortBy={rSortBy}";
                 if (!string.IsNullOrEmpty(rSortOrder)) rqs += $"&sortOrder={rSortOrder}";
                 if (!string.IsNullOrEmpty(rTags))
@@ -190,12 +198,18 @@ public class McpToolHandler
                 return await _backend.CallApiAsync(userId, "GET", rqs);
 
             case "add_recipe":
-                var createRecipeCmd = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
-                return await _backend.CallApiAsync(userId, "POST", "/api/Recipes", createRecipeCmd);
+                if (!normalizedArgs.TryGetProperty("isPublic", out _))
+                {
+                    var recipeArgs = JsonSerializer.Deserialize<Dictionary<string, object?>>(normalizedArgs.GetRawText())
+                        ?? new Dictionary<string, object?>();
+                    recipeArgs["isPublic"] = true;
+                    return await _backend.CallApiAsync(userId, "POST", "/api/Recipes", recipeArgs);
+                }
+
+                return await _backend.CallApiAsync(userId, "POST", "/api/Recipes", normalizedArgs);
 
             case "log_meal":
-                var logCmd = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
-                return await _backend.CallApiAsync(userId, "POST", "/api/Meals", logCmd);
+                return await _backend.CallApiAsync(userId, "POST", "/api/Meals", normalizedArgs);
 
             default:
                 throw new Exception($"Tool {toolName} not found");

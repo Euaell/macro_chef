@@ -124,6 +124,7 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
     public async Task Initialize_ReturnsCorrectProtocolVersionAndCapabilities()
     {
         var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "init-mcp@example.com", emailVerified: true);
         var token = await CreateMcpTokenAsync(userId);
 
         _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -153,6 +154,7 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
     public async Task ToolsList_ReturnsAllAvailableTools()
     {
         var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "tools-mcp@example.com", emailVerified: true);
         var token = await CreateMcpTokenAsync(userId);
 
         _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -169,7 +171,11 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
-        var toolsList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonResponse.Result.ToString());
+        jsonResponse.Should().NotBeNull();
+        jsonResponse!.Result.Should().NotBeNull();
+
+        var toolsResult = JsonSerializer.Deserialize<JsonElement>(jsonResponse.Result.ToString());
+        var toolsList = toolsResult.GetProperty("tools").Deserialize<List<Dictionary<string, object>>>();
         toolsList.Should().NotBeNull();
         toolsList.Should().HaveCount(7);
 
