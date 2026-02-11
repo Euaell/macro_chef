@@ -245,9 +245,9 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         textContent.Should().NotBeNull();
 
         var foodsResult = JsonSerializer.Deserialize<Dictionary<string, object>>(textContent);
-        foodsResult.Should().ContainKey("foods");
+        foodsResult.Should().ContainKey("items");
 
-        var items = JsonSerializer.Deserialize<List<object>>(foodsResult["foods"].ToString());
+        var items = JsonSerializer.Deserialize<List<object>>(foodsResult["items"].ToString());
         items.Should().HaveCountLessOrEqualTo(3);
     }
 
@@ -277,9 +277,9 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         textContent.Should().NotBeNull();
 
         var foodsResult = JsonSerializer.Deserialize<Dictionary<string, object>>(textContent);
-        foodsResult.Should().ContainKey("foods");
+        foodsResult.Should().ContainKey("items");
 
-        var items = JsonSerializer.Deserialize<List<object>>(foodsResult["foods"].ToString());
+        var items = JsonSerializer.Deserialize<List<object>>(foodsResult["items"].ToString());
         items.Should().BeEmpty();
     }
 
@@ -557,9 +557,9 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         textContent.Should().NotBeNull();
 
         var recipesResult = JsonSerializer.Deserialize<Dictionary<string, object>>(textContent);
-        recipesResult.Should().ContainKey("recipes");
+        recipesResult.Should().ContainKey("items");
 
-        var recipes = JsonSerializer.Deserialize<List<object>>(recipesResult["recipes"].ToString());
+        var recipes = JsonSerializer.Deserialize<List<object>>(recipesResult["items"].ToString());
         recipes.Should().BeEmpty();
     }
 
@@ -1119,6 +1119,184 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
     {
         public int Code { get; set; }
         public string Message { get; set; } = string.Empty;
+    }
+
+    #endregion
+
+    #region Pagination Tests
+
+    [Fact]
+    public async Task ListIngredients_ReturnsSecondPage()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "page2@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        for (int i = 0; i < 5; i++)
+        {
+            await _apiFixture.SeedFoodAsync($"PaginatedFood{i}", 100, 20, 5, 10m);
+        }
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { search = "PaginatedFood", limit = 2, page = 2 };
+        var request = CreateJsonRpcCallRequest("tools/call", "list_ingredients", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
+        var textContent = ExtractToolResultText(jsonResponse);
+        textContent.Should().NotBeNull();
+
+        var result = JsonSerializer.Deserialize<Dictionary<string, object>>(textContent!);
+        result.Should().ContainKey("items");
+        result.Should().ContainKey("totalCount");
+        result.Should().ContainKey("page");
+        result.Should().ContainKey("pageSize");
+
+        var items = JsonSerializer.Deserialize<List<object>>(result!["items"].ToString()!);
+        items.Should().HaveCountLessOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task ListIngredients_ReturnsTotalCountAndPageInfo()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "pageinfo@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        for (int i = 0; i < 5; i++)
+        {
+            await _apiFixture.SeedFoodAsync($"InfoFood{i}", 100, 20, 5, 10m);
+        }
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { search = "InfoFood", limit = 2, page = 1 };
+        var request = CreateJsonRpcCallRequest("tools/call", "list_ingredients", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
+        var textContent = ExtractToolResultText(jsonResponse);
+        var result = JsonSerializer.Deserialize<JsonElement>(textContent!);
+
+        result.GetProperty("totalCount").GetInt32().Should().Be(5);
+        result.GetProperty("page").GetInt32().Should().Be(1);
+        result.GetProperty("pageSize").GetInt32().Should().Be(2);
+        result.GetProperty("totalPages").GetInt32().Should().Be(3);
+    }
+
+    [Fact]
+    public async Task ListIngredients_SortsByName_Ascending()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "sortasc@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        await _apiFixture.SeedFoodAsync("Zebra Meat", 200, 30, 5, 10m);
+        await _apiFixture.SeedFoodAsync("Apple", 52, 0.3m, 14, 0.2m);
+        await _apiFixture.SeedFoodAsync("Banana", 89, 1.1m, 23, 0.3m);
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { sortBy = "name", sortOrder = "asc", limit = 10 };
+        var request = CreateJsonRpcCallRequest("tools/call", "list_ingredients", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
+        var textContent = ExtractToolResultText(jsonResponse);
+        var result = JsonSerializer.Deserialize<JsonElement>(textContent!);
+
+        var items = result.GetProperty("items");
+        items.GetArrayLength().Should().BeGreaterOrEqualTo(3);
+    }
+
+    [Fact]
+    public async Task ListIngredients_SortsByCalories_Descending()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "sortdesc@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        await _apiFixture.SeedFoodAsync("LowCal", 50, 10, 5, 2m);
+        await _apiFixture.SeedFoodAsync("HighCal", 500, 25, 50, 25m);
+        await _apiFixture.SeedFoodAsync("MidCal", 200, 15, 20, 10m);
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { sortBy = "calories", sortOrder = "desc", limit = 10 };
+        var request = CreateJsonRpcCallRequest("tools/call", "list_ingredients", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
+        var textContent = ExtractToolResultText(jsonResponse);
+        textContent.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ListRecipes_ReturnsPagedResults()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "recipepage@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { page = 1, limit = 5 };
+        var request = CreateJsonRpcCallRequest("tools/call", "list_recipes", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
+        var textContent = ExtractToolResultText(jsonResponse);
+        textContent.Should().NotBeNull();
+
+        var result = JsonSerializer.Deserialize<JsonElement>(textContent!);
+        result.TryGetProperty("items", out _).Should().BeTrue();
+        result.TryGetProperty("totalCount", out _).Should().BeTrue();
+        result.TryGetProperty("page", out _).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ListRecipes_SortsByTitle()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "recipesort@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { sortBy = "title", sortOrder = "asc", limit = 10 };
+        var request = CreateJsonRpcCallRequest("tools/call", "list_recipes", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetShoppingList_ReturnsPagedResults()
+    {
+        var userId = Guid.NewGuid();
+        await _apiFixture.SeedUserAsync(userId, "shoppingpage@example.com", emailVerified: true);
+        var token = await CreateMcpTokenAsync(userId);
+
+        _mcpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var args = new { page = 1, limit = 5 };
+        var request = CreateJsonRpcCallRequest("tools/call", "get_shopping_list", args);
+        var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var jsonResponse = await response.Content.ReadFromJsonAsync<JsonRpcResponse>();
+        var textContent = ExtractToolResultText(jsonResponse);
+        textContent.Should().NotBeNull();
+
+        var result = JsonSerializer.Deserialize<JsonElement>(textContent!);
+        result.TryGetProperty("items", out _).Should().BeTrue();
+        result.TryGetProperty("totalCount", out _).Should().BeTrue();
     }
 
     #endregion

@@ -1,16 +1,16 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Mizan.Application.Common;
 using Mizan.Application.Interfaces;
 
 namespace Mizan.Application.Queries;
 
-public record GetMcpTokensQuery : IRequest<GetMcpTokensResult>
+public record GetMcpTokensQuery : IRequest<PagedResult<McpTokenDto>>, IPagedQuery, ISortableQuery
 {
-}
-
-public record GetMcpTokensResult
-{
-    public List<McpTokenDto> Tokens { get; init; } = new();
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+    public string? SortBy { get; init; }
+    public string? SortOrder { get; init; }
 }
 
 public record McpTokenDto
@@ -23,7 +23,7 @@ public record McpTokenDto
     public bool IsActive { get; init; }
 }
 
-public class GetMcpTokensQueryHandler : IRequestHandler<GetMcpTokensQuery, GetMcpTokensResult>
+public class GetMcpTokensQueryHandler : IRequestHandler<GetMcpTokensQuery, PagedResult<McpTokenDto>>
 {
     private readonly IMizanDbContext _context;
     private readonly ICurrentUserService _currentUser;
@@ -34,16 +34,21 @@ public class GetMcpTokensQueryHandler : IRequestHandler<GetMcpTokensQuery, GetMc
         _currentUser = currentUser;
     }
 
-    public async Task<GetMcpTokensResult> Handle(GetMcpTokensQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<McpTokenDto>> Handle(GetMcpTokensQuery request, CancellationToken cancellationToken)
     {
         if (!_currentUser.UserId.HasValue)
         {
-            return new GetMcpTokensResult();
+            return new PagedResult<McpTokenDto>();
         }
 
-        var tokens = await _context.McpTokens
-            .Where(t => t.UserId == _currentUser.UserId)
+        var query = _context.McpTokens
+            .Where(t => t.UserId == _currentUser.UserId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var tokens = await query
             .OrderByDescending(t => t.CreatedAt)
+            .ApplyPaging(request)
             .Select(t => new McpTokenDto
             {
                 Id = t.Id,
@@ -55,9 +60,12 @@ public class GetMcpTokensQueryHandler : IRequestHandler<GetMcpTokensQuery, GetMc
             })
             .ToListAsync(cancellationToken);
 
-        return new GetMcpTokensResult
+        return new PagedResult<McpTokenDto>
         {
-            Tokens = tokens
+            Items = tokens,
+            TotalCount = totalCount,
+            Page = request.Page,
+            PageSize = request.PageSize
         };
     }
 }

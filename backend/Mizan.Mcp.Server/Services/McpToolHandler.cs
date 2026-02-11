@@ -28,7 +28,10 @@ public class McpToolHandler
                     properties = new
                     {
                         search = new { type = "string", description = "Search term" },
-                        limit = new { type = "integer", description = "Max results (default 20)" }
+                        limit = new { type = "integer", description = "Max results per page (default 20)" },
+                        page = new { type = "integer", description = "Page number (default 1)" },
+                        sortBy = new { type = "string", description = "Sort field: name, calories, protein, verified" },
+                        sortOrder = new { type = "string", description = "Sort direction: asc or desc" }
                     }
                 }
             },
@@ -58,7 +61,11 @@ public class McpToolHandler
                 InputSchema = new
                 {
                     type = "object",
-                    properties = new { }
+                    properties = new
+                    {
+                        page = new { type = "integer", description = "Page number (default 1)" },
+                        limit = new { type = "integer", description = "Max results per page (default 20)" }
+                    }
                 }
             },
             new McpTool
@@ -83,7 +90,13 @@ public class McpToolHandler
                     type = "object",
                     properties = new
                     {
-                        search = new { type = "string" }
+                        search = new { type = "string" },
+                        page = new { type = "integer", description = "Page number (default 1)" },
+                        limit = new { type = "integer", description = "Max results per page (default 20)" },
+                        sortBy = new { type = "string", description = "Sort field: title, createdat" },
+                        sortOrder = new { type = "string", description = "Sort direction: asc or desc" },
+                        tags = new { type = "string", description = "Comma-separated tag list" },
+                        favoritesOnly = new { type = "boolean", description = "Only return favorite recipes" }
                     }
                 }
             },
@@ -135,14 +148,22 @@ public class McpToolHandler
             case "list_ingredients":
                 var search = args.TryGetProperty("search", out var s) ? s.GetString() : null;
                 var limit = args.TryGetProperty("limit", out var l) ? l.GetInt32() : 20;
-                return await _backend.CallApiAsync(userId, "GET", $"/api/Foods/search?searchTerm={search}&pageSize={limit}");
-            
+                var page = args.TryGetProperty("page", out var p) ? p.GetInt32() : 1;
+                var sortBy = args.TryGetProperty("sortBy", out var sb) ? sb.GetString() : null;
+                var sortOrder = args.TryGetProperty("sortOrder", out var so) ? so.GetString() : null;
+                var qs = $"/api/Foods/search?searchTerm={search}&pageSize={limit}&page={page}";
+                if (!string.IsNullOrEmpty(sortBy)) qs += $"&sortBy={sortBy}";
+                if (!string.IsNullOrEmpty(sortOrder)) qs += $"&sortOrder={sortOrder}";
+                return await _backend.CallApiAsync(userId, "GET", qs);
+
             case "add_ingredient":
                 var createFoodCmd = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
                 return await _backend.CallApiAsync(userId, "POST", "/api/Foods", createFoodCmd);
 
             case "get_shopping_list":
-                return await _backend.CallApiAsync(userId, "GET", "/api/ShoppingLists");
+                var slPage = args.TryGetProperty("page", out var slp) ? slp.GetInt32() : 1;
+                var slLimit = args.TryGetProperty("limit", out var sll) ? sll.GetInt32() : 20;
+                return await _backend.CallApiAsync(userId, "GET", $"/api/ShoppingLists?page={slPage}&pageSize={slLimit}");
 
             case "get_nutrition_tracking":
                 var date = args.TryGetProperty("date", out var d) ? d.GetString() : DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -150,15 +171,29 @@ public class McpToolHandler
 
             case "list_recipes":
                 var rSearch = args.TryGetProperty("search", out var rs) ? rs.GetString() : null;
-                return await _backend.CallApiAsync(userId, "GET", $"/api/Recipes?searchTerm={rSearch}");
+                var rPage = args.TryGetProperty("page", out var rp) ? rp.GetInt32() : 1;
+                var rLimit = args.TryGetProperty("limit", out var rl) ? rl.GetInt32() : 20;
+                var rSortBy = args.TryGetProperty("sortBy", out var rsb) ? rsb.GetString() : null;
+                var rSortOrder = args.TryGetProperty("sortOrder", out var rso) ? rso.GetString() : null;
+                var rTags = args.TryGetProperty("tags", out var rt) ? rt.GetString() : null;
+                var rFavOnly = args.TryGetProperty("favoritesOnly", out var rf) && rf.GetBoolean();
+                var rqs = $"/api/Recipes?searchTerm={rSearch}&page={rPage}&pageSize={rLimit}&favoritesOnly={rFavOnly}";
+                if (!string.IsNullOrEmpty(rSortBy)) rqs += $"&sortBy={rSortBy}";
+                if (!string.IsNullOrEmpty(rSortOrder)) rqs += $"&sortOrder={rSortOrder}";
+                if (!string.IsNullOrEmpty(rTags))
+                {
+                    foreach (var tag in rTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        rqs += $"&tags={Uri.EscapeDataString(tag)}";
+                    }
+                }
+                return await _backend.CallApiAsync(userId, "GET", rqs);
 
             case "add_recipe":
                 var createRecipeCmd = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
                 return await _backend.CallApiAsync(userId, "POST", "/api/Recipes", createRecipeCmd);
 
             case "log_meal":
-                // Map simpler arguments to backend command if needed, or just pass through
-                // Backend expects: Date (DateOnly), MealType (string/enum), FoodId?, RecipeId?, Servings
                 var logCmd = JsonSerializer.Deserialize<Dictionary<string, object>>(args.GetRawText());
                 return await _backend.CallApiAsync(userId, "POST", "/api/Meals", logCmd);
 
