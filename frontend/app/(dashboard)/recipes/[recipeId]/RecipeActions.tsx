@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 import ConfirmationModal from "@/components/ConfirmationModal";
 
 interface RecipeActionsProps {
@@ -22,7 +22,7 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
     const handleToggleFavorite = async () => {
         setIsToggling(true);
         try {
-            const data = await apiClient<{ isFavorited: boolean }>(`/api/Recipes/${recipeId}/favorite`, {
+            const data = await clientApi<{ isFavorited: boolean }>(`/api/Recipes/${recipeId}/favorite`, {
                 method: "POST",
             });
             setIsFavorited(data.isFavorited);
@@ -40,7 +40,7 @@ export default function RecipeActions({ recipeId, isOwner, isFavorited: initialF
         setShowDeleteModal(false);
 
         try {
-            await apiClient(`/api/Recipes/${recipeId}`, {
+            await clientApi(`/api/Recipes/${recipeId}`, {
                 method: "DELETE",
             });
             router.push("/recipes");

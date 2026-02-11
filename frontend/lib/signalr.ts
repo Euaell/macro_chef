@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import { getApiToken } from "./auth-client";
+import { getApiToken } from "./api";
 import { logger } from "./logger";
 
 const chatLogger = logger.createModuleLogger("signalr-chat-service");

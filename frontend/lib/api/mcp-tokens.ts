@@ -5,7 +5,7 @@ import type {
   McpTokenDto,
   McpUsageAnalyticsResult,
 } from "@/types/mcp";
-import { getApiToken } from "@/lib/auth-client";
+import { getApiToken } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 const API_BASE = () => {

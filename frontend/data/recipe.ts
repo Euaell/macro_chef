@@ -1,6 +1,6 @@
 "use server";
 
-import { callBackendApi } from "@/lib/backend-api-client";
+import { serverApi } from "@/lib/api";
 import type { components } from "@/types/api.generated";
 import { logger } from "@/lib/logger";
 
@@ -45,7 +45,7 @@ export interface PopularRecipe {
  */
 export async function getPopularRecipes(): Promise<PopularRecipe[]> {
     try {
-        const result = await callBackendApi<{ recipes: RecipeDto[] }>(
+        const result = await serverApi<{ recipes: RecipeDto[] }>(
             "/api/Recipes?IncludePublic=true&PageSize=6",
             { requireAuth: false }
         );
@@ -79,7 +79,7 @@ export async function getAllRecipes(searchTerm?: string, page: number = 1, limit
         params.append("PageSize", limit.toString());
 
         // FavoritesOnly requires auth, but public recipes don't
-        const result = await callBackendApi<{ recipes: RecipeDto[], totalCount: number, page: number, pageSize: number }>(
+        const result = await serverApi<{ recipes: RecipeDto[], totalCount: number, page: number, pageSize: number }>(
             `/api/Recipes?${params.toString()}`,
             { requireAuth: favoritesOnly }
         );
@@ -111,7 +111,7 @@ export async function getFavoriteRecipesCount(): Promise<number> {
  */
 export async function getRecipeById(recipeId: string): Promise<Recipe | null> {
     try {
-        const result = await callBackendApi<Recipe>(
+        const result = await serverApi<Recipe>(
             `/api/Recipes/${recipeId}`,
             { requireAuth: false }
         );

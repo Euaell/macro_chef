@@ -6,7 +6,7 @@ import type { Ingredient } from "@/data/ingredient";
 import { CldUploadWidget } from 'next-cloudinary';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 import Modal from "@/components/Modal";
 import type { Recipe } from "@/data/recipe";
 
@@ -151,9 +151,9 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
         }
 
         try {
-            await apiClient(`/api/Recipes/${recipe.id}`, {
+            await clientApi(`/api/Recipes/${recipe.id}`, {
                 method: "PUT",
-                body: JSON.stringify(recipeData),
+                body: recipeData,
             });
             router.push(`/recipes/${recipe.id}`);
             router.refresh();

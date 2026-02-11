@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
 		];
 	},
 
-	// JWT-only: frontend talks directly to backend via NEXT_PUBLIC_API_URL
+
 };
 
 export default nextConfig;

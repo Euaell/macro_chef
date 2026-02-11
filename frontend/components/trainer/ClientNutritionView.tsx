@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiClient } from "@/lib/auth-client";
+import { clientApi } from "@/lib/api";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,7 +74,7 @@ export function ClientNutritionView({ clientId }: ClientNutritionViewProps) {
 		setLoading(true);
 		try {
 			const dateStr = format(selectedDate, "yyyy-MM-dd");
-			const data = await apiClient<ClientNutritionData>(
+			const data = await clientApi<ClientNutritionData>(
 				`/api/Trainers/clients/${clientId}/nutrition?date=${dateStr}`
 			);
 			setNutritionData(data);
