@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AchievementsPage() {
     await getUserServer();
-    const achievements = await getAchievements();
+    const { achievements } = await getAchievements();
     const streak = await getStreak();
 
     const earned = achievements.filter(a => a.isEarned);

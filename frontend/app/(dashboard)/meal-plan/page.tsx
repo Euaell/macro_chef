@@ -1,20 +1,34 @@
 import { getUserServer } from "@/helper/session";
 import Link from "next/link";
 import { getMealPlans } from "@/data/mealPlan";
+import Pagination from "@/components/Pagination";
+import { parseListParams, buildListUrl } from "@/lib/utils/list-params";
 
 import { logger } from "@/lib/logger";
 const mealLogger = logger.createModuleLogger("meal-plan-page");
 
 export const dynamic = 'force-dynamic';
 
-export default async function MealPlanPage() {
+export default async function MealPlanPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
 	const user = await getUserServer();
+	const params = await searchParams;
+	const { page, sortBy, sortOrder } = parseListParams(params);
+	const baseUrl = buildListUrl('/meal-plan', {});
 
-	let mealPlans: Awaited<ReturnType<typeof getMealPlans>> = [];
+	let mealPlans: Awaited<ReturnType<typeof getMealPlans>>['mealPlans'] = [];
+	let totalCount = 0;
+	let totalPages = 0;
 	let loadError: string | null = null;
 
 	try {
-		mealPlans = await getMealPlans();
+		const result = await getMealPlans(page, 20, sortBy ?? undefined, sortOrder);
+		mealPlans = result.mealPlans;
+		totalCount = result.totalCount;
+		totalPages = result.totalPages;
 	} catch (error) {
 		mealLogger.error("Failed to load meal plans", {
 			error: error instanceof Error ? error.message : String(error),
@@ -127,6 +141,16 @@ export default async function MealPlanPage() {
 						</div>
 					)}
 				</div>
+
+				{totalPages > 1 && (
+					<Pagination
+						currentPage={page}
+						totalPages={totalPages}
+						totalCount={totalCount}
+						pageSize={20}
+						baseUrl={baseUrl}
+					/>
+				)}
 		</div>
 	);
 }

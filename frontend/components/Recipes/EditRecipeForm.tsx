@@ -94,7 +94,7 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
             return;
         }
 
-        const result = await getAllIngredient(value, undefined, 1, 4);
+        const result = await getAllIngredient(value, undefined, undefined, 1, 4);
         setIngredientSearch(result.ingredients);
     }
 

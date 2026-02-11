@@ -22,11 +22,9 @@ export interface AuditLog {
 export interface GetAuditLogsResult {
     logs: AuditLog[];
     totalCount: number;
+    totalPages: number;
 }
 
-/**
- * Fetch audit logs from the backend API
- */
 export async function getAuditLogs(params: {
     action?: string;
     entityType?: string;
@@ -34,6 +32,8 @@ export async function getAuditLogs(params: {
     userId?: string;
     page?: number;
     pageSize?: number;
+    sortBy?: string;
+    sortOrder?: string;
 }): Promise<GetAuditLogsResult> {
     try {
         const queryParams = new URLSearchParams();
@@ -43,15 +43,21 @@ export async function getAuditLogs(params: {
         if (params.userId) queryParams.append("UserId", params.userId);
         if (params.page) queryParams.append("Page", params.page.toString());
         if (params.pageSize) queryParams.append("PageSize", (params.pageSize || 20).toString());
+        if (params.sortBy) queryParams.append("SortBy", params.sortBy);
+        if (params.sortOrder) queryParams.append("SortOrder", params.sortOrder);
 
-        const result = await serverApi<GetAuditLogsResult>(`/api/AuditLogs?${queryParams.toString()}`, {
+        const result = await serverApi<{ items: AuditLog[], totalCount: number, page: number, pageSize: number, totalPages: number }>(`/api/AuditLogs?${queryParams.toString()}`, {
             method: "GET",
         });
 
-        return result;
+        return {
+            logs: result.items || [],
+            totalCount: result.totalCount || 0,
+            totalPages: result.totalPages || 0
+        };
     } catch (error) {
         auditLogger.error("Error fetching audit logs", {error});
-        return { logs: [], totalCount: 0 };
+        return { logs: [], totalCount: 0, totalPages: 0 };
     }
 }
 

@@ -32,10 +32,10 @@ export default function WorkoutsPage() {
 
         setIsSearching(true);
         try {
-            const result = await clientApi<{ exercises: any[] }>(
+            const result = await clientApi<{ items: any[] }>(
                 `/api/Exercises?SearchTerm=${encodeURIComponent(searchTerm)}&PageSize=10`
             );
-            setSearchResults(result.exercises || []);
+            setSearchResults(result.items || []);
         } catch (error) {
             console.error("Failed to search exercises:", error);
         } finally {

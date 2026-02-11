@@ -42,8 +42,8 @@ export default function AddMealPlanPage() {
   useEffect(() => {
     const loadRecipes = async () => {
       try {
-        const data = await clientApi<{ recipes: SimplifiedRecipe[] }>('/api/Recipes?IncludePublic=true&PageSize=50');
-        const simplifiedRecipes = data.recipes.map(recipe => ({
+        const data = await clientApi<{ items: SimplifiedRecipe[] }>('/api/Recipes?IncludePublic=true&PageSize=50');
+        const simplifiedRecipes = (data.items || []).map(recipe => ({
           id: recipe.id,
           title: recipe.title,
           calories: recipe.calories || 0,
