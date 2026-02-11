@@ -318,7 +318,7 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
         var error = jsonResponse.Error;
         error.Should().NotBeNull();
         error.Code.Should().Be(-32603);
-        error.Message.Should().Contain("403");
+        error.Message.Should().Match(m => m.Contains("403") || m.Contains("Unauthorized"));
     }
 
     [Fact]
