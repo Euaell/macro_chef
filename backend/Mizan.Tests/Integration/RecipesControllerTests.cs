@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Mizan.Application.Common;
+using Mizan.Application.Queries;
 using Xunit;
 
 namespace Mizan.Tests.Integration;
@@ -33,6 +35,8 @@ public class RecipesControllerTests
             Title = "Chicken Bowl",
             Description = "Simple recipe",
             Servings = 2,
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 15,
             IsPublic = true,
             Ingredients = new[]
             {
@@ -69,6 +73,8 @@ public class RecipesControllerTests
             Title = "Updated Bowl",
             Description = "Updated",
             Servings = 3,
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 15,
             IsPublic = true,
             Ingredients = new[]
             {
@@ -97,9 +103,9 @@ public class RecipesControllerTests
         var searchResponse = await client.GetAsync("/api/Recipes?searchTerm=updated");
         searchResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var searchResult = await searchResponse.Content.ReadFromJsonAsync<GetRecipesResponse>();
+        var searchResult = await searchResponse.Content.ReadFromJsonAsync<PagedResult<RecipeDto>>();
         searchResult.Should().NotBeNull();
-        searchResult!.Recipes.Should().Contain(r => r.Id == created.Id);
+        searchResult!.Items.Should().Contain(r => r.Id == created.Id);
 
         var deleteResponse = await client.DeleteAsync($"/api/Recipes/{created.Id}");
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -128,6 +134,8 @@ public class RecipesControllerTests
         {
             Title = "Private Meal",
             Servings = 1,
+            PrepTimeMinutes = 5,
+            CookTimeMinutes = 10,
             IsPublic = false,
             Ingredients = new[]
             {
@@ -159,6 +167,8 @@ public class RecipesControllerTests
             Id = created.Id,
             Title = "Hack",
             Servings = 1,
+            PrepTimeMinutes = 5,
+            CookTimeMinutes = 10,
             IsPublic = false,
             Ingredients = new[]
             {
@@ -179,7 +189,5 @@ public class RecipesControllerTests
     }
 
     private sealed record CreateRecipeResponse(Guid Id, string Title);
-    private sealed record GetRecipesResponse(List<RecipeListItem> Recipes, int TotalCount);
-    private sealed record RecipeListItem(Guid Id, string Title);
     private sealed record RecipeDetailResponse(Guid Id, string Title, List<string> Tags);
 }
