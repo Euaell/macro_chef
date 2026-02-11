@@ -63,7 +63,7 @@ export default function RecipeOptions({ recipeId, isCreator }: RecipeOptionsProp
 		if (res.ok) {
 			router.push('/recipes');
 		} else {
-			alert('Failed to delete the recipe');
+			toast.error('Failed to delete the recipe');
 		}
 	};
 

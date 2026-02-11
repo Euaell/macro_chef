@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";

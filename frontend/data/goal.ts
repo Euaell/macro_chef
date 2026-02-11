@@ -1,6 +1,6 @@
 "use server";
 
-import { serverApi } from "@/lib/api";
+import { serverApi } from "@/lib/api.server";
 import { createErrorState, createSuccessState, FormState } from "@/helper/FormErrorHandler";
 import { logger } from "@/lib/logger";
 const goalLogger = logger.createModuleLogger("goal-data");

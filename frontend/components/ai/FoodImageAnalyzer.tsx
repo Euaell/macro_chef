@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 
 interface RecognizedFood {
 	name: string;
@@ -90,10 +90,10 @@ export function FoodImageAnalyzer() {
 			});
 
 			// Show success feedback
-			alert(`Logged ${food.name} successfully!`);
+			toast.success(`Logged ${food.name} successfully!`);
 		} catch (err) {
 			console.error("Failed to log food:", err);
-			alert("Failed to log food. Please try again.");
+			toast.error("Failed to log food. Please try again.");
 		}
 	};
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { clientApi } from "@/lib/api";
+import { clientApi } from "@/lib/api.client";
 
 interface WorkoutExercise {
     exerciseId: string;
