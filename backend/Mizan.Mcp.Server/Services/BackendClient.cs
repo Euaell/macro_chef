@@ -25,13 +25,21 @@ public class BackendClient : IBackendClient
 
     public async Task<Guid?> ValidateTokenAsync(string token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return null;
+        }
+
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "/api/McpTokens/validate");
-            request.Content = JsonContent.Create(new { token });
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/McpTokens/validate")
+            {
+                Content = JsonContent.Create(new { token })
+            };
             // Validation endpoint is public/anonymous, no API key needed usually, 
             // but the controller allows anonymous.
-            
+
+
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
             {
