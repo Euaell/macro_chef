@@ -26,7 +26,7 @@ public class UserStatusService : IUserStatusService
         var user = await _context.Users
             .AsNoTracking()
             .Where(u => u.Id == userId)
-            .Select(u => new { u.EmailVerified, u.Banned, u.BanExpires })
+            .Select(u => new { u.EmailVerified, u.Banned, u.BanExpires, u.Role })
             .FirstOrDefaultAsync(cancellationToken);
 
         var status = user == null
@@ -34,7 +34,8 @@ public class UserStatusService : IUserStatusService
             : new UserAccessStatus(
                 true,
                 user.EmailVerified,
-                user.Banned && (!user.BanExpires.HasValue || user.BanExpires > DateTime.UtcNow));
+                user.Banned && (!user.BanExpires.HasValue || user.BanExpires > DateTime.UtcNow),
+                user.Role);
 
         _cache.Set(userId, status, CacheDuration);
         return status;
