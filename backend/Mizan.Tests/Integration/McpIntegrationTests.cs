@@ -1070,10 +1070,10 @@ public class McpIntegrationTests : IClassFixture<WebApplicationFactory<McpServer
 
         var request = CreateJsonRpcCallRequest("tools/call", "log_meal", new
         {
-            date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
-            mealType = "SNACK",
-            servings = 1,
-            foodId = food.Id
+            Date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            MealType = "SNACK",
+            Servings = 1,
+            FoodId = food.Id
         });
 
         var response = await _mcpClient.PostAsJsonAsync("/mcp/messages?sessionId=test", request);
