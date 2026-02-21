@@ -1,6 +1,7 @@
 "use client";
 
 import { FieldError } from "@/components/FieldError";
+import Loading from "@/components/Loading";
 import { EMPTY_FORM_STATE } from "@/helper/FormErrorHandler";
 import { useActionState } from "react";
 import { createGoal } from "@/data/goal";
@@ -9,7 +10,7 @@ export default function GoalForm() {
 	const [formState, action, isPending] = useActionState(createGoal, EMPTY_FORM_STATE);
 
 	return (
-		<div className="max-w-3xl mx-auto space-y-6">
+		<div className="max-w-3xl mx-auto space-y-6" data-testid="goal-page">
 			{/* Header */}
 			<div>
 				<h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Nutrition Goals</h1>
@@ -17,9 +18,9 @@ export default function GoalForm() {
 			</div>
 
 			{/* Info Card */}
-			<div className="card p-6 bg-gradient-to-br from-brand-50 to-accent-50">
+			<div className="card p-6 bg-linear-to-br from-brand-50 to-accent-50">
 				<div className="flex items-start gap-4">
-					<div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center flex-shrink-0">
+					<div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shrink-0">
 						<i className="ri-target-line text-xl text-brand-600 dark:text-brand-400" />
 					</div>
 					<div>
@@ -171,10 +172,7 @@ export default function GoalForm() {
 				>
 					{isPending ? (
 						<>
-							<svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-							</svg>
+							<Loading size="sm" />
 							Saving Goal...
 						</>
 					) : (

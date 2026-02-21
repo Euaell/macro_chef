@@ -39,7 +39,7 @@ export default async function MealPlanPage({
 
 	if (loadError) {
 		return (
-			<div className="space-y-6">
+			<div className="space-y-6" data-testid="meal-plan-page">
 				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 					<div>
 						<h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Meal Planning</h1>
@@ -62,7 +62,7 @@ export default async function MealPlanPage({
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6" data-testid="meal-plan-page">
 				{/* Page Header */}
 				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 					<div>
@@ -91,7 +91,7 @@ export default async function MealPlanPage({
 					].map((stat) => (
 						<div key={stat.label} className="card p-4">
 							<div className="flex items-center gap-3">
-								<div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+								<div className={`w-10 h-10 rounded-xl bg-linear-to-br ${stat.color} flex items-center justify-center`}>
 									<i className={`${stat.icon} text-white`} />
 								</div>
 								<div>
@@ -132,7 +132,7 @@ export default async function MealPlanPage({
 							<div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
 								<i className="ri-calendar-line text-3xl text-slate-400" />
 							</div>
-							<h3 className="text-lg font-semibold text-slate-900 mb-2">No meal plans yet</h3>
+							<h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">No meal plans yet</h3>
 							<p className="text-slate-500 mb-4">Start planning your meals for the week</p>
 							<Link href="/meal-plan/create" className="btn-primary">
 								<i className="ri-add-line" />

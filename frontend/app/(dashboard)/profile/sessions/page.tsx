@@ -2,6 +2,7 @@
 
 import { useSession, authClient } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
+import Loading from "@/components/Loading";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -121,7 +122,7 @@ export default function ProfileSessionsPage() {
   if (isPending || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+        <Loading />
       </div>
     );
   }
@@ -186,7 +187,7 @@ export default function ProfileSessionsPage() {
                 className={`card p-6 ${isCurrent ? "border-2 border-brand-500" : ""}`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0">
                     <i className={`${getDeviceIcon(session.userAgent)} text-xl text-white`} />
                   </div>
 
@@ -224,7 +225,7 @@ export default function ProfileSessionsPage() {
                     <button
                       onClick={() => handleRevokeSession(session.token)}
                       disabled={revoking === session.token}
-                      className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 flex-shrink-0"
+                      className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 shrink-0"
                     >
                       {revoking === session.token ? "Revoking..." : "Revoke"}
                     </button>
@@ -238,7 +239,7 @@ export default function ProfileSessionsPage() {
 
       <div className="card p-6 bg-blue-50 border-blue-200">
         <div className="flex gap-3">
-          <i className="ri-information-line text-xl text-blue-600 flex-shrink-0" />
+          <i className="ri-information-line text-xl text-blue-600 shrink-0" />
           <div>
             <h3 className="font-semibold text-blue-900 mb-1">Security Tip</h3>
             <p className="text-sm text-blue-800">

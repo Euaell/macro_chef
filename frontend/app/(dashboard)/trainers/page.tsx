@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import Loading from "@/components/Loading";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 interface TrainerPublic {
 	id: string;
@@ -23,6 +25,8 @@ export default function TrainersPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [requestingTrainerId, setRequestingTrainerId] = useState<string | null>(null);
+
+	const debouncedQuery = useDebounce(searchQuery, 200);
 
 	useEffect(() => {
 		const fetchTrainers = async () => {
@@ -59,22 +63,22 @@ export default function TrainersPage() {
 
 	if (isPending || isLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+			<div className="flex items-center justify-center min-h-[50vh]">
+				<Loading />
 			</div>
 		);
 	}
 
 	if (!session?.user) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
+			<div className="flex items-center justify-center min-h-[50vh]">
 				<p className="text-slate-500 dark:text-slate-400">Not authenticated</p>
 			</div>
 		);
 	}
 
 	const filteredTrainers = trainers.filter((trainer) => {
-		const query = searchQuery.toLowerCase();
+		const query = debouncedQuery.toLowerCase();
 		return (
 			trainer.name?.toLowerCase().includes(query) ||
 			trainer.email.toLowerCase().includes(query) ||
@@ -83,7 +87,7 @@ export default function TrainersPage() {
 	});
 
 	return (
-		<div className="max-w-6xl mx-auto space-y-6">
+		<div className="max-w-6xl mx-auto space-y-6" data-testid="trainers-page">
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
@@ -108,6 +112,7 @@ export default function TrainersPage() {
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="input pl-10 w-full"
+						data-testid="search-input"
 					/>
 				</div>
 			</div>
@@ -137,7 +142,7 @@ export default function TrainersPage() {
 										className="w-20 h-20 rounded-2xl object-cover border-4 border-white dark:border-slate-900 shadow-lg mb-3"
 									/>
 								) : (
-									<div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-lg mb-3">
+									<div className="w-20 h-20 rounded-2xl bg-linear-to-br from-emerald-400 to-teal-600 flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-lg mb-3">
 										<span className="text-2xl font-bold text-white">
 											{trainer.email.charAt(0).toUpperCase()}
 										</span>
@@ -166,7 +171,7 @@ export default function TrainersPage() {
 							>
 								{requestingTrainerId === trainer.id ? (
 									<>
-										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+										<Loading size="sm" />
 										Sending...
 									</>
 								) : (
@@ -182,9 +187,9 @@ export default function TrainersPage() {
 			)}
 
 			{/* Info Card */}
-			<div className="card p-6 border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+			<div className="card p-6 border-2 border-blue-200 dark:border-blue-800 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
 				<div className="flex items-start gap-4">
-					<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+					<div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
 						<i className="ri-information-line text-2xl text-white" />
 					</div>
 					<div>
@@ -194,21 +199,15 @@ export default function TrainersPage() {
 						<ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
 							<li className="flex items-start gap-2">
 								<i className="ri-arrow-right-s-line text-blue-500 mt-0.5" />
-								<span>
-									Send a connection request to your preferred trainer
-								</span>
+								<span>Send a connection request to your preferred trainer</span>
 							</li>
 							<li className="flex items-start gap-2">
 								<i className="ri-arrow-right-s-line text-blue-500 mt-0.5" />
-								<span>
-									Wait for the trainer to accept and set your permissions
-								</span>
+								<span>Wait for the trainer to accept and set your permissions</span>
 							</li>
 							<li className="flex items-start gap-2">
 								<i className="ri-arrow-right-s-line text-blue-500 mt-0.5" />
-								<span>
-									Once accepted, your trainer can view your progress and send you personalized plans
-								</span>
+								<span>Once accepted, your trainer can view your progress and send you personalized plans</span>
 							</li>
 						</ul>
 					</div>
