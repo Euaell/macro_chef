@@ -1,8 +1,9 @@
 "use client";
 
 import { createAuthClient } from "better-auth/react";
-import { organizationClient, adminClient } from "better-auth/client/plugins";
+import { adminClient, lastLoginMethodClient, magicLinkClient } from "better-auth/client/plugins";
 import { ac, adminRole, trainerRole, userRole } from "@/lib/permissions";
+import { sentinelClient } from "@better-auth/infra/client";
 
 const betterAuthUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
 
@@ -12,8 +13,19 @@ if (!betterAuthUrl) {
 
 export const authClient = createAuthClient({
   baseURL: betterAuthUrl,
+  fetchOptions: {
+    onError: async (context) => {
+      if (context.response.status === 429) {
+        const retryAfter = context.response.headers.get("X-Retry-After");
+        console.warn(
+          `[auth] Rate limited. Retry after ${retryAfter ?? "unknown"} seconds.`,
+        );
+      }
+    },
+  },
   plugins: [
-    organizationClient(),
+    lastLoginMethodClient(),
+    magicLinkClient(),
     adminClient({
       ac,
       roles: {
@@ -22,6 +34,7 @@ export const authClient = createAuthClient({
         admin: adminRole,
       },
     }),
+    sentinelClient(),
   ],
 });
 
@@ -31,5 +44,4 @@ export const {
   signOut,
   useSession,
   getSession,
-  organization,
 } = authClient;

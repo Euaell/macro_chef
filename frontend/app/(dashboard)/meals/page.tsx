@@ -8,9 +8,10 @@ import { deleteMeal } from "@/data/meal";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-// Assuming radix-ui wrap or similar, if not I'll just use HTML progress or div. 
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+// Assuming radix-ui wrap or similar, if not I'll just use HTML progress or div.
 // Actually I don't see components/ui/progress in file list. I will use custom div.
+import Loading from "@/components/Loading";
 
 interface DailyStat {
 	date: string;
@@ -124,6 +125,7 @@ export default function MealsPage() {
 	const totalProtein = todayMeals.reduce((sum, meal) => sum + (meal.proteinGrams || 0), 0);
 	const totalCarbs = todayMeals.reduce((sum, meal) => sum + (meal.carbsGrams || 0), 0);
 	const totalFat = todayMeals.reduce((sum, meal) => sum + (meal.fatGrams || 0), 0);
+	const totalFiber = todayMeals.reduce((sum, meal) => sum + (meal.fiberGrams || 0), 0);
 
 	// Goal percentages
 	const caloriePct = goal?.targetCalories ? Math.min(100, (totalCalories / goal.targetCalories) * 100) : 0;
@@ -134,7 +136,7 @@ export default function MealsPage() {
 	if (isPending || (loading && !todayMeals.length)) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+				<Loading />
 			</div>
 		);
 	}
@@ -148,11 +150,11 @@ export default function MealsPage() {
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6" data-testid="meal-list">
 			{/* Header & Date Nav */}
 			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
-					<h1 className="text-2xl font-bold text-slate-900">Food Diary</h1>
+					<h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Food Diary</h1>
 					<p className="text-slate-500 mt-1">Track your daily nutrition intake</p>
 				</div>
 				<div className="flex items-center gap-4">
@@ -160,7 +162,7 @@ export default function MealsPage() {
 						<button onClick={handlePrevDay} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-lg text-slate-600">
 							<i className="ri-arrow-left-s-line" />
 						</button>
-						<span className="px-4 font-medium text-slate-900 min-w-[140px] text-center">
+						<span className="px-4 font-medium text-slate-900 min-w-35 text-center">
 							{new Date(queryDate).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })}
 						</span>
 						<button onClick={handleNextDay} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-lg text-slate-600">
@@ -177,7 +179,7 @@ export default function MealsPage() {
 			{/* Goals & Progress */}
 			{goal && (
 				<div className="card p-6">
-					<h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+					<h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
 						<i className="ri-target-line text-brand-500" />
 						Daily Goals
 					</h2>
@@ -223,12 +225,17 @@ export default function MealsPage() {
 							</div>
 						</div>
 					</div>
+					{totalFiber > 0 && (
+						<p className="text-sm text-slate-500 mt-3">
+							Fiber intake: <span className="font-medium text-green-600">{totalFiber.toFixed(1)}g</span>
+						</p>
+					)}
 				</div>
 			)}
 
 			{/* History Chart */}
-			<div className="card p-6 h-[400px]">
-				<h2 className="font-semibold text-slate-900 mb-6 flex items-center gap-2">
+			<div className="card p-6 h-100">
+				<h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
 					<i className="ri-bar-chart-fill text-brand-500" />
 					Last 7 Days (Calories)
 				</h2>
@@ -242,6 +249,15 @@ export default function MealsPage() {
 							cursor={{ fill: '#f1f5f9' }}
 						/>
 						<Bar dataKey="calories" fill="#f97316" radius={[4, 4, 0, 0]} name="Calories" />
+					{goal?.targetCalories && (
+						<ReferenceLine
+							y={goal.targetCalories}
+							stroke="#f97316"
+							strokeDasharray="6 3"
+							strokeWidth={2}
+							label={{ value: `Goal: ${goal.targetCalories}`, position: "insideTopRight", fontSize: 11, fill: "#f97316" }}
+						/>
+					)}
 					</BarChart>
 				</ResponsiveContainer>
 			</div>
@@ -250,7 +266,7 @@ export default function MealsPage() {
 			{/* Meal List */}
 			<div className="card p-6">
 				<div className="flex items-center justify-between mb-4">
-					<h2 className="font-semibold text-slate-900 flex items-center gap-2">
+					<h2 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
 						<i className="ri-restaurant-2-line text-brand-500" />
 						Meals ({new Date(queryDate).toLocaleDateString()})
 					</h2>
@@ -267,7 +283,7 @@ export default function MealsPage() {
 								className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
 							>
 								<div>
-									<h3 className="font-medium text-slate-900">
+									<h3 className="font-medium text-slate-900 dark:text-slate-100">
 										{meal.name || meal.mealType}
 									</h3>
 									<p className="text-sm text-slate-500 capitalize">{meal.mealType} • {new Date(meal.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -281,6 +297,7 @@ export default function MealsPage() {
 											<span>P: {meal.proteinGrams?.toFixed(1)}g</span>
 											<span>C: {meal.carbsGrams?.toFixed(1)}g</span>
 											<span>F: {meal.fatGrams?.toFixed(1)}g</span>
+											{(meal.fiberGrams ?? 0) > 0 && <span>Fiber: {meal.fiberGrams?.toFixed(1)}g</span>}
 										</div>
 									</div>
 									<button
@@ -299,7 +316,7 @@ export default function MealsPage() {
 						<div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
 							<i className="ri-restaurant-line text-3xl text-slate-400" />
 						</div>
-						<h3 className="text-lg font-semibold text-slate-900 mb-2">
+						<h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
 							No meals logged
 						</h3>
 						<Link href="/meals/add" className="btn-primary mt-4">

@@ -17,6 +17,7 @@ export interface MealEntry {
     proteinGrams?: number;
     carbsGrams?: number;
     fatGrams?: number;
+    fiberGrams?: number;
     loggedAt: string;
 }
 
@@ -28,6 +29,7 @@ export interface FoodDiaryResult {
         protein: number;
         carbs: number;
         fat: number;
+        fiber: number;
     };
 }
 
@@ -83,8 +85,9 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
         const protein = parseFloat(formData.get("protein") as string);
         const carbs = parseFloat(formData.get("carbs") as string);
         const fat = parseFloat(formData.get("fat") as string);
+        const fiber = parseFloat(formData.get("fiber") as string);
 
-        await serverApi("/api/Meals", {
+        const result = await serverApi<{ id: string; success: boolean; message?: string; warnings?: string[] }>("/api/Meals", {
             method: "POST",
             body: {
                 recipeId: recipeId || null,
@@ -97,11 +100,16 @@ export async function addMeal(prevState: FormState, formData: FormData): Promise
                 proteinGrams: isNaN(protein) ? null : protein,
                 carbsGrams: isNaN(carbs) ? null : carbs,
                 fatGrams: isNaN(fat) ? null : fat,
+                fiberGrams: isNaN(fiber) ? null : fiber,
             },
         });
 
         mealLogger.info("Meal logged successfully", { mealType, servings, date });
-        return createSuccessState("Meal logged successfully!");
+        return {
+            status: "success",
+            message: "Meal logged successfully!",
+            warnings: result?.warnings?.length ? result.warnings : undefined,
+        };
     } catch (error) {
         mealLogger.error("Failed to log meal", {
             error: error instanceof Error ? error.message : String(error),

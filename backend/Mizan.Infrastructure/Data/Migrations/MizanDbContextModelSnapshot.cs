@@ -166,11 +166,6 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<decimal?>("ArmsCm")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)")
-                        .HasColumnName("arms_cm");
-
                     b.Property<decimal?>("BodyFatPercentage")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -192,6 +187,16 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(6,2)")
                         .HasColumnName("hips_cm");
 
+                    b.Property<decimal?>("LeftArmCm")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("numeric(6,2)")
+                        .HasColumnName("left_arm_cm");
+
+                    b.Property<decimal?>("LeftThighCm")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("numeric(6,2)")
+                        .HasColumnName("left_thigh_cm");
+
                     b.Property<DateOnly>("MeasurementDate")
                         .HasColumnType("date")
                         .HasColumnName("measurement_date");
@@ -205,10 +210,15 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
-                    b.Property<decimal?>("ThighsCm")
+                    b.Property<decimal?>("RightArmCm")
                         .HasPrecision(6, 2)
                         .HasColumnType("numeric(6,2)")
-                        .HasColumnName("thighs_cm");
+                        .HasColumnName("right_arm_cm");
+
+                    b.Property<decimal?>("RightThighCm")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("numeric(6,2)")
+                        .HasColumnName("right_thigh_cm");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -570,6 +580,11 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)")
                         .HasColumnName("fat_grams");
+
+                    b.Property<decimal?>("FiberGrams")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)")
+                        .HasColumnName("fiber_grams");
 
                     b.Property<Guid?>("FoodId")
                         .HasColumnType("uuid")
@@ -1081,6 +1096,10 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("sort_order");
 
+                    b.Property<Guid?>("SubRecipeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sub_recipe_id");
+
                     b.Property<string>("Unit")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -1091,6 +1110,8 @@ namespace Mizan.Infrastructure.Data.Migrations
                     b.HasIndex("FoodId");
 
                     b.HasIndex("RecipeId");
+
+                    b.HasIndex("SubRecipeId");
 
                     b.ToTable("recipe_ingredients", (string)null);
                 });
@@ -1898,9 +1919,16 @@ namespace Mizan.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Mizan.Domain.Entities.Recipe", "SubRecipe")
+                        .WithMany()
+                        .HasForeignKey("SubRecipeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Food");
 
                     b.Navigation("Recipe");
+
+                    b.Navigation("SubRecipe");
                 });
 
             modelBuilder.Entity("Mizan.Domain.Entities.RecipeInstruction", b =>

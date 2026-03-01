@@ -28,10 +28,13 @@ public record RecipeDetailDto
 public record RecipeIngredientDto
 {
     public Guid? FoodId { get; init; }
+    public Guid? SubRecipeId { get; init; }
     public string FoodName { get; init; } = string.Empty;
+    public string SubRecipeName { get; init; } = string.Empty;
     public decimal? Amount { get; init; }
     public string Unit { get; init; } = string.Empty;
     public string IngredientText { get; init; } = string.Empty;
+    public RecipeNutritionDto? SubRecipeNutrition { get; init; }
 }
 
 public record RecipeInstructionDto
@@ -57,6 +60,9 @@ public class GetRecipeByIdQueryHandler : IRequestHandler<GetRecipeByIdQuery, Rec
             .Include(r => r.Nutrition)
             .Include(r => r.Ingredients)
                 .ThenInclude(i => i.Food)
+            .Include(r => r.Ingredients)
+                .ThenInclude(i => i.SubRecipe)
+                    .ThenInclude(sr => sr.Nutrition)
             .Include(r => r.Instructions)
             .Include(r => r.Tags)
             .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
@@ -85,15 +91,26 @@ public class GetRecipeByIdQueryHandler : IRequestHandler<GetRecipeByIdQuery, Rec
                 CaloriesPerServing = recipe.Nutrition.CaloriesPerServing,
                 ProteinGrams = recipe.Nutrition.ProteinGrams,
                 CarbsGrams = recipe.Nutrition.CarbsGrams,
-                FatGrams = recipe.Nutrition.FatGrams
+                FatGrams = recipe.Nutrition.FatGrams,
+                FiberGrams = recipe.Nutrition.FiberGrams
             } : null,
             Ingredients = recipe.Ingredients.Select(i => new RecipeIngredientDto
             {
                 FoodId = i.FoodId,
+                SubRecipeId = i.SubRecipeId,
                 FoodName = i.Food?.Name ?? "",
+                SubRecipeName = i.SubRecipe?.Title ?? "",
                 Amount = i.Amount,
                 Unit = i.Unit ?? "",
-                IngredientText = i.IngredientText
+                IngredientText = i.IngredientText,
+                SubRecipeNutrition = i.SubRecipe?.Nutrition != null ? new RecipeNutritionDto
+                {
+                    CaloriesPerServing = i.SubRecipe.Nutrition.CaloriesPerServing,
+                    ProteinGrams = i.SubRecipe.Nutrition.ProteinGrams,
+                    CarbsGrams = i.SubRecipe.Nutrition.CarbsGrams,
+                    FatGrams = i.SubRecipe.Nutrition.FatGrams,
+                    FiberGrams = i.SubRecipe.Nutrition.FiberGrams
+                } : null
             }).ToList(),
             Instructions = recipe.Instructions
                 .OrderBy(i => i.StepNumber)

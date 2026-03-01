@@ -5,6 +5,7 @@ import { clientApi } from "@/lib/api.client";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import Loading from "@/components/Loading";
 
 interface MyTrainer {
 	relationshipId: string;
@@ -50,7 +51,7 @@ export default function MyTrainerPage() {
 	if (isPending || isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+				<Loading />
 			</div>
 		);
 	}
@@ -121,7 +122,7 @@ export default function MyTrainerPage() {
 								className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
 							/>
 						) : (
-							<div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center border-4 border-white shadow-lg">
+							<div className="w-24 h-24 rounded-2xl bg-linear-to-br from-emerald-400 to-teal-600 flex items-center justify-center border-4 border-white shadow-lg">
 								<span className="text-3xl font-bold text-white">
 									{trainer.trainerEmail?.charAt(0).toUpperCase()}
 								</span>

@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Mizan.Application.Interfaces;
+using Mizan.Application.Services;
 using Mizan.Domain.Entities;
 
 namespace Mizan.Application.Commands;
@@ -16,6 +17,7 @@ public record CreateFoodDiaryEntryCommand : IRequest<CreateFoodDiaryEntryResult>
     public decimal? ProteinGrams { get; init; }
     public decimal? CarbsGrams { get; init; }
     public decimal? FatGrams { get; init; }
+    public decimal? FiberGrams { get; init; }
     public string Name { get; init; } = string.Empty;
 }
 
@@ -24,6 +26,7 @@ public record CreateFoodDiaryEntryResult
     public Guid Id { get; init; }
     public bool Success { get; init; }
     public string? Message { get; init; }
+    public IReadOnlyList<string> Warnings { get; init; } = [];
 }
 
 public class CreateFoodDiaryEntryCommandValidator : AbstractValidator<CreateFoodDiaryEntryCommand>
@@ -42,6 +45,7 @@ public class CreateFoodDiaryEntryCommandValidator : AbstractValidator<CreateFood
         RuleFor(x => x.ProteinGrams).GreaterThanOrEqualTo(0).When(x => x.ProteinGrams.HasValue);
         RuleFor(x => x.CarbsGrams).GreaterThanOrEqualTo(0).When(x => x.CarbsGrams.HasValue);
         RuleFor(x => x.FatGrams).GreaterThanOrEqualTo(0).When(x => x.FatGrams.HasValue);
+        RuleFor(x => x.FiberGrams).GreaterThanOrEqualTo(0).When(x => x.FiberGrams.HasValue);
     }
 }
 
@@ -80,6 +84,7 @@ public class CreateFoodDiaryEntryCommandHandler : IRequestHandler<CreateFoodDiar
             ProteinGrams = request.ProteinGrams,
             CarbsGrams = request.CarbsGrams,
             FatGrams = request.FatGrams,
+            FiberGrams = request.FiberGrams,
             Name = request.Name,
             LoggedAt = DateTime.UtcNow
         };
@@ -87,11 +92,19 @@ public class CreateFoodDiaryEntryCommandHandler : IRequestHandler<CreateFoodDiar
         _context.FoodDiaryEntries.Add(entry);
         await _context.SaveChangesAsync(cancellationToken);
 
+        var warnings = NutritionHints.CheckConsistency(
+            request.Calories,
+            request.ProteinGrams,
+            request.CarbsGrams,
+            request.FatGrams,
+            request.FiberGrams);
+
         return new CreateFoodDiaryEntryResult
         {
             Id = entry.Id,
             Success = true,
-            Message = "Entry logged successfully"
+            Message = "Entry logged successfully",
+            Warnings = warnings
         };
     }
 }

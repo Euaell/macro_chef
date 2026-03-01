@@ -8,11 +8,16 @@ import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Loading from "@/components/Loading";
+import { PasswordInput } from "@/components/PasswordInput";
+
+const hasCloudinary = !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
 export default function Page() {
 	const router = useRouter();
 	const [formState, action, isPending] = useActionState(addUser, EMPTY_FORM_STATE);
 	const [image, setImage] = useState<string>("");
+	const [password, setPassword] = useState("");
 
 	useEffect(() => {
 		if (formState.status === "success") {
@@ -25,7 +30,7 @@ export default function Page() {
 			<div className="w-full max-w-md">
 				{/* Header */}
 				<div className="text-center mb-8">
-					<div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-500/30 dark:shadow-brand-500/15 mb-4">
+					<div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-500/30 dark:shadow-brand-500/15 mb-4">
 						<i className="ri-user-add-line text-3xl text-white" />
 					</div>
 					<h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Create your account</h1>
@@ -34,7 +39,7 @@ export default function Page() {
 
 				{/* Form Card */}
 				<div className="card p-6 sm:p-8">
-					<form action={action} className="space-y-5">
+					<form data-testid="register-form" action={action} className="space-y-5">
 						{/* Email */}
 						<div>
 							<label htmlFor="email" className="label">
@@ -45,6 +50,7 @@ export default function Page() {
 								type="email"
 								id="email"
 								name="email"
+								data-testid="register-email"
 								className="input"
 								placeholder="you@example.com"
 								defaultValue=""
@@ -58,13 +64,16 @@ export default function Page() {
 								<label htmlFor="password" className="label">
 									Password
 								</label>
-								<input
+								<PasswordInput
 									required
-									type="password"
 									id="password"
 									name="password"
-									className="input"
+									data-testid="register-password"
+									className="input pr-10"
 									placeholder="••••••••"
+									showStrength
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
 								/>
 								<FieldError formState={formState} name="password" />
 							</div>
@@ -72,12 +81,12 @@ export default function Page() {
 								<label htmlFor="confirmPassword" className="label">
 									Confirm Password
 								</label>
-								<input
+								<PasswordInput
 									required
-									type="password"
 									id="confirmPassword"
 									name="confirmPassword"
-									className="input"
+									data-testid="register-confirm-password"
+									className="input pr-10"
 									placeholder="••••••••"
 								/>
 								<FieldError formState={formState} name="confirmPassword" />
@@ -89,55 +98,68 @@ export default function Page() {
 							<label className="label">
 								Profile Image <span className="text-slate-400 dark:text-slate-500 font-normal">(optional)</span>
 							</label>
-							<CldUploadWidget
-								onSuccess={(result) => {
-									if (result?.info && result.info instanceof Object) {
-										setImage(result.info.secure_url);
-									}
-								}}
-								signatureEndpoint="/api/sign-cloudinary-params"
-							>
-								{({ open }) => (
-									<div className="flex items-center gap-4">
-										{image ? (
-											<div className="relative">
-												<Image
-													src={image}
-													alt="Profile"
-													width={80}
-													height={80}
-													className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-200 dark:border-slate-700"
-												/>
+							{hasCloudinary ? (
+								<CldUploadWidget
+									onSuccess={(result) => {
+										if (result?.info && result.info instanceof Object) {
+											setImage(result.info.secure_url);
+										}
+									}}
+									signatureEndpoint="/api/sign-cloudinary-params"
+								>
+									{({ open }) => (
+										<div className="flex items-center gap-4">
+											{image ? (
+												<div className="relative">
+													<Image
+														src={image}
+														alt="Profile"
+														width={80}
+														height={80}
+														className="w-20 h-20 rounded-2xl object-cover border-2 border-slate-200 dark:border-slate-700"
+													/>
+													<button
+														type="button"
+														onClick={() => setImage("")}
+														className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+													>
+														<i className="ri-close-line text-sm" />
+													</button>
+												</div>
+											) : (
 												<button
 													type="button"
-													onClick={() => setImage("")}
-													className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+													onClick={(e) => {
+														e.preventDefault();
+														open();
+													}}
+													className="w-20 h-20 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-400 bg-slate-50 dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950 flex flex-col items-center justify-center transition-colors group"
 												>
-													<i className="ri-close-line text-sm" />
+													<i className="ri-camera-line text-2xl text-slate-400 dark:text-slate-500 group-hover:text-brand-500" />
+													<span className="text-xs text-slate-400 dark:text-slate-500 group-hover:text-brand-500 mt-1">Upload</span>
 												</button>
+											)}
+											<div className="text-sm text-slate-500 dark:text-slate-400">
+												<p>Add a profile photo</p>
+												<p className="text-xs text-slate-400 dark:text-slate-500">JPG, PNG up to 5MB</p>
 											</div>
-										) : (
-											<button
-												type="button"
-												onClick={(e) => {
-													e.preventDefault();
-													open();
-												}}
-												className="w-20 h-20 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-brand-400 bg-slate-50 dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950 flex flex-col items-center justify-center transition-colors group"
-											>
-												<i className="ri-camera-line text-2xl text-slate-400 dark:text-slate-500 group-hover:text-brand-500" />
-												<span className="text-xs text-slate-400 dark:text-slate-500 group-hover:text-brand-500 mt-1">Upload</span>
-											</button>
-										)}
-										<div className="text-sm text-slate-500 dark:text-slate-400">
-											<p>Add a profile photo</p>
-											<p className="text-xs text-slate-400 dark:text-slate-500">JPG, PNG up to 5MB</p>
 										</div>
-									</div>
-								)}
-							</CldUploadWidget>
+									)}
+								</CldUploadWidget>
+							) : null}
 							<input type="hidden" name="userImage" value={image} />
 						</div>
+
+						{/* Terms checkbox */}
+						<label className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+							<input type="checkbox" required className="mt-0.5 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500" />
+							<span>
+								I agree to the{" "}
+								<span className="text-brand-600 dark:text-brand-400 font-medium">Terms of Service</span>
+								{" "}and{" "}
+								<span className="text-brand-600 dark:text-brand-400 font-medium">Privacy Policy</span>
+							</span>
+						</label>
 
 						{/* Success Message */}
 						{formState.status === "success" && (
@@ -149,8 +171,8 @@ export default function Page() {
 
 						{/* Error Message */}
 						{formState.status === "error" && formState.message && (
-							<div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 text-sm">
-								<i className="ri-error-warning-line text-lg flex-shrink-0" />
+							<div data-testid="error-message" className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 text-sm">
+								<i className="ri-error-warning-line text-lg shrink-0" />
 								<span>
 									{formState.message}
 									{formState.message.includes("already exists") && (
@@ -169,14 +191,12 @@ export default function Page() {
 						<button
 							type="submit"
 							disabled={isPending}
+							data-testid="register-submit"
 							className="btn-primary w-full py-3"
 						>
 							{isPending ? (
 								<>
-									<svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-									</svg>
+									<Loading size="sm" />
 									Creating account...
 								</>
 							) : (
@@ -186,28 +206,6 @@ export default function Page() {
 								</>
 							)}
 						</button>
-
-						{/* Divider */}
-						<div className="relative my-6">
-							<div className="absolute inset-0 flex items-center">
-								<div className="w-full border-t border-slate-200 dark:border-slate-700" />
-							</div>
-							<div className="relative flex justify-center text-sm">
-								<span className="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">Or sign up with</span>
-							</div>
-						</div>
-
-						{/* Social Login */}
-						<div className="grid grid-cols-2 gap-3">
-							<button type="button" className="btn-secondary py-2.5">
-								<i className="ri-google-fill text-lg" />
-								Google
-							</button>
-							<button type="button" className="btn-secondary py-2.5">
-								<i className="ri-github-fill text-lg" />
-								GitHub
-							</button>
-						</div>
 					</form>
 				</div>
 

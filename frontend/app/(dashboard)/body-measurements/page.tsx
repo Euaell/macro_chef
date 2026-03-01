@@ -1,4 +1,5 @@
 import { getBodyMeasurements } from "@/data/bodyMeasurement";
+import { getCurrentGoal } from "@/data/goal";
 import { getUserServer } from "@/helper/session";
 import AddMeasurementForm from "./AddMeasurementForm";
 import DeleteMeasurementButton from "./DeleteMeasurementButton";
@@ -23,9 +24,10 @@ export default async function BodyMeasurementsPage({
     await getUserServer();
     const params = await searchParams;
     const { page, sortBy, sortOrder } = parseListParams(params, { sortBy: 'Date', sortOrder: 'desc' });
-    const [tableResult, chartResult] = await Promise.all([
+    const [tableResult, chartResult, goal] = await Promise.all([
         getBodyMeasurements(page, 20, sortBy ?? undefined, sortOrder),
         getBodyMeasurements(1, 200, "Date", "desc"),
+        getCurrentGoal(),
     ]);
     const { bodyMeasurements: measurements, totalCount, totalPages } = tableResult;
     const allMeasurements = chartResult.bodyMeasurements;
@@ -39,7 +41,7 @@ export default async function BodyMeasurementsPage({
     const muscleDelta = getDelta(latest?.muscleMassKg, previous?.muscleMassKg);
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8" data-testid="body-measurements-page">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Body Measurements</h1>
@@ -50,7 +52,7 @@ export default async function BodyMeasurementsPage({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="card-hover p-5">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg">
                             <i className="ri-scales-3-line text-xl text-white" />
                         </div>
                         <div className="flex-1">
@@ -71,7 +73,7 @@ export default async function BodyMeasurementsPage({
 
                 <div className="card-hover p-5">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-accent-400 to-accent-600 flex items-center justify-center shadow-lg">
                             <i className="ri-heart-pulse-line text-xl text-white" />
                         </div>
                         <div className="flex-1">
@@ -92,7 +94,7 @@ export default async function BodyMeasurementsPage({
 
                 <div className="card-hover p-5">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg">
                             <i className="ri-hand-heart-line text-xl text-white" />
                         </div>
                         <div className="flex-1">
@@ -114,7 +116,7 @@ export default async function BodyMeasurementsPage({
 
             <AddMeasurementForm />
 
-            <MeasurementChart measurements={allMeasurements} />
+            <MeasurementChart measurements={allMeasurements} targetWeight={goal?.targetWeight ?? null} />
 
             <div className="card p-6">
                 <h2 className="section-title mb-6">Measurement History</h2>
@@ -128,6 +130,12 @@ export default async function BodyMeasurementsPage({
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Body Fat</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Muscle</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Waist</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Hips</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Chest</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">L Arm</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">R Arm</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">L Thigh</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">R Thigh</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Notes</th>
                                     <th className="w-10"></th>
                                 </tr>
@@ -149,6 +157,24 @@ export default async function BodyMeasurementsPage({
                                         </td>
                                         <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
                                             {m.waistCm ? `${m.waistCm} cm` : "-"}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                                            {m.hipsCm ? `${m.hipsCm} cm` : "-"}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                                            {m.chestCm ? `${m.chestCm} cm` : "-"}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                                            {m.leftArmCm ? `${m.leftArmCm} cm` : "-"}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                                            {m.rightArmCm ? `${m.rightArmCm} cm` : "-"}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                                            {m.leftThighCm ? `${m.leftThighCm} cm` : "-"}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                                            {m.rightThighCm ? `${m.rightThighCm} cm` : "-"}
                                         </td>
                                         <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">
                                             {m.notes || "-"}
