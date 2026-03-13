@@ -8,7 +8,7 @@ import { getAuditLogs } from "@/data/audit";
 
 
 export const metadata = {
-  title: "Admin Dashboard | Macro Chef",
+  title: "Admin Dashboard | Mizan",
   description: "System administration dashboard",
 };
 
@@ -191,6 +191,18 @@ export default async function AdminDashboard() {
           description="Add, edit, and verify public food ingredients"
           link="/admin/ingredients"
           icon="🍎"
+        />
+        <QuickActionCard
+          title="Exercise Library"
+          description="Browse and manage the exercise database"
+          link="/admin/exercises"
+          icon="🏋️"
+        />
+        <QuickActionCard
+          title="Recipe Management"
+          description="Browse and moderate community recipes"
+          link="/admin/recipes"
+          icon="🍳"
         />
         <QuickActionCard
           title="Audit Logs"
