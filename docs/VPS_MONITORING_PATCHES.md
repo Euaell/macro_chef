@@ -18,7 +18,7 @@ Edit `/opt/prometheus/docker-compose.yml`:
 
 ```yaml
 # Add a new network. `internal: true` means this network has no external
-# gateway — containers on it cannot reach the internet, and containers on
+# gateway, containers on it cannot reach the internet, and containers on
 # other networks cannot reach them. That is exactly what we want for
 # metrics-only sidecars.
 networks:
@@ -46,7 +46,7 @@ services:
     # Remove proxy-net from this service. Only monitoring-net.
     networks:
       - monitoring-net
-    # Optional: drop any `ports:` block — exposing on the host isn't
+    # Optional: drop any `ports:` block, exposing on the host isn't
     # needed when Prometheus can reach it over monitoring-net.
 
   cadvisor:
@@ -114,7 +114,7 @@ docker kill -s HUP prometheus
 curl -X POST http://prometheus:9090/-/reload
 ```
 
-Check the targets page: `https://<grafana-host>/prometheus/targets` — all
+Check the targets page: `https://<grafana-host>/prometheus/targets`, all
 three should be `UP` within ~30 s. If any are `DOWN`, confirm they're on
 `proxy-net` and that the target port matches your compose.
 
@@ -122,7 +122,7 @@ The backend exposes the Prometheus scrape endpoint via
 `app.MapPrometheusScrapingEndpoint()` in `Program.cs`; the MCP server
 should do the same (check `Mizan.Mcp.Server/Program.cs`). The frontend
 port comes from `OTEL_METRICS_PORT=9464` which is already set in
-`docker-compose.yml` — confirm it's mirrored on the VPS `.env` if you
+`docker-compose.yml`, confirm it's mirrored on the VPS `.env` if you
 don't source from the repo one.
 
 ## 3. Postgres healthcheck
